@@ -6,7 +6,7 @@ import {transform} from 'ol/proj.js';
 import type {GeometryFunction} from 'ol/interaction/Draw.js';
 import type Geometry from 'ol/geom/Geometry.js';
 
-export type Measurement={length:number;area:number;radius?:number;points:number;valid:boolean;crossed:boolean};
+export type Measurement={length:number;lastSegment?:number;area:number;radius?:number;points:number;valid:boolean;crossed:boolean};
 // The two chosen points define a true circle in L-EST97. Render its sampled outline
 // in the view projection, but calculate area analytically rather than from the polygon.
 export const circleGeometry:GeometryFunction=(coordinates,existing,projection)=>{
@@ -46,7 +46,8 @@ export function measureGeometry(geometry:Geometry,committedOnly=false):Measureme
  const length=points>1?new LineString(ring).getLength():0;
  const crossed=polygon&&points>=3&&crosses(coords);
  const area=polygon&&points>=3&&!crossed?new Polygon([ring]).getArea():0;
- return {length,area,points,crossed,valid:polygon?points>=3&&area>0&&!crossed:points>=2&&length>0};
+ const lastSegment=!polygon&&points>1?new LineString(coords.slice(-2)).getLength():0;
+ return {length,lastSegment,area,points,crossed,valid:polygon?points>=3&&area>0&&!crossed:points>=2&&length>0};
 }
 const number=(n:number,digits=1)=>n.toLocaleString('et-EE',{maximumFractionDigits:digits});
 export const lengthLabel=(metres:number)=>metres>=1000?number(metres/1000,2)+' km':number(metres)+' m';
