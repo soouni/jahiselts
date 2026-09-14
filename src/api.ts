@@ -1,0 +1,14 @@
+import {createClient} from '@supabase/supabase-js';
+import type {Entry,Member,Kind} from './types';
+import backend from './backend-config.json';
+// Publishable browser configuration. Authorization is enforced by database RLS.
+const url=import.meta.env.VITE_SUPABASE_URL||backend.url;
+const key=import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY||import.meta.env.VITE_SUPABASE_ANON_KEY||backend.publishableKey;
+export const db=url&&key?createClient(url,key):null;
+export async function getMembership():Promise<Member|null>{if(!db)return null;const {data,error}=await db.rpc('join_club');if(error)throw error;return data?.[0]||null;}
+export async function loadEntries(trash=false):Promise<Entry[]>{if(!db)return [];const {data,error}=await db.rpc('list_features',{include_deleted:trash});if(error)throw error;return data||[];}
+export async function saveEntry(kind:Kind,id:string,version:number,properties:Record<string,any>,geometry:any){if(!db)throw new Error('Andmebaas ei ole ühendatud.');const {data,error}=await db.rpc('save_feature',{feature_kind:kind,feature_id:id,expected_version:version,feature_properties:properties,feature_geometry:geometry});if(error)throw error;return data;}
+export async function removeEntry(e:Entry,restore=false){if(!db)return;const {error}=await db.rpc('set_deleted',{feature_kind:e.kind,feature_id:e.id,expected_version:e.version,restore});if(error)throw error;}
+export async function preparePhoto(file:File):Promise<Blob>{if(file.size>20*1024*1024)throw new Error('Foto on liiga suur (üle 20 MB).');let bitmap:ImageBitmap;try{bitmap=await createImageBitmap(file);}catch{throw new Error('Seda fotovormingut ei saa avada. Vali JPEG või PNG foto.');}const scale=Math.min(1,1920/Math.max(bitmap.width,bitmap.height));const c=document.createElement('canvas');c.width=Math.round(bitmap.width*scale);c.height=Math.round(bitmap.height*scale);c.getContext('2d')!.drawImage(bitmap,0,0,c.width,c.height);bitmap.close();return new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(new Error('Foto töötlemine ebaõnnestus.')),'image/jpeg',.82));}
+export async function uploadPhoto(e:{id:string;kind:Kind},file:File){if(!db)return;const photo=await preparePhoto(file);const path=`${e.kind}/${e.id}/${crypto.randomUUID()}.jpg`;const {error}=await db.storage.from('photos').upload(path,photo,{contentType:'image/jpeg',upsert:false});if(error)throw error;const {error:insertError}=await db.from('attachments').insert({entry_id:e.id,kind:e.kind,path});if(insertError){await db.storage.from('photos').remove([path]);throw insertError;}}
+export async function photos(e:Entry){if(!db)return [];const {data,error}=await db.from('attachments').select('path').eq('entry_id',e.id).eq('kind',e.kind);if(error)throw error;return Promise.all((data||[]).map(async p=>{const {data,error}=await db!.storage.from('photos').createSignedUrl(p.path,120);if(error)throw error;return data.signedUrl;}));}

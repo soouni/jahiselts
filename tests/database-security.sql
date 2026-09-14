@@ -1,0 +1,94 @@
+-- Run against the dedicated project via execute_sql. All fixtures are rolled back
+-- inside a subtransaction. No emails, passwords, sessions or real photo bytes.
+do $$
+declare
+ a uuid:=gen_random_uuid(); m uuid:=gen_random_uuid(); m2 uuid:=gen_random_uuid(); v uuid:=gen_random_uuid(); outsider uuid:=gen_random_uuid(); unverified uuid:=gen_random_uuid();
+ obs uuid:=gen_random_uuid(); obs2 uuid:=gen_random_uuid(); sign_id uuid:=gen_random_uuid(); area_id uuid:=gen_random_uuid(); road_id uuid:=gen_random_uuid(); place_id uuid:=gen_random_uuid();
+ p jsonb; report jsonb:=jsonb_build_object('species','Metssiga','count',2,'observed_at',now(),'observer','FORGED','outside',true,'created_by','FORGED');
+ path text; result jsonb; denied boolean; n integer:=0; message text;
+begin
+ begin
+  if (select public from storage.buckets where id='photos') is distinct from false then raise exception 'FAIL public photo bucket';end if;n:=n+1;
+  insert into auth.users(id,email,email_confirmed_at,aud,role,raw_app_meta_data,raw_user_meta_data)
+   values(a,a||'@test.invalid',now(),'authenticated','authenticated','{}','{}'),(m,m||'@test.invalid',now(),'authenticated','authenticated','{}','{}'),(m2,m2||'@test.invalid',now(),'authenticated','authenticated','{}','{}'),(v,v||'@test.invalid',now(),'authenticated','authenticated','{}','{}'),(outsider,outsider||'@test.invalid',now(),'authenticated','authenticated','{}','{}'),(unverified,unverified||'@test.invalid',null,'authenticated','authenticated','{}','{}');
+  insert into public.memberships(email,user_id,display_name,role) values(a||'@test.invalid',a,'Test admin','admin'),(m||'@test.invalid',m,'Test member','member'),(m2||'@test.invalid',m2,'Test other','member'),(v||'@test.invalid',null,'Test viewer','viewer'),(unverified||'@test.invalid',null,'Unverified admin invitation','admin');
+  select extensions.st_asgeojson(extensions.st_transform(extensions.st_pointonsurface(b.geom),4326))::jsonb into p from public.boundary_versions b join public.hunting_areas h on h.active_version=b.id where h.code='JAH1000125';
+  execute 'set local role authenticated';
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',unverified,'email',unverified||'@test.invalid','role','authenticated')::text,true);
+  if exists(select 1 from public.join_club()) or public.my_role() is not null then raise exception 'FAIL unverified email enrolment';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',v,'email',v||'@test.invalid','role','authenticated')::text,true);
+  if (select count(*) from public.join_club())<>1 or public.my_role()<>'viewer' then raise exception 'FAIL verified invitation enrolment';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'email',a||'@test.invalid','role','authenticated')::text,true);
+  if public.my_role() is distinct from 'admin' then raise exception 'FAIL admin identity';end if;n:=n+1;
+  perform public.save_feature('area',area_id,0,'{"name":"Transaction test area"}','{"type":"Polygon","coordinates":[[[24.86,58.63],[24.861,58.63],[24.861,58.631],[24.86,58.63]]]}');
+  perform public.save_feature('line',road_id,0,'{"name":"Transaction test line"}','{"type":"LineString","coordinates":[[24.86,58.63],[24.861,58.631]]}');
+  perform public.save_feature('place',place_id,0,'{"name":"Transaction test place"}',p);n:=n+3;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',m,'email',m||'@test.invalid','role','authenticated')::text,true);
+  if public.save_feature('observation',obs,0,report,p)<>1 then raise exception 'FAIL create observation';end if;n:=n+1;
+  select properties into result from public.observations where id=obs;
+  if result->>'observer'<>'Test member' or result->>'outside'<>'false' or result ? 'created_by' then raise exception 'FAIL authoritative properties';end if;n:=n+1;
+  if public.save_feature('observation',obs,0,report,p)<>1 then raise exception 'FAIL idempotent retry';end if;n:=n+1;
+  perform public.save_feature('sign',sign_id,0,jsonb_build_object('species','Teadmata','sign_type','Ulukirada','observed_at',now()),'{"type":"LineString","coordinates":[[24.86,58.63],[24.861,58.631]]}');n:=n+1;
+  denied:=false;begin perform public.save_feature('place',gen_random_uuid(),0,'{"name":"Forbidden"}',p);exception when raise_exception then if sqlerrm like '%Ainult admin%' then denied:=true;else raise;end if;end;
+  if not denied then raise exception 'FAIL member map write';end if;n:=n+1;
+  denied:=false;begin insert into public.observations(id,properties,geom,created_by,updated_by) values(gen_random_uuid(),report,extensions.st_transform(extensions.st_geomfromgeojson(p),3301),m,m);exception when insufficient_privilege then denied:=true;end;
+  if not denied then raise exception 'FAIL direct table insert';end if;n:=n+1;
+  if public.save_feature('observation',obs,1,report||'{"count":3}',p)<>2 then raise exception 'FAIL owner update';end if;n:=n+1;
+  denied:=false;begin perform public.save_feature('observation',obs,1,report,p);exception when raise_exception then if sqlerrm like '%conflict%' then denied:=true;else raise;end if;end;
+  if not denied then raise exception 'FAIL stale version';end if;n:=n+1;
+  denied:=false;begin perform public.save_feature('observation',obs,null,report,p);exception when raise_exception then if sqlerrm like '%versioon%' then denied:=true;else raise;end if;end;
+  if not denied then raise exception 'FAIL null version';end if;n:=n+1;
+  path:='observation/'||obs||'/'||gen_random_uuid()||'.jpg';
+  insert into storage.objects(bucket_id,name,metadata) values('photos',path,'{"mimetype":"image/jpeg"}');
+  insert into public.attachments(kind,entry_id,path) values('observation',obs,path);
+  if not public.photo_access(path,true) then raise exception 'FAIL own photo';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',m2,'email',m2||'@test.invalid','role','authenticated')::text,true);
+  denied:=false;begin perform public.save_feature('observation',obs,2,report,p);exception when raise_exception then if sqlerrm like '%lubatud%' then denied:=true;else raise;end if;end;
+  if not denied then raise exception 'FAIL other member update';end if;n:=n+1;
+  denied:=false;begin perform public.set_deleted('observation',obs,2,false);exception when raise_exception then if sqlerrm like '%lubatud%' then denied:=true;else raise;end if;end;
+  if not denied then raise exception 'FAIL other member delete';end if;n:=n+1;
+  denied:=false;begin insert into storage.objects(bucket_id,name) values('photos','observation/'||obs||'/forbidden.jpg');exception when insufficient_privilege then denied:=true;end;
+  if not denied or public.photo_access(path,true) then raise exception 'FAIL other photo write';end if;n:=n+1;
+  perform public.save_feature('observation',obs2,0,report,'{"type":"Point","coordinates":[25.6,58.36]}');
+  if (select properties->>'outside' from public.observations where id=obs2)<>'true' then raise exception 'FAIL outside allowed';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',v,'email',v||'@test.invalid','role','authenticated')::text,true);
+  if jsonb_array_length(public.list_features())<>6 then raise exception 'FAIL viewer full read';end if;n:=n+1;
+  if not public.photo_access(path,false) or public.photo_access(path,true) then raise exception 'FAIL viewer photos';end if;n:=n+1;
+  denied:=false;begin perform public.save_feature('observation',gen_random_uuid(),0,report,p);exception when raise_exception then if sqlerrm like '%lubatud%' then denied:=true;else raise;end if;end;
+  if not denied then raise exception 'FAIL viewer write';end if;n:=n+1;
+  denied:=false;begin perform public.admin_member(v||'@test.invalid','Test viewer','admin',true);exception when raise_exception then if sqlerrm like '%lubatud%' then denied:=true;else raise;end if;end;
+  if not denied then raise exception 'FAIL privilege escalation';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated')::text,true);
+  perform public.set_viewer_layers(array['area','line','place']);
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',v,'role','authenticated')::text,true);
+  if jsonb_array_length(public.list_features())<>3 or exists(select 1 from public.observations) or exists(select 1 from public.sign_reports) then raise exception 'FAIL viewer hidden layers';end if;n:=n+1;
+  if public.photo_access(path,false) or exists(select 1 from public.attachments where entry_id=obs) or exists(select 1 from storage.objects where bucket_id='photos' and name=path) then raise exception 'FAIL viewer hidden photos';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',outsider,'email',outsider||'@test.invalid','role','authenticated')::text,true);
+  if public.my_role() is not null or exists(select 1 from public.join_club()) or public.list_features()<>'[]'::jsonb then raise exception 'FAIL outsider access';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated')::text,true);
+  perform public.admin_member(m2||'@test.invalid','Test other','member',false);
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',m2,'role','authenticated')::text,true);
+  if public.my_role() is not null or public.list_features()<>'[]'::jsonb or public.photo_access(path,false) then raise exception 'FAIL inactive user';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',m,'role','authenticated')::text,true);
+  perform public.set_deleted('observation',obs,2,false);
+  if exists(select 1 from public.observations where id=obs) or public.photo_access(path,false) then raise exception 'FAIL deleted member visibility';end if;n:=n+1;
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated')::text,true);
+  if not exists(select 1 from public.observations where id=obs and deleted_at is not null) then raise exception 'FAIL admin trash';end if;n:=n+1;
+  perform public.set_deleted('observation',obs,3,true);
+  if not exists(select 1 from public.observations where id=obs and deleted_at is null and version=4) then raise exception 'FAIL restore';end if;n:=n+1;
+  if (select count(*) from public.audit_events where entry_id=obs)<>4 then raise exception 'FAIL audit history';end if;n:=n+1;
+  execute 'set local role anon';
+  denied:=false;begin perform public.list_features();exception when insufficient_privilege then denied:=true;end;
+  if not denied then raise exception 'FAIL anonymous RPC';end if;n:=n+1;
+  denied:=false;begin perform 1 from public.observations;exception when insufficient_privilege then denied:=true;end;
+  if not denied then raise exception 'FAIL anonymous table';end if;n:=n+1;
+  execute 'reset role';
+  raise exception using errcode='P0002',message='ROLLBACK_TEST_FIXTURES';
+ exception when no_data_found then
+  get stacked diagnostics message=message_text;
+  if message<>'ROLLBACK_TEST_FIXTURES' then raise;end if;
+ end;
+ if exists(select 1 from auth.users where id in(a,m,m2,v,outsider,unverified)) or exists(select 1 from public.observations where id in(obs,obs2)) then raise exception 'FAIL fixture cleanup';end if;n:=n+1;
+ perform set_config('parnjoe_test.results',jsonb_build_object('passed',n,'fixtures_persisted',false,'email_sent',false)::text,false);
+end $$;
+select current_setting('parnjoe_test.results')::jsonb as database_security_checks;
