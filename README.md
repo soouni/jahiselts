@@ -35,3 +35,11 @@ Vite baasrada on `/jahiselts/`. Kui hoidla nimi või domeen muutub, tuleb muuta 
 ## Allikad
 
 Ametlik piir: EELIS, Keskkonnaagentuur, JAH1000125, CC BY 4.0; ametlikust WFS-ist saadud väljavõte 13.09.2026. Aluskaardid: Maa- ja Ruumiamet. Kaardil on allikaviited. Jahiseltsi objektid on eraldi andmekihis.
+
+## Kasutajanimi või e-post
+
+Parooliga sisenemisel võib kasutada e-posti või enda valitud kasutajanime. Kasutajanime määrab kinnitatud aktiivne liige konto vaates. Vorm lubab 3–30 märki (a–z, numbrid, punkt, alakriips, sidekriips), eristamata suur- ja väiketähti. Nimi peab olema unikaalne. Enne nime määramist saab kasutada e-posti. Sama Supabase Auth konto ja parool jäävad alles; e-kirjade SMTP seadistamine on endiselt vajalik esmaseks kinnitamiseks ja parooli taastamiseks.
+
+Backend rollout: `supabase/username-login.sql` on lisav SQL, mis on olemasolevas projektis rakendatud. Seda ei tule seal uuesti käivitada. `supabase/functions/username-login/index.ts` on avaldatud Edge Function `username-login` all, verify_jwt=false, sest see autentib kasutajanime ja parooli Supabase Authi kaudu. Funktsioon ei väljasta kasutajanime ja e-posti vastavust; väljastab sessioonitokenid alles eduka autentimise järel. Salajased võtmed loetakse ainult serveri keskkonnast. Sisselogimiskatsete loendur kasutab HMAC-räsisid, 15 minuti piiranguid ning ainult service_role ligipääsu. RLS keelab kõigi teiste ligipääsu loenduritabelile; poliitika puudumine seal on tahtlik. Uusi SECURITY DEFINER funktsioone ei lisatud.
+
+Kontrollid: frontend koostamine; Edge Functioni testid tuntud/tundmatu kasutaja, vale parooli, konto mittevastavuse, võõra päritolu ja katsete piirangu kohta; live anonüümsed veavastused; andmebaasi tehingus oma kasutajanime muutmine, teise kasutaja muutmise ning rolli tõstmise keeld ja katsete piirang. Tehingu testandmed tühistati. Olemasoleva liikme päris parooliga edukas sisenemine vajab kasutaja proovimist. Turvanõustaja olemasolevad 10 SECURITY DEFINER hoiatust ja väljalülitatud lekkinud paroolide kontroll ei ole selle muudatusega parandatud.
