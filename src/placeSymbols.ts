@@ -1,17 +1,18 @@
 // Shared by the map, editor and legend. Unknown types remain neutral landmarks.
-const house='<path d="M6 15 16 6l10 9M9 13v12h14V13M13 25v-8h6v8"/>';
+export const symbolSize=20;
+const house='<path d="M3 14 16 3l13 11h-4v15H7V14Z"/>';
 export const placeSymbols:Record<string,{color:string;path:string}>={
  'Jahimaja':{color:'#c45a12',path:house},
  'Maja':{color:'#7845a3',path:house},
- 'Kõrvalhoone':{color:'#52616b',path:'<rect x="8" y="9" width="16" height="16"/><path d="M13 25V15h6v10M8 12h16"/>'},
- 'Jahitorn':{color:'#27623e',path:'<path d="M8 12h16M10 12V7h12v5M12 13 8 26M20 13l4 13M11 18h10M10 23h12M8 7l8-4 8 4"/>'},
- 'Soolakivi':{color:'#8a5c23',path:'<path d="m8 12 8-5 8 5v10l-8 5-8-5Zm0 0 8 5 8-5M16 17v10"/>'},
- 'Söödakoht':{color:'#58722e',path:'<path d="M7 19h18l-3 7H10ZM16 18V6M16 11l-5-4M16 15l5-5"/>'},
- 'Sild / ületuskoht':{color:'#225e8a',path:'<path d="M6 21h20M7 15h18M8 11v14M24 11v14M12 15v6M16 15v6M20 15v6"/>'},
- 'Kogunemiskoht':{color:'#225e8a',path:'<circle cx="12" cy="11" r="3"/><circle cx="22" cy="12" r="2"/><path d="M5 25v-4a7 7 0 0 1 14 0v4M22 18q5 0 5 7"/>'},
- 'Parkimiskoht':{color:'#225e8a',path:'<path d="M11 26V7h7a6 6 0 0 1 0 12h-7"/>'},
- 'Orientiir':{color:'#52616b',path:'<path d="m16 7 11 19H5Z"/>'},
+ 'Kõrvalhoone':{color:'#52616b',path:'<rect x="5" y="5" width="22" height="22"/>'},
+ 'Jahitorn':{color:'#27623e',path:'<path d="M6 4h20v12h-5l5 13h-6l-4-11-4 11H6l5-13H6Z"/>'},
+ 'Soolakivi':{color:'#8a5c23',path:'<path d="m16 3 13 13-13 13L3 16Z"/>'},
+ 'Söödakoht':{color:'#58722e',path:'<path d="M3 8h26l-5 18H8Z"/>'},
+ 'Sild / ületuskoht':{color:'#225e8a',path:'<path d="M3 7h7v6h12V7h7v18h-7v-6H10v6H3Z"/>'},
+ 'Kogunemiskoht':{color:'#225e8a',path:'<circle cx="16" cy="16" r="12"/>'},
+ 'Parkimiskoht':{color:'#225e8a',path:'<path fill-rule="evenodd" d="M7 3h12a9 9 0 0 1 0 18h-5v8H7Zm7 6v6h5a3 3 0 0 0 0-6Z"/>'},
+ 'Orientiir':{color:'#52616b',path:'<path d="m16 3 13 25H3Z"/>'},
 };
 export const placeTypes=Object.keys(placeSymbols);
 export function symbolType(type:unknown){return typeof type==='string'&&placeSymbols[type]?type:'Orientiir';}
-export function symbolUrl(type:unknown){const {color,path}=placeSymbols[symbolType(type)];return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="7" fill="white" stroke="${color}" stroke-width="2"/><g fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</g></svg>`);}
+export function symbolUrl(type:unknown){const {color,path}=placeSymbols[symbolType(type)];return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><g fill="${color}" stroke="white" stroke-width="3" stroke-linejoin="round" paint-order="stroke fill">${path}</g></svg>`);}
