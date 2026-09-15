@@ -1,3 +1,4 @@
+import houseUrl from './assets/house.svg';
 import {MapCompass} from './MapCompass';
 import {MeasureTool} from './MeasureTool';
 import {forwardRef,useEffect,useImperativeHandle,useRef,useState} from 'react';
@@ -9,10 +10,11 @@ import type {OfficialPlace} from './officialSearch';
 import type WMTS from 'ol/source/WMTS';import VectorSource from 'ol/source/Vector';import VectorLayer from 'ol/layer/Vector';import TileLayer from 'ol/layer/Tile';
 import {createBasemapSource} from './basemaps';
 import {mapColor,colorOutline,mapWidth} from './mapColors';
-import {Fill,Stroke,Style,Circle as CircleStyle,Text} from 'ol/style';import {Draw,Modify} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,transform} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
+import {Fill,Stroke,Style,Circle as CircleStyle,Text,Icon} from 'ol/style';import {Draw,Modify} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,transform} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
 import type {Entry,Geometry,Kind} from './types';import {label} from './types';import 'ol/ol.css';
 proj4.defs('EPSG:3301','+proj=lcc +lat_0=57.51755393055556 +lon_0=24 +lat_1=59.33333333333334 +lat_2=58 +x_0=500000 +y_0=6375000 +ellps=GRS80 +units=m +no_defs');register(proj4);
 const format=new GeoJSON();
+const houseIcon=new Icon({src:houseUrl,width:32,height:32});
 export type MapHandle={fit:()=>void;focus:(e:Entry)=>void;undo:()=>void;finish:()=>void;locate:(coords:number[],accuracy:number)=>void;boundaryCheck:(coords:number[],accuracy?:number)=>string;geometry:()=>Geometry|null};
 type Props={measuring:boolean;onCloseMeasure:()=>void;searchResult:OfficialPlace|null;onClearSearch:()=>void;entries:Entry[];base:string;boundaryVisible:boolean;drawing:Kind|null;drawingColor:string;drawingWidth:number;drawType:'Point'|'LineString'|'Polygon';editGeometry:Geometry|null;onGeometry:(g:Geometry)=>void;onSelect:(id:string)=>void;onReady:()=>void;onError:(s:string)=>void};
 export const MapCanvas=forwardRef<MapHandle,Props>(function MapCanvas(p,ref){const el=useRef<HTMLDivElement>(null),map=useRef<Map|null>(null),official=useRef(new VectorSource()),source=useRef(new VectorSource()),draft=useRef(new VectorSource()),gps=useRef(new VectorSource()),search=useRef(new VectorSource()),draw=useRef<Draw|null>(null),tiles=useRef<Record<string,TileLayer<WMTS>>>({});const callbacks=useRef(p);callbacks.current=p;const [tileProblem,setTileProblem]=useState('');const [mapInstance,setMapInstance]=useState<Map|null>(null);
@@ -20,8 +22,8 @@ useImperativeHandle(ref,()=>({fit(){if(map.current&&!official.current.isEmpty())
 useEffect(()=>{let disposed=false;const boundaryLayer=new VectorLayer({source:official.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.035)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]});
 const entriesLayer=new VectorLayer({source:source.current,declutter:true,style:(f,res)=>{
  const kind=f.get('kind') as Kind,color=mapColor(kind,f.get('color')),named=kind==='area'||kind==='line';
- const width=mapWidth(kind,f.get('stroke_width'));
- const mainStyle=new Style({stroke:new Stroke({color,width,lineDash:kind==='sign'?[6,4]:undefined}),fill:new Fill({color:kind==='area'?color+'20':'rgba(124,72,148,.08)'}),image:new CircleStyle({radius:kind==='observation'?8:7,fill:new Fill({color}),stroke:new Stroke({color:'#fff',width:2})}),text:res<18?new Text({text:(kind==='sign'?'↟ ':kind==='observation'?'◉ ':'')+f.get('label'),offsetY:-18,font:'600 14px system-ui',fill:new Fill({color:'#162f28'}),stroke:new Stroke({color:'#fff',width:4})}):undefined});
+ const width=mapWidth(kind,f.get('stroke_width')),house=kind==='place'&&f.get('objectType')==='Maja';
+ const mainStyle=new Style({stroke:new Stroke({color,width,lineDash:kind==='sign'?[6,4]:undefined}),fill:new Fill({color:kind==='area'?color+'20':'rgba(124,72,148,.08)'}),image:house?houseIcon:new CircleStyle({radius:kind==='observation'?8:7,fill:new Fill({color}),stroke:new Stroke({color:'#fff',width:2})}),text:res<18?new Text({text:(kind==='sign'?'↟ ':kind==='observation'?'◉ ':'')+f.get('label'),offsetY:house?-26:-18,font:'600 14px system-ui',fill:new Fill({color:'#162f28'}),stroke:new Stroke({color:'#fff',width:4})}):undefined});
  return named?[new Style({stroke:new Stroke({color:colorOutline(color),width:width+3})}),mainStyle]:mainStyle;
 }});
 const draftStyle=()=>{const color=callbacks.current.drawingColor,width=callbacks.current.drawingWidth;return [
@@ -53,7 +55,7 @@ useEffect(()=>{
  padding[0]*=scale;padding[2]*=scale;
  m.getView().fit(target,{padding,maxZoom:16,duration:450});
 },[p.searchResult]);
-useEffect(()=>{source.current.clear();source.current.addFeatures(p.entries.map(e=>{const f=format.readFeature({type:'Feature',geometry:e.geometry,properties:{kind:e.kind,label:label(e),entryId:e.id,color:mapColor(e.kind,e.properties.color),stroke_width:mapWidth(e.kind,e.properties.stroke_width)}},{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}) as Feature;return f;}));},[p.entries]);
+useEffect(()=>{source.current.clear();source.current.addFeatures(p.entries.map(e=>{const f=format.readFeature({type:'Feature',geometry:e.geometry,properties:{kind:e.kind,objectType:e.properties.type,label:label(e),entryId:e.id,color:mapColor(e.kind,e.properties.color),stroke_width:mapWidth(e.kind,e.properties.stroke_width)}},{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}) as Feature;return f;}));},[p.entries]);
 useEffect(()=>{for(const [name,l]of Object.entries(tiles.current))l.setVisible(name==='kaart'?p.base==='kaart':name==='foto'?p.base!=='kaart':p.base==='hybriid');},[p.base]);
 useEffect(()=>{map.current?.getLayers().getArray().find(l=>l instanceof VectorLayer&&l.getSource()===official.current)?.setVisible(p.boundaryVisible);},[p.boundaryVisible]);
 useEffect(()=>{draft.current.changed();draw.current?.getOverlay().changed();},[p.drawingColor,p.drawingWidth]);
