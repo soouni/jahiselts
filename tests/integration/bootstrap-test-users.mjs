@@ -41,7 +41,8 @@ try {
   const values = roles.map(x => `('${x.email.replaceAll("'", "''")}', '${x.name}', '${x.role}', true)`).join(',\n  ');
   await writeFile(migrationPath, `insert into public.memberships(email,display_name,role,active) values\n  ${values};\n`);
   execFileSync('npx', ['supabase@latest', 'db', 'push', '--linked', '--yes'], { stdio: 'inherit' });
-  await rm(migrationPath, { force: true });
+  // Keep the generated migration locally: Supabase records its version remotely.
+  // The filename is gitignored so subsequent CLI runs can still match migration history.
 
   const password = `Rls-${randomBytes(20).toString('base64url')}!9`;
   for (const item of roles) {
@@ -77,7 +78,8 @@ try {
   console.log(`Testkontod valmisid ainult projektis ${projectRef}. Ajutine testimaterjal salvestati faili ${envPath}.`);
   console.log('RLS_TEST_SECRET_KEY ei salvestatud faili ega väljastatud. Kustuta testprojekt pärast auditit Supabase Dashboardist, kui seda enam vaja pole.');
 } catch (error) {
-  await rm(migrationPath, { force: true });
+  // Keep the migration file even after a later bootstrap failure, since db push
+  // may already have applied it and recorded its version remotely.
   for (const id of created) await admin.auth.admin.deleteUser(id).catch(() => {});
   throw error;
 } finally {
