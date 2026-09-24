@@ -1,0 +1,82 @@
+name: Weekly Supabase backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * 1"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create database dump and GeoJSON exports
+        run: |
+          set -euo pipefail
+
+          test -n "$SUPABASE_DB_URL"
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_SERVICE_ROLE_KEY"
+
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          dir="backup-$stamp"
+          mkdir "$dir"
+
+          pg_dump "$SUPABASE_DB_URL" \
+            --format=custom \
+            --no-owner \
+            --no-privileges \
+            --file "$dir/database.dump"
+
+          pg_dump "$SUPABASE_DB_URL" \
+            --schema-only \
+            --no-owner \
+            --no-privileges \
+            --file "$dir/schema.sql"
+
+          export_geojson() {
+            table="$1"
+            file="$2"
+
+            psql "$SUPABASE_DB_URL" -v ON_ERROR_STOP=1 -At -c "
+              select jsonb_build_object(
+                'type', 'FeatureCollection',
+                'features', coalesce(jsonb_agg(
+                  jsonb_build_object(
+                    'type', 'Feature',
+                    'geometry', ST_AsGeoJSON(geom)::jsonb,
+                    'properties', to_jsonb(t) - 'geom'
+                  )
+                ), '[]'::jsonb)
+              )
+              from public.${table} t
+              where deleted_at is null;
+            " > "$dir/$file"
+          }
+
+          export_geojson map_objects map_objects.geojson
+          export_geojson observations observations.geojson
+          export_geojson sign_reports sign_reports.geojson
+
+          tar -czf "$dir.tar.gz" "$dir"
+
+          curl --fail-with-body \
+            -X POST "$SUPABASE_URL/storage/v1/object/backups/$dir.tar.gz" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Content-Type: application/gzip" \
+            --data-binary "@$dir.tar.gz"
