@@ -88,10 +88,10 @@ const {data:viewerDelete,error:viewerDeleteError}=await viewer.rpc('set_deleted'
 assert(Boolean(viewerDeleteError)&&viewerDelete===null,'vaataja ei kustuta vaatlust');
 const {data:inactiveDelete,error:inactiveDeleteError}=await inactive.rpc('set_deleted',{feature_kind:'observation',feature_id:obsId,expected_version:2,restore:false});
 assert(Boolean(inactiveDeleteError)&&inactiveDelete===null,'deaktiveeritud liige ei kustuta vaatlust');
+const {data:removed,error:removedError}=await member.storage.from('photos').remove([path]);
+assert(!removedError&&removed.length===1,'liige kustutab enda aktiivse vaatluse foto');
 await rpc(member,'set_deleted',{feature_kind:'observation',feature_id:obsId,expected_version:2,restore:false});
 assert(true,'liige kustutab enda vaatluse pehme kustutamisega');
-const {data:removed,error:removedError}=await member.storage.from('photos').remove([path]);
-assert(!removedError&&removed.length===1,'liige kustutab enda vaatluse foto');
 await rpc(admin,'set_deleted',{feature_kind:'place',feature_id:mapId,expected_version:2,restore:false});
 assert(true,'admin saab koha pehmelt kustutada');
 console.log(results.join('\n'));
