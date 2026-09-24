@@ -14,7 +14,7 @@ export function ObjectColorPicker({value,onChange}:{value:string;onChange:(value
 export function ObjectWidthPicker({value,color,onChange}:{value:number;color:string;onChange:(value:number)=>void}){
  return <fieldset className="object-width"><legend>Joone paksus</legend>
   <label><span>{value} px</span><input aria-label="Joone paksus pikslites" type="range" min="1" max="12" step="1" value={value} onChange={e=>onChange(Number(e.target.value))}/></label>
-  <div className="width-presets">{[{name:'Peen',width:2},{name:'Tavaline',width:5},{name:'Paks',width:8}].map(x=><button key={x.width} type="button" aria-pressed={value===x.width} onClick={()=>onChange(x.width)}>{x.name}</button>)}</div>
+  <div className="width-presets">{[{name:'Peen',width:1},{name:'Tavaline',width:2},{name:'Paks',width:5}].map(x=><button key={x.width} type="button" aria-pressed={value===x.width} onClick={()=>onChange(x.width)}>{x.name}</button>)}</div>
   <div className="width-preview" aria-label={`Joone eelvaade, ${value} pikslit`}><span style={{height:value,backgroundColor:color,boxShadow:`0 0 0 1.5px ${colorOutline(color)}`}}/></div>
  </fieldset>;
 }
