@@ -39,6 +39,6 @@ Deno.serve(async(req:Request)=>{
   if(!result.ok)return fail();
   const session=await result.json();
   if(!member?.user_id||session.user?.id!==member.user_id||!session.user?.email_confirmed_at||!session.access_token||!session.refresh_token)return fail();
-  return reply(200,{access_token:session.access_token,refresh_token:session.refresh_token});
+  await fetch(url+'/rest/v1/rpc/clear_username_login_attempts',{method:'POST',headers:serviceHeaders,body:JSON.stringify({ip_hash:await hash('ip:'+ip),name_hash:await hash('name:'+username)}),signal:AbortSignal.timeout(8000)});return reply(200,{access_token:session.access_token,refresh_token:session.refresh_token});
  }catch{return reply(503,{code:'unavailable'});}
 });

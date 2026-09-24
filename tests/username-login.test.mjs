@@ -10,7 +10,7 @@ function setup({allowed=true,passwordOK=true,member=true,matching=true}={}){
  const env={SUPABASE_URL:'https://test.supabase.co',SUPABASE_SECRET_KEYS:JSON.stringify({default:'sb_secret_fixture'}),SUPABASE_PUBLISHABLE_KEYS:JSON.stringify({default:'sb_publishable_fixture'})};
  runInNewContext(code,{Deno:{env:{get:k=>env[k]},serve:fn=>handler=fn},TextEncoder,Response,URLSearchParams,AbortSignal,crypto:webcrypto,fetch:async(url,init)=>{
   calls.push({url,init});
-  if(url.includes('consume_username'))return Response.json(allowed);
+  if(url.includes('consume_username'))return Response.json(allowed);if(url.includes('clear_username_login_attempts'))return Response.json(null);
   if(url.includes('/memberships?'))return Response.json(member?[{email:'fixture@example.invalid',user_id:'test-user'}]:[]);
   if(url.includes('/auth/v1/token'))return passwordOK?Response.json({access_token:'test-access',refresh_token:'test-refresh',user:{id:matching?'test-user':'other-user',email_confirmed_at:'2026-01-01'}}):Response.json({error:'private auth error'},{status:400});
   throw Error('Unexpected endpoint');
