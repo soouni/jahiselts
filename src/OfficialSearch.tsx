@@ -1,6 +1,6 @@
 import {useEffect,useState} from 'react';
 import {ChevronRight,LoaderCircle,MapPin,Search} from 'lucide-react';
-import {gazetteerSource,searchOfficialPlaces,type OfficialPlace} from './officialSearch';
+import {gazetteerSource,searchOfficialPlaces,type OfficialPlace} from './gazetteerSearch';
 
 export function OfficialSearch({query,onSelect}:{query:string;onSelect:(place:OfficialPlace)=>void}){
  const [region,setRegion]=useState<'637'|'all'>('637'),[retry,setRetry]=useState(0);

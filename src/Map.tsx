@@ -6,7 +6,7 @@ import Map from 'ol/Map';import View from 'ol/View';import Feature from 'ol/Feat
 import WKT from 'ol/format/WKT';
 import {transformExtent} from 'ol/proj';
 import {X} from 'lucide-react';
-import type {OfficialPlace} from './officialSearch';
+import type {OfficialPlace} from './gazetteerSearch';
 import type WMTS from 'ol/source/WMTS';import VectorSource from 'ol/source/Vector';import VectorLayer from 'ol/layer/Vector';import TileLayer from 'ol/layer/Tile';
 import {createBasemapSource} from './basemaps';
 import {mapColor,colorOutline,mapWidth} from './mapColors';

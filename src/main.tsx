@@ -2,7 +2,7 @@ import {MapLegend} from './MapLegend';
 import {symbolSize,placeTypes,symbolUrl} from './placeSymbols';
 import {PasswordLogin,PasswordSettings,UsernameSettings} from './PasswordForms';
 import {OfficialSearch} from './OfficialSearch';
-import type {OfficialPlace} from './officialSearch';
+import type {OfficialPlace} from './gazetteerSearch';
 import {ObjectColorPicker,ObjectWidthPicker} from './ObjectColorPicker';
 import {mapColor,colorName,mapWidth} from './mapColors';
 import {dateLocal,tallinnISO,localFromISO} from './time';
