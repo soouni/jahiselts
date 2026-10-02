@@ -36,8 +36,12 @@ function geometryTracks(entry:Entry){
   return '';
 }
 
-export function garminGpx(entries:Entry[]){
-  const permanent=entries.filter(entry=>!entry.deleted_at&&['area','line','place'].includes(entry.kind));
+export function garminGpx(entries:Entry[],boundary?:any){
+  const usefulPlaceTypes=new Set(['Jahimaja','Jahitorn','Soolakivi','Söödakoht','Kogunemiskoht','Parkimiskoht']);
+  const permanent=entries.filter(entry=>!entry.deleted_at&&(
+    (entry.kind==='place'&&usefulPlaceTypes.has(entry.properties.type))||
+    (entry.kind==='line'&&['Siht','Metsatee'].includes(entry.properties.type))
+  ));
   const waypoints=permanent
     .filter(entry=>entry.kind==='place'&&entry.geometry.type==='Point')
     .map(entry=>{
@@ -45,15 +49,22 @@ export function garminGpx(entries:Entry[]){
       const description=entryDescription(entry);
       return `<wpt lat="${lat}" lon="${lon}"><name>${xmlEscape(entryName(entry))}</name>${description?`<desc>${xmlEscape(description)}</desc>`:''}<type>${xmlEscape(entry.properties.type||'Koht')}</type></wpt>`;
     }).join('');
-  const tracks=permanent
-    .filter(entry=>entry.kind==='line'||entry.kind==='area')
-    .map(geometryTracks)
-    .join('');
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart</name><desc>JAH1000125 püsivad seltsiobjektid</desc><time>${new Date().toISOString()}</time></metadata>${waypoints}${tracks}</gpx>`;
+  const tracks=permanent.filter(entry=>entry.kind==='line').map(geometryTracks).join('');
+  const boundaryEntry=boundary?({kind:'line',geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}} as Entry):null;
+  const boundaryTrack=boundaryEntry?geometryTracks(boundaryEntry):'';
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart</name><desc>JAH1000125 püsivad seltsiobjektid</desc><time>${new Date().toISOString()}</time></metadata>${waypoints}${boundaryTrack}${tracks}</gpx>`;
 }
 
-export function downloadGarminGpx(entries:Entry[]){
-  const url=URL.createObjectURL(new Blob([garminGpx(entries)],{type:'application/gpx+xml;charset=utf-8'}));
+export async function downloadGarminGpx(entries:Entry[]){
+  let boundary:any=undefined;
+  try{
+    const response=await fetch(import.meta.env.BASE_URL+'data/boundary.geojson');
+    if(response.ok){
+      const geojson=await response.json();
+      boundary=geojson.type==='FeatureCollection'?geojson.features?.[0]?.geometry:geojson.type==='Feature'?geojson.geometry:geojson;
+    }
+  }catch{}
+  const url=URL.createObjectURL(new Blob([garminGpx(entries,boundary)],{type:'application/gpx+xml;charset=utf-8'}));
   const anchor=document.createElement('a');
   anchor.href=url;
   anchor.download='parnjoe-garmin.gpx';
