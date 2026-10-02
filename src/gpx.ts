@@ -12,6 +12,18 @@ const entryDescription=(entry:Entry)=>[
   entry.properties.description
 ].filter(Boolean).join(' · ');
 
+const garminSymbol=(entry:Entry)=>{
+  const symbols:Record<string,string>={
+    'Jahitorn':'Tree Stand',
+    'Söödakoht':'Food Source',
+    'Jahimaja':'Lodge',
+    'Parkimiskoht':'Parking Area',
+    'Soolakivi':'Water Source',
+    'Kogunemiskoht':'Pin, Green'
+  };
+  return symbols[entry.properties.type]||'Flag, Blue';
+};
+
 function track(name:string,coordinates:any[],description=''){
   const points=coordinates
     .filter(point=>Array.isArray(point)&&point.length>=2)
@@ -47,7 +59,7 @@ export function garminGpx(entries:Entry[],boundary?:any){
     .map(entry=>{
       const [lon,lat]=entry.geometry.coordinates;
       const description=entryDescription(entry);
-      return `<wpt lat="${lat}" lon="${lon}"><name>${xmlEscape(entryName(entry))}</name>${description?`<desc>${xmlEscape(description)}</desc>`:''}<type>${xmlEscape(entry.properties.type||'Koht')}</type></wpt>`;
+      return `<wpt lat="${lat}" lon="${lon}"><name>${xmlEscape(entryName(entry))}</name>${description?`<desc>${xmlEscape(description)}</desc>`:''}<type>${xmlEscape(entry.properties.type||'Koht')}</type><sym>${xmlEscape(garminSymbol(entry))}</sym></wpt>`;
     }).join('');
   const tracks=permanent.filter(entry=>entry.kind==='line').map(geometryTracks).join('');
   const boundaryEntry=boundary?({kind:'line',geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}} as Entry):null;
