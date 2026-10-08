@@ -4,9 +4,11 @@ const xmlEscape=(value:unknown)=>String(value??'').replace(/[&<>"']/g,char=>({
   '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'
 }[char]!));
 
-const entryName=(entry:Entry)=>entry.properties.name||entry.properties.alias||entry.properties.type||'Pärnjõe objekt';
+type GpxEntry = Pick<Entry,'geometry'|'properties'>;
 
-const entryDescription=(entry:Entry)=>[
+const entryName=(entry:GpxEntry)=>entry.properties.name||entry.properties.alias||entry.properties.type||'Pärnjõe objekt';
+
+const entryDescription=(entry:GpxEntry)=>[
   entry.properties.type,
   entry.properties.alias,
   entry.properties.description
@@ -33,7 +35,7 @@ function track(name:string,coordinates:any[],description=''){
   return `<trk><name>${xmlEscape(name)}</name>${description?`<desc>${xmlEscape(description)}</desc>`:''}<trkseg>${points}</trkseg></trk>`;
 }
 
-function geometryTracks(entry:Entry){
+function geometryTracks(entry:GpxEntry){
   const geometry=entry.geometry;
   const name=entryName(entry);
   const description=entryDescription(entry);
@@ -62,7 +64,7 @@ export function garminGpx(entries:Entry[],boundary?:any){
       return `<wpt lat="${lat}" lon="${lon}"><name>${xmlEscape(entryName(entry))}</name>${description?`<desc>${xmlEscape(description)}</desc>`:''}<type>${xmlEscape(entry.properties.type||'Koht')}</type><sym>${xmlEscape(garminSymbol(entry))}</sym></wpt>`;
     }).join('');
   const tracks=permanent.filter(entry=>entry.kind==='line').map(geometryTracks).join('');
-  const boundaryEntry=boundary?({kind:'line',geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}} as Entry):null;
+  const boundaryEntry:GpxEntry|null=boundary?{geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}}:null;
   const boundaryTrack=boundaryEntry?geometryTracks(boundaryEntry):'';
   return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart</name><desc>JAH1000125 püsivad seltsiobjektid</desc><time>${new Date().toISOString()}</time></metadata>${waypoints}${boundaryTrack}${tracks}</gpx>`;
 }
