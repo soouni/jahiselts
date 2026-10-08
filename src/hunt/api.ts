@@ -23,7 +23,7 @@ export async function listHunts(){
 export type ClubChoice={user_id:string;display_name:string};
 export type HuntDriveRow={id:string;sequence:number;title:string;status:string};
 export type HuntRow={id:string;title:string;type:string;status:string;leader_id:string;allow_self_selection:boolean;hunt_drives:HuntDriveRow[]};
-export type HuntPersonRow={id:string;hunt_id:string;user_id:string|null;display_name:string;role:string;status:string};
+export type HuntPersonRow={id:string;hunt_id:string;user_id:string|null;display_name:string;role:string;status:string;roster_id:string|null};
 export type HuntPositionRow={id:string;drive_id:string;number:number;location:{type:'Point';coordinates:[number,number]};assigned_participant_id:string|null;confirmed_at:string|null};
 export async function huntChoices():Promise<ClubChoice[]>{
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
@@ -66,4 +66,36 @@ export async function removeHuntPosition(positionId:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_positions').delete().eq('id',positionId);
  if(error)throw error;
+}
+
+export type RosterPerson={id:string;user_id:string|null;display_name:string;default_role:'hunter'|'driver'};
+export async function listRoster():Promise<RosterPerson[]>{
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.from('hunt_roster').select('id,user_id,display_name,default_role').order('display_name');
+ if(error)throw error;return data||[];
+}
+export async function addRosterPerson(name:string,role:'hunter'|'driver',userId?:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_roster').insert({display_name:name.trim(),default_role:role,user_id:userId||null});if(error)throw error;
+}
+export async function removeRosterPerson(id:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_roster').delete().eq('id',id);if(error)throw error;
+}
+export async function setRosterRole(id:string,role:'hunter'|'driver'){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_roster').update({default_role:role}).eq('id',id);if(error)throw error;
+}
+export async function addRosterParticipant(huntId:string,person:RosterPerson){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_participants').insert({hunt_id:huntId,roster_id:person.id,user_id:person.user_id,display_name:person.display_name,role:person.default_role});if(error)throw error;
+}
+export async function createHuntFromPrevious(previous:HuntRow,title:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const drives=previous.hunt_drives.slice().sort((a,b)=>a.sequence-b.sequence).map(d=>({title:d.title}));
+ const id=await createHunt({title,type:previous.type as HuntType,allowSelfSelection:previous.allow_self_selection,drives:drives.length?drives:[{title:'Aju 1'}]});
+ const {data,error}=await db.from('hunt_participants').select('user_id,roster_id,display_name,role').eq('hunt_id',previous.id);
+ if(error)throw new Error('Uus jaht loodi, aga osalejate lugemine ebaõnnestus: '+error.message);
+ if(data?.length){const {error:copyError}=await db.from('hunt_participants').insert(data.map(p=>({...p,hunt_id:id})));if(copyError)throw new Error('Uus jaht loodi, aga osalejate kopeerimine ebaõnnestus: '+copyError.message);}
+ return id;
 }
