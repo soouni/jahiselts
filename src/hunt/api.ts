@@ -33,7 +33,7 @@ export async function huntPeople(huntId:string):Promise<HuntPersonRow[]>{
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {data,error}=await db.from('hunt_participants').select('*').eq('hunt_id',huntId).order('display_name');if(error)throw error;return data||[];
 }
-export async function addHuntPerson(huntId:string,person:ClubChoice,role:'hunter'|'driver'|'leader'){
+export async function addHuntPerson(huntId:string,person:ClubChoice,role:'hunter'|'driver'|'dog_driver'|'leader'){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_participants').insert({hunt_id:huntId,user_id:person.user_id,display_name:person.display_name,role});if(error)throw error;
 }
@@ -68,13 +68,13 @@ export async function removeHuntPosition(positionId:string){
  if(error)throw error;
 }
 
-export type RosterPerson={id:string;user_id:string|null;display_name:string;default_role:'hunter'|'driver'};
+export type RosterPerson={id:string;user_id:string|null;display_name:string;default_role:'hunter'|'driver'|'dog_driver'};
 export async function listRoster():Promise<RosterPerson[]>{
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {data,error}=await db.from('hunt_roster').select('id,user_id,display_name,default_role').order('display_name');
  if(error)throw error;return data||[];
 }
-export async function addRosterPerson(name:string,role:'hunter'|'driver',userId?:string){
+export async function addRosterPerson(name:string,role:'hunter'|'driver'|'dog_driver',userId?:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_roster').insert({display_name:name.trim(),default_role:role,user_id:userId||null});if(error)throw error;
 }
@@ -82,7 +82,7 @@ export async function removeRosterPerson(id:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_roster').delete().eq('id',id);if(error)throw error;
 }
-export async function setRosterRole(id:string,role:'hunter'|'driver'){
+export async function setRosterRole(id:string,role:'hunter'|'driver'|'dog_driver'){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_roster').update({default_role:role}).eq('id',id);if(error)throw error;
 }
