@@ -1,3 +1,6 @@
+import {HuntPositionMap} from './HuntPositionMap';
+import {huntChoices,huntPeople,addHuntPerson,huntPositions,addHuntPosition,assignHuntPosition} from './api';
+import type {ClubChoice,HuntRow,HuntPersonRow,HuntPositionRow} from './api';
 import {createHunt,listHunts} from './api';
 import {useEffect} from 'react';
 import {useState} from 'react';
@@ -12,12 +15,47 @@ export function HuntPlanner(){
  const [draft,setDraft]=useState<DraftHunt>(initial);
  const [notice,setNotice]=useState('');
  const [saving,setSaving]=useState(false);
+ const [selected,setSelected]=useState<HuntRow|null>(null);
+ const [driveId,setDriveId]=useState('');
+ const [people,setPeople]=useState<HuntPersonRow[]>([]);
+ const [choices,setChoices]=useState<ClubChoice[]>([]);
+ const [positions,setPositions]=useState<HuntPositionRow[]>([]);
+ const [personChoice,setPersonChoice]=useState('');
+ const [personRole,setPersonRole]=useState<'hunter'|'driver'>('hunter');
+ const [positionPerson,setPositionPerson]=useState('');
+ const [placing,setPlacing]=useState(false);
+ const [working,setWorking]=useState(false);
+ async function openHunt(h:HuntRow){setSelected(h);setDriveId(h.hunt_drives?.slice().sort((a,b)=>a.sequence-b.sequence)[0]?.id||'');setNotice('');try{const [p,c]=await Promise.all([huntPeople(h.id),huntChoices()]);setPeople(p);setChoices(c);}catch(e){setNotice(String(e));}}
+ useEffect(()=>{if(!driveId){setPositions([]);return;}let active=true;huntPositions(driveId).then(p=>{if(active)setPositions(p);}).catch(e=>{if(active)setNotice(String(e));});return()=>{active=false;};},[driveId]);
+ async function addPerson(){if(!selected||!personChoice)return;const person=choices.find(c=>c.user_id===personChoice);if(!person)return;setWorking(true);try{await addHuntPerson(selected.id,person,personRole);setPeople(await huntPeople(selected.id));setPersonChoice('');setNotice('Osaleja lisatud.');}catch(e){setNotice(String(e));}finally{setWorking(false);}}
+ async function placePosition(coords:[number,number]){if(!placing||!driveId||!selected)return;setWorking(true);try{const number=Math.max(0,...positions.map(p=>p.number))+1;await addHuntPosition(driveId,number,coords,positionPerson||null);setPositions(await huntPositions(driveId));setNotice('Positsioon K'+number+' salvestatud.');setPlacing(false);}catch(e){setNotice(String(e));}finally{setWorking(false);}}
+ async function assign(positionId:string,personId:string){setWorking(true);try{await assignHuntPosition(positionId,personId||null);setPositions(await huntPositions(driveId));}catch(e){setNotice(String(e));}finally{setWorking(false);}}
+
  const [existing,setExisting]=useState<{id:string;title:string;status:string}[]>([]);
  useEffect(()=>{let active=true;listHunts().then(rows=>{if(active)setExisting(rows);}).catch(e=>{if(active)setNotice('Jahipäevade laadimine: '+e.message);});return()=>{active=false;};},[]);
  async function save(){if(!draft.title.trim()||draft.drives.some(d=>!d.title.trim())){setNotice('Sisesta jahi ja kõigi ajude nimed.');return;}setSaving(true);setNotice('');try{const id=await createHunt({title:draft.title,type:draft.type,allowSelfSelection:draft.allowSelfSelection,drives:draft.drives});setNotice('Jaht salvestatud! ID: '+id);setExisting(await listHunts());setDraft(initial);}catch(e){setNotice('Salvestamine ebaõnnestus: '+(e instanceof Error?e.message:String(e)));}finally{setSaving(false);}}
 
  const addDrive=()=>setDraft(h=>({...h,drives:[...h.drives,{id:crypto.randomUUID(),title:'Aju '+(h.drives.length+1),positions:0}]}));
  return <section aria-label="Jahi planeerimine">
+ {selected&&<div>
+ <button type="button" onClick={()=>{setSelected(null);setDriveId('');setPlacing(false);}}>← Tagasi jahipäevade juurde</button>
+ <h3>{selected.title}</h3>
+ <label className="field"><span>Vali aju</span><select value={driveId} onChange={e=>{setDriveId(e.target.value);setPlacing(false);}}>{selected.hunt_drives?.slice().sort((a,b)=>a.sequence-b.sequence).map(d=><option key={d.id} value={d.id}>{d.sequence}. {d.title}</option>)}</select></label>
+ <h3>Jahimehed ja ajajad</h3>
+ <div className="field"><span>Lisa seltsi liige</span><select value={personChoice} onChange={e=>setPersonChoice(e.target.value)}><option value="">Vali jahimees</option>{choices.filter(c=>!people.some(p=>p.user_id===c.user_id)).map(c=><option key={c.user_id} value={c.user_id}>{c.display_name}</option>)}</select>
+ <select value={personRole} onChange={e=>setPersonRole(e.target.value as 'hunter'|'driver')}><option value="hunter">Kütt</option><option value="driver">Ajaja</option></select>
+ <button type="button" disabled={working||!personChoice} onClick={addPerson}>Lisa osaleja</button></div>
+ {people.map(p=><div className="memberrow" key={p.id}><strong>{p.display_name}</strong><small>{p.role==='driver'?'Ajaja':p.role==='leader'?'Jahijuht':'Kütt'}</small></div>)}
+ <h3>Positsioonid kaardil</h3>
+ <p className="muted">Vali jahimees ja vajuta „Lisa positsioon”. Seejärel puuduta kaardil asukohta. Nimed on kaardil pidevalt nähtavad. Kaardipunkt ei asenda jahiohutuse kontrolli.</p>
+ <label className="field"><span>Positsioonile määratud kütt</span><select value={positionPerson} onChange={e=>setPositionPerson(e.target.value)}><option value="">Määramata (vaba)</option>{people.filter(p=>p.role!=='driver').map(p=><option key={p.id} value={p.id}>{p.display_name}</option>)}</select></label>
+ <button type="button" disabled={working||!driveId} onClick={()=>setPlacing(!placing)}>{placing?'Tühista positsiooni lisamine':'+ Lisa positsioon kaardile'}</button>
+ {placing&&<p role="status">Puuduta kaardil soovitud kohta, et salvestada järgmine K-positsioon.</p>}
+ <HuntPositionMap positions={positions} people={people} onPlace={placePosition}/>
+ {positions.map(p=><div className="memberrow" key={p.id}><strong>K{p.number}</strong><select aria-label={'K'+p.number+' kütt'} disabled={working} value={p.assigned_participant_id||''} onChange={e=>assign(p.id,e.target.value)}><option value="">Vaba</option>{people.filter(person=>person.role!=='driver').map(person=><option key={person.id} value={person.id}>{person.display_name}</option>)}</select></div>)}
+ {notice&&<p role="status" className="notice">{notice}</p>}
+ </div>}
+ {!selected&&<>
   <p className="muted">Loo jahipäev ja järjestikused ajud. Positsioonide kaardile määramine lisandub järgmises etapis.</p>
   <label className="field"><span>Jahi nimi</span><input value={draft.title} maxLength={120} placeholder="Näiteks laupäevane ühisjaht" onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
   <label className="field"><span>Jahiliik</span><select value={draft.type} onChange={e=>setDraft({...draft,type:e.target.value as HuntType})}><option value="drive">Ajujaht</option><option value="stand">Varitsusjaht</option><option value="other">Muu</option></select></label>
@@ -28,6 +66,7 @@ export function HuntPlanner(){
   <p className="muted">Positsioonid, eesnimed, GPS-kinnitused ja jahijuhi teated lisanduvad järgmistes etappides. Korraga saab aktiivne olla üks aju.</p>
   <button type="button" className="primary full" onClick={save} disabled={saving}>{saving?'Salvestan…':'Salvesta jaht'}</button>
   {notice&&<p role="status" className="notice">{notice}</p>}
-  <h3>Salvestatud jahid</h3>{existing.length?existing.map(h=><div className="memberrow" key={h.id}><strong>{h.title}</strong><small>{h.status}</small></div>):<p className="muted">Jahte veel ei ole.</p>}
+  <h3>Salvestatud jahid</h3>{existing.length?existing.map(h=><div className="memberrow" key={h.id}><strong>{h.title}</strong><small>{h.status}</small><button type="button" onClick={()=>openHunt(h as HuntRow)}>Ava jaht</button></div>):<p className="muted">Jahte veel ei ole.</p>}
+ </>}
  </section>;
 }
