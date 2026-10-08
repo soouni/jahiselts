@@ -19,3 +19,33 @@ export async function listHunts(){
  if(error)throw error;
  return data||[];
 }
+
+export type ClubChoice={user_id:string;display_name:string};
+export type HuntDriveRow={id:string;sequence:number;title:string;status:string};
+export type HuntRow={id:string;title:string;type:string;status:string;leader_id:string;allow_self_selection:boolean;hunt_drives:HuntDriveRow[]};
+export type HuntPersonRow={id:string;hunt_id:string;user_id:string|null;display_name:string;role:string;status:string};
+export type HuntPositionRow={id:string;drive_id:string;number:number;location:{type:'Point';coordinates:[number,number]};assigned_participant_id:string|null;confirmed_at:string|null};
+export async function huntChoices():Promise<ClubChoice[]>{
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('hunt_member_choices');if(error)throw error;return data||[];
+}
+export async function huntPeople(huntId:string):Promise<HuntPersonRow[]>{
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.from('hunt_participants').select('*').eq('hunt_id',huntId).order('display_name');if(error)throw error;return data||[];
+}
+export async function addHuntPerson(huntId:string,person:ClubChoice,role:'hunter'|'driver'|'leader'){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_participants').insert({hunt_id:huntId,user_id:person.user_id,display_name:person.display_name,role});if(error)throw error;
+}
+export async function huntPositions(driveId:string):Promise<HuntPositionRow[]>{
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.from('hunt_positions').select('*').eq('drive_id',driveId).order('number');if(error)throw error;return data||[];
+}
+export async function addHuntPosition(driveId:string,number:number,coordinates:[number,number],personId:string|null){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_positions').insert({drive_id:driveId,number,location:{type:'Point',coordinates},assigned_participant_id:personId});if(error)throw error;
+}
+export async function assignHuntPosition(positionId:string,personId:string|null){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_positions').update({assigned_participant_id:personId,confirmed_at:null}).eq('id',positionId);if(error)throw error;
+}
