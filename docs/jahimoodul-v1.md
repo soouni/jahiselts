@@ -22,3 +22,9 @@ Esimene etapp lisab tüübistatud domeenimudeli ja puhtad töövoo reeglid, ilma
 
 ## Ohutus
 GPS ei tõenda, et inimene asub ainult kuvatud punktis. Kaart ei asenda jahijuhi ohutuskorraldusi, sidekontrolli ega vahetut visuaalset tuvastamist. Kõik asukohad peavad kuvama viimase uuenduse aja ja täpsuse.
+
+## Kaardil olevad nimed
+- Kõigi aktiivse aju jahimeeste eesnimed on kaardil püsivalt nähtavad, mitte ainult märgile vajutades.
+- Kütipositsioonidel kasutatakse tähist K1, K2 jne koos eesnimega; ajajatel A1, A2 jne.
+- Sama eesnime korral lisatakse eristamiseks perekonnanime esitäht.
+- Sildid järgivad kaardi liikumist ja suumi; kattumisi vähendatakse automaatse paigutusega. Nime nähtavus ei tähenda GPS-asukoha ajakohasust.
