@@ -99,3 +99,13 @@ export async function createHuntFromPrevious(previous:HuntRow,title:string){
  if(data?.length){const {error:copyError}=await db.from('hunt_participants').insert(data.map(p=>({...p,hunt_id:id})));if(copyError)throw new Error('Uus jaht loodi, aga osalejate kopeerimine ebaõnnestus: '+copyError.message);}
  return id;
 }
+
+export async function finishHunt(huntId:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data:authData,error:authError}=await db.auth.getUser();
+ if(authError||!authData.user)throw new Error('Jahi lõpetamiseks logi sisse.');
+ const {data,error}=await db.from('hunts').update({status:'finished'}).eq('id',huntId).eq('leader_id',authData.user.id).neq('status','finished').select('id,status').maybeSingle();
+ if(error)throw error;
+ if(!data)throw new Error('Jaht on juba lõpetatud või puudub sul selle lõpetamiseks jahijuhi õigus.');
+ return data;
+}
