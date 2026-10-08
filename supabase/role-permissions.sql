@@ -34,6 +34,6 @@ CREATE POLICY hunts_insert ON public.hunts FOR INSERT TO authenticated WITH CHEC
 DROP POLICY IF EXISTS hunts_update ON public.hunts;
 CREATE POLICY hunts_update ON public.hunts FOR UPDATE TO authenticated
  USING (public.can_manage_hunt(id)) WITH CHECK (public.can_manage_hunt(id));
--- The remaining child table policies and member administration functions must be
--- audited and updated before this migration is safe to deploy.
+-- NOT DEPLOYABLE: child table RLS and member administration functions still require audit.
+-- This is a design document only, not an executable migration.
 ROLLBACK;
