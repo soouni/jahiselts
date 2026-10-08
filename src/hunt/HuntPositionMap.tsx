@@ -9,8 +9,18 @@ import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import {fromLonLat,toLonLat} from 'ol/proj';
-import {Style,Fill,Stroke,Circle as CircleStyle,Text} from 'ol/style';
+import {Style,Fill,Stroke,Icon,Text} from 'ol/style';
 import type {HuntPositionRow,HuntPersonRow} from './api';
+
+function markerSvg(driver:boolean){
+ const icon=driver
+ ? '<path d="M8 5c-2 1-3 4-3 7l2 5 5-1 1-5-2-5zM17 13c-2 1-3 4-3 7l2 5 5-1 1-5-2-5z" transform="translate(0 -2) scale(.9)" fill="white"/><circle cx="8" cy="4" r="1.5" fill="white"/><circle cx="18" cy="12" r="1.5" fill="white"/>'
+ : '<path d="M12 4h4l1 4v13H11V8zM12 3l1-2h2l1 2zM11 20h6v2h-6z" fill="white" transform="translate(-1 1)"/>';
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="#176c52" stroke="white" stroke-width="4"/><g transform="translate(10 10) scale(1.15)">'+icon+'</g></svg>';
+ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+const hunterMarker=markerSvg(false);
+const driverMarker=markerSvg(true);
 
 export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void}){
  const el=useRef<HTMLDivElement>(null);
@@ -43,8 +53,8 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
    const suffix=duplicate&&person?' '+(person.display_name.trim().split(/\s+/)[1]||'').slice(0,1)+'.':'';
    const isDriver=person?.role==='driver';
    feature.setStyle(new Style({
-    image:new CircleStyle({radius:9,fill:new Fill({color:'#176c52'}),stroke:new Stroke({color:'#fff',width:3})}),
-    text:new Text({text:(isDriver?'👣 ':'● ')+firstName+suffix,font:'bold 14px sans-serif',offsetY:-24,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:5}),padding:[3,4,3,4]})
+    image:new Icon({src:isDriver?driverMarker:hunterMarker,anchor:[0.5,0.5],scale:0.85}),
+    text:new Text({text:firstName+suffix,font:'bold 14px sans-serif',offsetY:-36,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:5}),padding:[3,4,3,4]})
    }));
    src.addFeature(feature);
   });
