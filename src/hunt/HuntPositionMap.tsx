@@ -4,6 +4,7 @@ import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import VectorLayer from 'ol/layer/Vector';
 import OSM from 'ol/source/OSM';
+import GeoJSON from 'ol/format/GeoJSON';
 import VectorSource from 'ol/source/Vector';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
@@ -15,14 +16,21 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
  const el=useRef<HTMLDivElement>(null);
  const map=useRef<Map|null>(null);
  const source=useRef(new VectorSource());
+ const boundary=useRef(new VectorSource());
  const onPlaceRef=useRef(onPlace);
  onPlaceRef.current=onPlace;
  useEffect(()=>{
   if(!el.current)return;
-  const m=new Map({target:el.current,layers:[new TileLayer({source:new OSM()}),new VectorLayer({source:source.current,declutter:false})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
+  const m=new Map({target:el.current,layers:[new TileLayer({source:new OSM()}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:false})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
   map.current=m;
+  let cancelled=false;
+  fetch(import.meta.env.BASE_URL+'data/boundary.geojson').then(response=>{if(!response.ok)throw new Error('Jahipiirkonna piir ei laadinud.');return response.json();}).then(geojson=>{
+   if(cancelled)return;
+   boundary.current.addFeatures(new GeoJSON().readFeatures(geojson,{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}));
+   if(boundary.current.getFeatures().length&&!positions.length)m.getView().fit(boundary.current.getExtent(),{padding:[25,25,25,25],maxZoom:13});
+  }).catch(error=>{if(!cancelled)console.error('Jahipiirkonna piir:',error);});
   m.on('singleclick',event=>{const p=toLonLat(event.coordinate);onPlaceRef.current([p[0],p[1]]);});
-  return()=>{m.setTarget(undefined);map.current=null;};
+  return()=>{cancelled=true;m.setTarget(undefined);map.current=null;boundary.current.clear();};
  },[]);
  useEffect(()=>{
   const src=source.current;src.clear();
@@ -32,9 +40,10 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
    const firstName=person?.display_name.trim().split(/\s+/)[0]||'Vaba';
    const duplicate=people.filter(p=>p.display_name.trim().split(/\s+/)[0]===firstName).length>1;
    const suffix=duplicate&&person?' '+(person.display_name.trim().split(/\s+/)[1]||'').slice(0,1)+'.':'';
+   const isDriver=person?.role==='driver';
    feature.setStyle(new Style({
     image:new CircleStyle({radius:9,fill:new Fill({color:'#176c52'}),stroke:new Stroke({color:'#fff',width:3})}),
-    text:new Text({text:'K'+position.number+' '+firstName+suffix,font:'bold 14px sans-serif',offsetY:-24,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:5}),padding:[3,4,3,4]})
+    text:new Text({text:(isDriver?'👣 ':'● ')+firstName+suffix,font:'bold 14px sans-serif',offsetY:-24,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:5}),padding:[3,4,3,4]})
    }));
    src.addFeature(feature);
   });
