@@ -108,3 +108,16 @@ dialog.sheet:has(.hunt-fullscreen)>.sheetbody{padding:0!important;margin:0!impor
  .basemap-cycle .basemap-cycle-button{width:56px!important;height:56px!important;min-height:56px!important}
  .hunt-mode-switch{top:207px!important;left:22px!important;right:auto!important;max-width:min(260px,75vw)}
 }
+
+
+/* Ühtne minimalistlik ikoonipaar: kaardikihid ja põdrasarved */
+.basemap.basemap-cycle{left:22px!important;right:auto!important}
+.basemap-cycle .basemap-cycle-button,.hunt-mode-switch .hunt-round-button{width:64px!important;height:64px!important;min-height:64px!important;border-radius:50%!important;background:#fff!important;border:0!important;color:#111!important;box-shadow:0 3px 16px #0003!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:0!important}
+.basemap-layer-icon{position:relative;display:block;width:36px;height:35px}
+.basemap-layer-icon i{position:absolute;left:6px;width:24px;height:24px;background:#111;transform:rotate(45deg) scaleY(.55);border-radius:1px}
+.basemap-layer-icon i:first-child{top:0}
+.basemap-layer-icon i:last-child{top:12px;background:#111;border:0;clip-path:polygon(0 0,100% 0,100% 26%,26% 100%,0 74%);transform:rotate(45deg) scaleY(.55)}
+.hunt-mode-switch{align-items:flex-start!important}
+.hunt-mode-switch .hunt-round-button.hunt-mode-active{background:#173e32!important;color:#fff!important;box-shadow:0 0 0 3px #fff,0 3px 16px #0004!important}
+.hunt-antlers{width:39px;height:39px;display:block}
+@media(max-width:720px){.basemap-cycle .basemap-cycle-button,.hunt-mode-switch .hunt-round-button{width:60px!important;height:60px!important;min-height:60px!important}.hunt-mode-switch{top:210px!important}.hunt-antlers{width:37px;height:37px}}
