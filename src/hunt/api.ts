@@ -49,3 +49,21 @@ export async function assignHuntPosition(positionId:string,personId:string|null)
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_positions').update({assigned_participant_id:personId,confirmed_at:null}).eq('id',positionId);if(error)throw error;
 }
+
+export async function removeHuntPerson(personId:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error:clearError}=await db.from('hunt_positions').update({assigned_participant_id:null,confirmed_at:null}).eq('assigned_participant_id',personId);
+ if(clearError)throw clearError;
+ const {error}=await db.from('hunt_participants').delete().eq('id',personId);
+ if(error)throw error;
+}
+export async function moveHuntPosition(positionId:string,coordinates:[number,number]){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_positions').update({location:{type:'Point',coordinates},confirmed_at:null,confirmation_accuracy_m:null,confirmation_distance_m:null}).eq('id',positionId);
+ if(error)throw error;
+}
+export async function removeHuntPosition(positionId:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_positions').delete().eq('id',positionId);
+ if(error)throw error;
+}
