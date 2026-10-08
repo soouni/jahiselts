@@ -43,7 +43,6 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
    const firstName=person?.display_name.trim().split(/\s+/)[0]||'Vaba';
    const duplicate=people.filter(p=>p.display_name.trim().split(/\s+/)[0]===firstName).length>1;
    const suffix=duplicate&&person?' '+(person.display_name.trim().split(/\s+/)[1]||'').slice(0,1)+'.':'';
-   const isDriver=person?.role==='driver';
    feature.setStyle(new Style({
     image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.85}),
     text:new Text({text:firstName+suffix,font:'bold 14px sans-serif',offsetY:-36,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:5}),padding:[3,4,3,4]})
