@@ -3,7 +3,8 @@ import type {RosterPerson} from './api';
 import {HuntPositionMap} from './HuntPositionMap';
 import {huntChoices,huntPeople,addHuntPerson,huntPositions,addHuntPosition,assignHuntPosition,removeHuntPerson,moveHuntPosition,removeHuntPosition} from './api';
 import type {ClubChoice,HuntRow,HuntPersonRow,HuntPositionRow} from './api';
-import {createHunt,listHunts} from './api';
+import {createHunt,listHunts,finishHunt} from './api';
+import {db} from '../api';
 import {useEffect} from 'react';
 import {useState} from 'react';
 import type {HuntType} from './types';
@@ -33,6 +34,10 @@ export function HuntPlanner({onExit}:{onExit:()=>void}){
  const [newRole,setNewRole]=useState<'hunter'|'driver'|'dog_driver'>('hunter');
  const [rosterOpen,setRosterOpen]=useState(false);
  const [fullMap,setFullMap]=useState(false);
+ const [canFinish,setCanFinish]=useState(false);
+ useEffect(()=>{db?.auth.getUser().then(({data})=>setCanFinish(Boolean(selected&&data.user?.id===selected.leader_id)));},[selected]);
+ async function completeSelectedHunt(){if(!selected||working||selected.status==='finished')return;if(!window.confirm('Kas lõpetada jaht „'+selected.title+'”? Jaht jääb ajalukku, kuid seda ei saa enam aktiivse jahina kasutada.'))return;setWorking(true);try{await finishHunt(selected.id);setSelected({...selected,status:'finished'});setExisting(await listHunts());setPlacing(false);setMovingId(null);setFullMap(false);setNotice('Jaht lõpetatud. Osalejad ja positsioonid on ajaloo jaoks alles.');}catch(e){setNotice('Jahi lõpetamine ebaõnnestus: '+String(e));}finally{setWorking(false);}}
+
  useEffect(()=>{listRoster().then(setRoster).catch(e=>setNotice('Nimekirja laadimine: '+String(e)));},[]);
  async function createRosterEntry(){if(!newName.trim())return;setWorking(true);try{await addRosterPerson(newName,newRole);setRoster(await listRoster());setNewName('');}catch(e){setNotice(String(e));}finally{setWorking(false);}}
  async function toggleParticipant(person:RosterPerson,active:boolean){if(!selected)return;setWorking(true);try{if(active)await addRosterParticipant(selected.id,person);else{const participant=people.find(p=>p.roster_id===person.id||!!person.user_id&&p.user_id===person.user_id);if(participant)await removeHuntPerson(participant.id);}setPeople(await huntPeople(selected.id));if(driveId)setPositions(await huntPositions(driveId));}catch(e){setNotice(String(e));}finally{setWorking(false);}}
@@ -57,6 +62,7 @@ export function HuntPlanner({onExit}:{onExit:()=>void}){
  {selected&&<div>
  <button type="button" onClick={()=>{setSelected(null);setDriveId('');setPlacing(false);setMovingId(null);setFullMap(false);}}>← Tagasi jahipäevade juurde</button>
  <h3>{selected.title}</h3>
+ <div className="hunt-finish-row"><span className="muted">{selected.status==='finished'?'Jaht lõpetatud':'Staatus: '+(selected.status==='active'?'aktiivne':selected.status==='paused'?'peatatud':'planeeritud')}</span>{canFinish&&selected.status!=='finished'&&<button type="button" className="hunt-finish-button" disabled={working} onClick={completeSelectedHunt}>{working?'Palun oota…':'Lõpeta jaht'}</button>}</div>
  <label className="field"><span>Vali aju</span><select value={driveId} onChange={e=>{setDriveId(e.target.value);setPlacing(false);setMovingId(null);}}>{selected.hunt_drives?.slice().sort((a,b)=>a.sequence-b.sequence).map(d=><option key={d.id} value={d.id}>{d.sequence}. {d.title}</option>)}</select></label>
  <h3>Jahimehed ja ajajad</h3>
  <div className="hunt-counts"><strong>Kütid {positions.filter(pos=>people.some(p=>p.id===pos.assigned_participant_id&&(p.role!=='driver'&&p.role!=='dog_driver'))).length}/{people.filter(p=>(p.role!=='driver'&&p.role!=='dog_driver')).length}</strong><strong>Ajajad {positions.filter(pos=>people.some(p=>p.id===pos.assigned_participant_id&&(p.role==='driver'||p.role==='dog_driver'))).length}/{people.filter(p=>(p.role==='driver'||p.role==='dog_driver')).length}</strong></div>
