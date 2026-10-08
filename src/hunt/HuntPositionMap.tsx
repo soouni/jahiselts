@@ -27,7 +27,8 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
   fetch(import.meta.env.BASE_URL+'data/boundary.geojson').then(response=>{if(!response.ok)throw new Error('Jahipiirkonna piir ei laadinud.');return response.json();}).then(geojson=>{
    if(cancelled)return;
    boundary.current.addFeatures(new GeoJSON().readFeatures(geojson,{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}));
-   if(boundary.current.getFeatures().length&&!positions.length)m.getView().fit(boundary.current.getExtent(),{padding:[25,25,25,25],maxZoom:13});
+   const extent=boundary.current.getExtent();
+   if(extent&&boundary.current.getFeatures().length&&!positions.length)m.getView().fit(extent,{padding:[25,25,25,25],maxZoom:13});
   }).catch(error=>{if(!cancelled)console.error('Jahipiirkonna piir:',error);});
   m.on('singleclick',event=>{const p=toLonLat(event.coordinate);onPlaceRef.current([p[0],p[1]]);});
   return()=>{cancelled=true;m.setTarget(undefined);map.current=null;boundary.current.clear();};
