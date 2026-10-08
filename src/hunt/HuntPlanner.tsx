@@ -47,12 +47,12 @@ export function HuntPlanner(){
  <button type="button" disabled={working||!personChoice} onClick={addPerson}>Lisa osaleja</button></div>
  {people.map(p=><div className="memberrow" key={p.id}><strong>{p.display_name}</strong><small>{p.role==='driver'?'Ajaja':p.role==='leader'?'Jahijuht':'Kütt'}</small></div>)}
  <h3>Positsioonid kaardil</h3>
- <p className="muted">Vali jahimees ja vajuta „Lisa positsioon”. Seejärel puuduta kaardil asukohta. Nimed on kaardil pidevalt nähtavad. Kaardipunkt ei asenda jahiohutuse kontrolli.</p>
- <label className="field"><span>Positsioonile määratud kütt</span><select value={positionPerson} onChange={e=>setPositionPerson(e.target.value)}><option value="">Määramata (vaba)</option>{people.filter(p=>p.role!=='driver').map(p=><option key={p.id} value={p.id}>{p.display_name}</option>)}</select></label>
+ <p className="muted">Vali kütt või ajaja ja vajuta „Lisa positsioon”. Seejärel puuduta kaardil asukohta. Nimed on kaardil pidevalt nähtavad. Kaardipunkt ei asenda jahiohutuse kontrolli.</p>
+ <label className="field"><span>Positsioonile määratud osaleja</span><select value={positionPerson} onChange={e=>setPositionPerson(e.target.value)}><option value="">Määramata (vaba)</option>{people.map(p=><option key={p.id} value={p.id}>{p.display_name}</option>)}</select></label>
  <button type="button" disabled={working||!driveId} onClick={()=>setPlacing(!placing)}>{placing?'Tühista positsiooni lisamine':'+ Lisa positsioon kaardile'}</button>
  {placing&&<p role="status">Puuduta kaardil soovitud kohta, et salvestada järgmine K-positsioon.</p>}
  <HuntPositionMap positions={positions} people={people} onPlace={placePosition}/>
- {positions.map(p=><div className="memberrow" key={p.id}><strong>K{p.number}</strong><select aria-label={'K'+p.number+' kütt'} disabled={working} value={p.assigned_participant_id||''} onChange={e=>assign(p.id,e.target.value)}><option value="">Vaba</option>{people.filter(person=>person.role!=='driver').map(person=><option key={person.id} value={person.id}>{person.display_name}</option>)}</select></div>)}
+ {positions.map(p=><div className="memberrow" key={p.id}><strong>K{p.number}</strong><select aria-label={'Positsiooni '+p.number+' osaleja'} disabled={working} value={p.assigned_participant_id||''} onChange={e=>assign(p.id,e.target.value)}><option value="">Vaba</option>{people.map(person=><option key={person.id} value={person.id}>{person.display_name}</option>)}</select></div>)}
  {notice&&<p role="status" className="notice">{notice}</p>}
  </div>}
  {!selected&&<>
