@@ -125,3 +125,7 @@ dialog.sheet:has(.hunt-fullscreen)>.sheetbody{padding:0!important;margin:0!impor
 /* Terav kahekihiline SVG-ikoon, ilma kattuvate CSS-rombide moonutuseta. */
 .basemap-layer-svg{display:block;width:38px;height:38px;color:#111;flex-shrink:0}
 .hunt-antlers{stroke-width:3.8}
+
+.hunt-finish-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
+.hunt-finish-button{border:1px solid #b94b41!important;color:#a52c25!important;background:#fff!important;font-weight:700;border-radius:12px;padding:10px 15px}
+.hunt-finish-button:disabled{opacity:.5}
