@@ -58,3 +58,13 @@
 .hunt-fullscreen-list{padding:10px;display:flex;gap:8px;align-items:center;overflow-x:auto;max-width:100%;background:#fff}
 .hunt-fullscreen-list button{white-space:nowrap;flex-shrink:0}
 @media(max-width:600px){.hunt-fullscreen-list{padding-bottom:max(12px,env(safe-area-inset-bottom))}.hunt-fullscreen-bar strong{font-size:14px}}
+
+
+/* Täisekraani jahikaart peab jääma modaaldialoogi nähtavasse alasse (top layer). */
+dialog.sheet:has(.hunt-fullscreen){position:fixed!important;inset:0!important;margin:0!important;padding:0!important;width:100vw!important;max-width:none!important;height:100dvh!important;max-height:none!important;border:0!important;border-radius:0!important;overflow:hidden!important}
+dialog.sheet:has(.hunt-fullscreen)>header{display:none!important}
+dialog.sheet:has(.hunt-fullscreen)>.sheetbody{padding:0!important;margin:0!important;max-height:none!important;height:100%!important;overflow:visible!important}
+.hunt-fullscreen{inset:0!important;width:100%;height:100%;height:100dvh;z-index:100;overflow:hidden}
+.hunt-fullscreen-bar{position:relative;z-index:10;min-height:62px;padding-top:max(12px,env(safe-area-inset-top));padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right));background:white;box-shadow:0 1px 5px #0002}
+.hunt-map-back{background:#173e32!important;color:white!important;border-radius:12px!important;font-weight:700!important;padding:12px 16px!important;white-space:nowrap}
+@media(max-width:600px){.hunt-fullscreen-bar{gap:6px;min-height:58px}.hunt-fullscreen-bar strong{display:none}.hunt-map-back{font-size:14px!important}.hunt-fullscreen-list{flex-shrink:0}}
