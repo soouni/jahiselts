@@ -3,7 +3,7 @@ import type {RosterPerson} from './api';
 import {HuntPositionMap} from './HuntPositionMap';
 import {huntChoices,huntPeople,addHuntPerson,huntPositions,addHuntPosition,assignHuntPosition,removeHuntPerson,moveHuntPosition,removeHuntPosition} from './api';
 import type {ClubChoice,HuntRow,HuntPersonRow,HuntPositionRow} from './api';
-import {createHunt,listHunts,finishHunt,canManageHunt,assignHuntLeader} from './api';
+import {createHunt,listHunts,finishHunt,assignHuntLeader} from './api';
 import {db} from '../api';
 import {useEffect} from 'react';
 import {useState} from 'react';
@@ -38,8 +38,8 @@ export function HuntPlanner({onExit,clubRole='member'}:{onExit:()=>void;clubRole
  const [currentUid,setCurrentUid]=useState('');
  const [leaderChoice,setLeaderChoice]=useState('');
  const canCreate=['owner','admin'].includes(clubRole);
- const canManage=Boolean(selected&&(clubRole==='owner'||clubRole==='admin'||selected.leader_id===currentUid));
- useEffect(()=>{db?.auth.getUser().then(({data})=>setCurrentUid(data.user?.id||'');setCanFinish(Boolean(selected&&(clubRole==='owner'||clubRole==='admin'||data.user?.id===selected.leader_id))));},[selected,clubRole]);
+ const canManage=Boolean(selected&&selected.status!=='finished'&&(clubRole==='owner'||clubRole==='admin'||selected.leader_id===currentUid));
+ useEffect(()=>{db?.auth.getUser().then(({data})=>{setCurrentUid(data.user?.id||'');setCanFinish(Boolean(selected&&(clubRole==='owner'||clubRole==='admin'||data.user?.id===selected.leader_id)));});},[selected,clubRole]);
  async function completeSelectedHunt(){if(!selected||working||selected.status==='finished')return;if(!window.confirm('Kas lõpetada jaht „'+selected.title+'”? Jaht jääb ajalukku, kuid seda ei saa enam aktiivse jahina kasutada.'))return;setWorking(true);try{await finishHunt(selected.id);setSelected({...selected,status:'finished'});setExisting(await listHunts());setPlacing(false);setMovingId(null);setFullMap(false);setNotice('Jaht lõpetatud. Osalejad ja positsioonid on ajaloo jaoks alles.');}catch(e){setNotice('Jahi lõpetamine ebaõnnestus: '+String(e));}finally{setWorking(false);}}
 
  useEffect(()=>{listRoster().then(setRoster).catch(e=>setNotice('Nimekirja laadimine: '+String(e)));},[]);
