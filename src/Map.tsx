@@ -34,31 +34,17 @@ const draftStyle=()=>{const color=callbacks.current.drawingColor,width=callbacks
 ];};
 const draftLayer=new VectorLayer({source:draft.current,style:draftStyle});
 const gpsLayer = new VectorLayer({source:gps.current,style:new Style({fill:new Fill({color:'rgba(38,126,231,.13)'}),stroke:new Stroke({color:'#2680eb',width:1}),image:new CircleStyle({radius:7,fill:new Fill({color:'#1976df'}),stroke:new Stroke({color:'#fff',width:3})})})});
-// The visual marker can be displaced from its stored position to avoid overlaps.
-// Reuse the same screen-space placement for rendering and tap selection.
-const huntDisplayCoordinate=(feature:Feature,resolution:number):number[]=>{
- const features=huntSource.current.getFeatures().sort((a,b)=>String(a.get('huntPositionId')).localeCompare(String(b.get('huntPositionId'))));
- const coordinate=(feature.getGeometry() as Point).getCoordinates();
- const nearby=features.filter(other=>{const c=(other.getGeometry() as Point).getCoordinates();return Math.hypot(c[0]-coordinate[0],c[1]-coordinate[1])<resolution*95;});
- const count=nearby.length;
- if(count<=1)return coordinate;
- const index=nearby.indexOf(feature);
- const angle=2*Math.PI*index/count-Math.PI/2;
- const radius=Math.max(45,Math.min(85,count*13));
- return [coordinate[0]+Math.cos(angle)*radius*resolution,coordinate[1]+Math.sin(angle)*radius*resolution];
-};
-const huntLayer=new VectorLayer({source:huntSource.current,declutter:false,style:(f,resolution)=>{return new Style({geometry:new Point(huntDisplayCoordinate(f as Feature,resolution)),image:new Icon({src:huntMarkerUrl(f.get('role')),scale:.9,anchor:[.5,.5]}),text:new Text({text:f.get('name'),offsetY:-36,font:'700 14px system-ui',fill:new Fill({color:'#173e32'}),stroke:new Stroke({color:'#fff',width:5})})});}});
+const huntLayer=new VectorLayer({source:huntSource.current,declutter:false,style:f=>{return new Style({image:new Icon({src:huntMarkerUrl(f.get('role')),scale:.9,anchor:[.5,.5]}),text:new Text({text:f.get('name'),offsetY:-36,font:'700 14px system-ui',fill:new Fill({color:'#173e32'}),stroke:new Stroke({color:'#fff',width:5})})});}});
 const searchLayer=new VectorLayer({source:search.current,style:[new Style({stroke:new Stroke({color:'#fff',width:8})}),new Style({stroke:new Stroke({color:'#d72f79',width:4}),fill:new Fill({color:'rgba(215,47,121,.10)'}),image:new CircleStyle({radius:10,fill:new Fill({color:'#d72f79'}),stroke:new Stroke({color:'#fff',width:3})})})]});
 const m=new Map({target:el.current!,view:new View({center:fromLonLat([24.887,58.638]),zoom:11}),controls:defaultControls({zoom:false,rotate:false,attribution:false}),layers:[boundaryLayer,entriesLayer,draftLayer,gpsLayer,searchLayer,huntLayer]});map.current=m;setMapInstance(m);
-m.on('singleclick',ev=>{if(callbacks.current.drawing||callbacks.current.measuring)return;if(callbacks.current.huntMode){if(callbacks.current.huntMoving){const c=toLonLat(ev.coordinate);callbacks.current.onHuntPlace([c[0],c[1]]);return;}// Hit-test the rendered marker centres, not just their underlying geometry.
-const resolution=m.getView().getResolution()||1;
+m.on('singleclick',ev=>{if(callbacks.current.drawing||callbacks.current.measuring)return;if(callbacks.current.huntMode){if(callbacks.current.huntMoving){const c=toLonLat(ev.coordinate);callbacks.current.onHuntPlace([c[0],c[1]]);return;}const resolution=m.getView().getResolution()||1;
 const candidates=huntSource.current.getFeatures().map(feature=>{
- const pixel=m.getPixelFromCoordinate(huntDisplayCoordinate(feature as Feature,resolution));
- const distance=Math.hypot(pixel[0]-ev.pixel[0],pixel[1]-ev.pixel[1]);
- return {id:feature.get('huntPositionId') as string,distance};
-}).filter(candidate=>candidate.id&&candidate.distance<=38).sort((a,b)=>a.distance-b.distance);
-if(candidates.length){callbacks.current.onHuntSelect(candidates[0].id);return;}
-m.forEachFeatureAtPixel(ev.pixel,f=>{const id=f.get('huntPositionId');if(id){callbacks.current.onHuntSelect(id);return true;}},{hitTolerance:15,layerFilter:l=>l===huntLayer});return;}m.forEachFeatureAtPixel(ev.pixel,f=>{const id=f.get('entryId');if(id){callbacks.current.onSelect(id);return true;}},{hitTolerance:12,layerFilter:l=>l===entriesLayer});});
+ const pixel=m.getPixelFromCoordinate((feature.getGeometry() as Point).getCoordinates());
+ return {id:feature.get('huntPositionId') as string,distance:Math.hypot(pixel[0]-ev.pixel[0],pixel[1]-ev.pixel[1])};
+}).filter(candidate=>candidate.id&&candidate.distance<=42).sort((a,b)=>a.distance-b.distance);
+if(candidates.length)callbacks.current.onHuntSelect(candidates[0].id);
+return;}
+m.forEachFeatureAtPixel(ev.pixel,f=>{const id=f.get('entryId');if(id){callbacks.current.onSelect(id);return true;}},{hitTolerance:12,layerFilter:l=>l===entriesLayer});});
 fetch(import.meta.env.BASE_URL+'data/boundary.geojson').then(r=>{if(!r.ok)throw Error();return r.json();}).then(j=>{if(disposed)return;official.current.addFeatures(format.readFeatures(j,{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}));if(!callbacks.current.searchResult&&!callbacks.current.measuring)m.getView().fit(official.current.getExtent()!,{padding:[90,50,110,50]});callbacks.current.onReady();}).catch(()=>callbacks.current.onError('Ametliku piiri laadimine ebaõnnestus.'));
 fetch(import.meta.env.BASE_URL+'data/wmts.xml').then(r=>{if(!r.ok)throw Error();return r.text();}).then(xml=>{if(disposed)return;const cap=new WMTSCapabilities().read(xml);for(const name of ['kaart','foto','hybriid']){const s=createBasemapSource(cap,name);s.on('tileloaderror',()=>{if(!disposed&&tiles.current[name]?.getVisible())setTileProblem('Aluskaart ei lae. Kontrolli ühendust või vali teine aluskaart.');});s.on('tileloadend',()=>{if(!disposed&&tiles.current[name]?.getVisible())setTileProblem('');});const layer=new TileLayer({source:s,visible:name==='kaart'});tiles.current[name]=layer;m.getLayers().insertAt(['kaart','foto','hybriid'].indexOf(name),layer);}setBase(callbacks.current.base);}).catch(()=>{if(!disposed)setTileProblem('Aluskaardi kirjeldus ei avanenud. Laadi leht uuesti.');});
 function setBase(b:string){for(const [name,l]of Object.entries(tiles.current))l.setVisible(name==='kaart'?b==='kaart':name==='foto'?b!=='kaart':b==='hybriid');}
