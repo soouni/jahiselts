@@ -11,7 +11,7 @@ import type {OfficialPlace} from './gazetteerSearch';
 import type WMTS from 'ol/source/WMTS';import VectorSource from 'ol/source/Vector';import VectorLayer from 'ol/layer/Vector';import TileLayer from 'ol/layer/Tile';
 import {createBasemapSource} from './basemaps';
 import {mapColor,colorOutline,mapWidth} from './mapColors';
-import {Fill,Stroke,Style,Circle as CircleStyle,Text,Icon} from 'ol/style';import {Draw,Modify} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,transform} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
+import {Fill,Stroke,Style,Circle as CircleStyle,Text,Icon} from 'ol/style';import {Draw,Modify} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,toLonLat,transform} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
 import type {Entry,Geometry,Kind} from './types';import {label} from './types';import 'ol/ol.css';
 proj4.defs('EPSG:3301','+proj=lcc +lat_0=57.51755393055556 +lon_0=24 +lat_1=59.33333333333334 +lat_2=58 +x_0=500000 +y_0=6375000 +ellps=GRS80 +units=m +no_defs');register(proj4);
 const format=new GeoJSON();
