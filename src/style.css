@@ -282,3 +282,5 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 /* Väike jahimeeste vahemaa sisse-välja nupp */
 .hunt-mode-switch .hunt-distance-button{width:44px!important;height:44px!important;min-height:44px!important;margin-right:10px}
 .hunt-mode-switch .hunt-distance-button.hunt-mode-active{background:#173e32!important;color:#fff!important}
+
+.hunt-distance-hint{position:absolute;top:350px;right:24px;z-index:7;max-width:min(290px,75vw);background:#fff;color:#173e32;border:2px solid #d69a3d;border-radius:12px;padding:9px 12px;font-weight:750;font-size:13px;box-shadow:0 3px 16px #0003;pointer-events:none}
