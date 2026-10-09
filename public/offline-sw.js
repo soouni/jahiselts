@@ -29,7 +29,7 @@ self.addEventListener('fetch',event=>{
  if(req.mode==='navigate'){
   event.respondWith(fetch(req).then(async response=>{if(response.ok){const cache=await caches.open(SHELL);await cache.put(SCOPE,response.clone());}return response;}).catch(async()=>await (await caches.open(SHELL)).match(SCOPE)||Response.error()));return;
  }
- if(/\\.(?:js|css|svg|png|woff2?)$/.test(url.pathname)){
+ if(/\.(?:js|css|svg|png|woff2?)$/.test(url.pathname)){
   event.respondWith(caches.open(SHELL).then(async cache=>{
    const saved=await cache.match(req);if(saved)return saved;
    const response=await fetch(req);if(response.ok)await cache.put(req,response.clone());return response;
