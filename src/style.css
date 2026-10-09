@@ -215,3 +215,15 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
   .overview-is-open .overview .subtle{min-height:36px;padding:6px 0}
   .overview-is-open .overview .signin-note{padding-top:8px}
 }
+
+/* Mobile: collapse the overview into a small strip while keeping its toggle accessible. */
+@media(max-width:760px){
+ .overview-is-open .overview.overview-collapsed{top:calc(76px + env(safe-area-inset-top,0px));height:60px;min-height:0;max-height:60px;overflow:hidden;padding:10px 56px 10px 16px;display:flex;align-items:center}
+ .overview-is-open .overview.overview-collapsed>:not(.overview-collapse):not(.overview-close){display:none!important}
+ .overview-is-open .overview.overview-collapsed .overview-collapse{position:static;display:inline-flex;white-space:nowrap}
+ .overview-is-open .overview.overview-collapsed .overview-close{top:10px;right:10px}
+ .overview-is-open .overview:not(.overview-collapsed) .overview-collapse{position:relative;display:inline-flex;margin:0 45px 8px 0}
+ .overview-is-open .overview.overview-collapsed~.basemap.basemap-cycle,.overview-is-open .overview.overview-collapsed~.hunt-mode-switch{visibility:visible}
+}
+.overview-collapse{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:4px 8px;border:0;border-radius:8px;background:#edf4ed;color:#173e32;font-size:12px;font-weight:700}
+.overview-collapsed .overview-collapse svg{transform:rotate(90deg)}
