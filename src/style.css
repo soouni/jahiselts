@@ -164,7 +164,7 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 .hunt-fullscreen-list>strong{flex:0 0 auto}
 .hunt-fullscreen-list button{flex:0 0 auto}
 @media (max-width:760px){
- .hunt-fullscreen-bar{min-height:52px;padding:7px 10px;gap:8px;flex-wrap:nowrap}
+ .hunt-fullscreen-bar{min-height:52px;padding-top:max(7px,env(safe-area-inset-top));padding-right:max(10px,env(safe-area-inset-right));padding-bottom:7px;padding-left:max(10px,env(safe-area-inset-left));gap:8px;flex-wrap:nowrap}
  .hunt-fullscreen-bar button{min-height:38px;padding:7px 10px;font-size:13px;white-space:nowrap}
  .hunt-fullscreen-bar .hunt-map-back{min-width:0;max-width:58%;overflow:hidden;text-overflow:ellipsis}
  .hunt-fullscreen-map{min-height:0;flex:1 1 auto}
