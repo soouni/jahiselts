@@ -27,7 +27,7 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
  onPlaceRef.current=onPlace;
  useEffect(()=>{
   if(!el.current)return;
-  const m=new Map({target:el.current,layers:[new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:false})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
+  const m=new Map({target:el.current,layers:[new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:true})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
   map.current=m;
   let cancelled=false;
   fetch(import.meta.env.BASE_URL+'data/wmts.xml').then(r=>{if(!r.ok)throw Error('WMTS ei laadinud');return r.text();}).then(xml=>{
@@ -59,11 +59,11 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
    const duplicate=people.filter(p=>p.display_name.trim().split(/\s+/)[0]===firstName).length>1;
    const suffix=duplicate&&person?' '+(person.display_name.trim().split(/\s+/)[1]||'').slice(0,1)+'.':'';
    feature.setStyle(new Style({
-    image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.85}),
-    text:new Text({text:firstName+suffix,font:'bold 14px sans-serif',offsetY:-36,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:5}),padding:[3,4,3,4]})
+    image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.72,declutterMode:'none'}),
+    text:new Text({text:firstName+suffix,font:'bold 12px sans-serif',offsetY:-31,overflow:false,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:4}),padding:[2,3,2,3]})
    }));
    src.addFeature(feature);
   });
  },[positions,people]);
- return <div style={{position:'relative',width:'100%',height:'100%'}}><div ref={el} style={{width:'100%',height:'100%',minHeight:360,borderRadius:12,overflow:'hidden',border:'1px solid #ccd8d0'}} aria-label="Aju positsioonide kaart. Vajuta kaardile, et lisada positsioon."/><button type="button" style={{position:'absolute',top:12,right:12,zIndex:2,padding:'9px 12px',borderRadius:8,background:'white',color:'#153b30',fontWeight:700}} onClick={()=>setBase(b=>b==='kaart'?'foto':b==='foto'?'hybriid':'kaart')}>Aluskaart: {base==='kaart'?'Kaart':base==='foto'?'Ortofoto':'Hübriid'} ↻</button><small style={{position:'absolute',bottom:4,right:8,zIndex:2,background:'rgba(255,255,255,.85)',color:'#153b30'}}>Aluskaart: Maa- ja Ruumiamet</small></div>;
+ return <div style={{position:'relative',width:'100%',height:'100%'}}><div ref={el} style={{width:'100%',height:'100%',minHeight:360,borderRadius:12,overflow:'hidden',border:'1px solid #ccd8d0'}} aria-label="Aju positsioonide kaart. Vajuta kaardile, et lisada positsioon."/><button type="button" style={{position:'absolute',top:8,right:8,zIndex:2,padding:'6px 9px',fontSize:12,maxWidth:'62%',minHeight:36,borderRadius:8,background:'white',color:'#153b30',fontWeight:700}} onClick={()=>setBase(b=>b==='kaart'?'foto':b==='foto'?'hybriid':'kaart')}>Aluskaart: {base==='kaart'?'Kaart':base==='foto'?'Ortofoto':'Hübriid'} ↻</button><small style={{position:'absolute',bottom:4,right:8,zIndex:2,background:'rgba(255,255,255,.85)',color:'#153b30'}}>Aluskaart: Maa- ja Ruumiamet</small></div>;
 }
