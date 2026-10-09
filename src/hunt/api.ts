@@ -17,13 +17,13 @@ export async function createHunt(draft:HuntDraft){
 }
 export async function listHunts(){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
- const {data,error}=await db.from('hunts').select('id,title,type,status,leader_id,allow_self_selection,created_at,hunt_drives(id,sequence,title,status)').order('created_at',{ascending:false}).limit(40);
+ const {data,error}=await db.from('hunts').select('id,title,type,status,leader_id,allow_self_selection,created_at,hunt_drives(id,sequence,title,status,area_geojson)').order('created_at',{ascending:false}).limit(40);
  if(error)throw error;
  return data||[];
 }
 
 export type ClubChoice={user_id:string;display_name:string};
-export type HuntDriveRow={id:string;sequence:number;title:string;status:string};
+export type HuntDriveRow={id:string;sequence:number;title:string;status:string;area_geojson?:{type:'Polygon';coordinates:[number,number][][]}|null};
 export type HuntRow={id:string;title:string;type:string;status:string;leader_id:string;allow_self_selection:boolean;hunt_drives:HuntDriveRow[]};
 export type HuntPersonRow={id:string;hunt_id:string;user_id:string|null;display_name:string;role:string;status:string;roster_id:string|null};
 export type HuntPositionRow={id:string;drive_id:string;number:number;location:{type:'Point';coordinates:[number,number]};assigned_participant_id:string|null;confirmed_at:string|null};
@@ -38,6 +38,11 @@ export async function huntPeople(huntId:string):Promise<HuntPersonRow[]>{
 export async function addHuntPerson(huntId:string,person:ClubChoice,role:'hunter'|'driver'|'dog_driver'|'leader'){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_participants').insert({hunt_id:huntId,user_id:person.user_id,display_name:person.display_name,role});if(error)throw error;
+}
+export async function saveHuntDriveArea(driveId:string,area:{type:'Polygon';coordinates:[number,number][][]}|null){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.rpc('set_hunt_drive_area',{target_drive_id:driveId,new_area:area});
+ if(error)throw error;
 }
 export async function huntPositions(driveId:string):Promise<HuntPositionRow[]>{
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
