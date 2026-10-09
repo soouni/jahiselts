@@ -1,5 +1,7 @@
 import {db} from '../api';
 import type {HuntType} from './types';
+export async function canManageHunt(huntId:string){if(!db)return false;const {data,error}=await db.rpc('can_manage_hunt',{target_hunt_id:huntId});if(error)throw error;return Boolean(data);}
+export async function assignHuntLeader(huntId:string,userId:string){if(!db)throw new Error('Andmebaasi ühendus puudub.');const {error}=await db.rpc('assign_hunt_leader',{target_hunt_id:huntId,new_leader_id:userId});if(error)throw error;}
 export type HuntDraft={title:string;type:HuntType;allowSelfSelection:boolean;drives:{title:string}[]};
 export async function createHunt(draft:HuntDraft){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
@@ -104,7 +106,7 @@ export async function finishHunt(huntId:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {data:authData,error:authError}=await db.auth.getUser();
  if(authError||!authData.user)throw new Error('Jahi lõpetamiseks logi sisse.');
- const {data,error}=await db.from('hunts').update({status:'finished'}).eq('id',huntId).eq('leader_id',authData.user.id).neq('status','finished').select('id,status').maybeSingle();
+ const {data,error}=await db.from('hunts').update({status:'finished'}).eq('id',huntId).neq('status','finished').select('id,status').maybeSingle();
  if(error)throw error;
  if(!data)throw new Error('Jaht on juba lõpetatud või puudub sul selle lõpetamiseks jahijuhi õigus.');
  return data;
