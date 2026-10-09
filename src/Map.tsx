@@ -108,7 +108,8 @@ useEffect(()=>{
  padding[0]*=scale;padding[2]*=scale;
  m.getView().fit(target,{padding,maxZoom:16,duration:450});
 },[p.searchResult]);
-useEffect(()=>{huntAreaSource.current.clear();if(p.huntMode&&p.huntDriveArea?.type==='Polygon'){try{huntAreaSource.current.addFeature(new Feature({geometry:new Polygon(p.huntDriveArea.coordinates.map(ring=>ring.map(coord=>fromLonLat(coord))))}));}catch(e){console.error('Aju ala:',e);}}huntSource.current.clear();huntSource.current.addFeatures(p.huntMarkers.map(person=>new Feature({geometry:new Point(fromLonLat(person.coordinates)),name:person.name,role:person.role,huntPositionId:person.id})));},[p.huntMarkers]);
+useEffect(()=>{huntAreaSource.current.clear();if(p.huntMode&&p.huntDriveArea?.type==='Polygon'){try{huntAreaSource.current.addFeature(new Feature({geometry:new Polygon(p.huntDriveArea.coordinates.map(ring=>ring.map(coord=>fromLonLat(coord))))}));}catch(e){console.error('Aju ala:',e);}}},[p.huntMode,p.huntDriveArea]);
+useEffect(()=>{huntSource.current.clear();huntSource.current.addFeatures(p.huntMarkers.map(person=>new Feature({geometry:new Point(fromLonLat(person.coordinates)),name:person.name,role:person.role,huntPositionId:person.id})));},[p.huntMarkers]);
 useEffect(()=>{
  huntDistanceSource.current.clear();
  if(!p.huntMode||!p.huntDistanceOn)return;
