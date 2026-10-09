@@ -8,7 +8,7 @@ import WKT from 'ol/format/WKT';
 import {transformExtent} from 'ol/proj';
 import {X} from 'lucide-react';
 import LineString from 'ol/geom/LineString';
-import {measureGeometry,lengthLabel} from './measurement';
+import {lengthLabel} from './measurement';
 import type {OfficialPlace} from './gazetteerSearch';
 import type WMTS from 'ol/source/WMTS';import VectorSource from 'ol/source/Vector';import VectorLayer from 'ol/layer/Vector';import TileLayer from 'ol/layer/Tile';
 import {createBasemapSource} from './basemaps';
@@ -20,7 +20,7 @@ const format=new GeoJSON();
 const pointIcons=Object.fromEntries(placeTypes.map(t=>[t,new Icon({src:symbolUrl(t),width:symbolSize,height:symbolSize})]));
 export type HuntMapMarker={id:string;name:string;role:string;coordinates:[number,number]};
 export type MapHandle={fit:()=>void;focus:(e:Entry)=>void;undo:()=>void;finish:()=>void;locate:(coords:number[],accuracy:number)=>void;boundaryCheck:(coords:number[],accuracy?:number)=>string;geometry:()=>Geometry|null;fitHunt:()=>void};
-type Props={huntMarkers:HuntMapMarker[];huntDistanceIds:string[];measuring:boolean;onCloseMeasure:()=>void;searchResult:OfficialPlace|null;onClearSearch:()=>void;entries:Entry[];base:string;boundaryVisible:boolean;drawing:Kind|null;drawingColor:string;drawingWidth:number;drawType:'Point'|'LineString'|'Polygon';editGeometry:Geometry|null;onGeometry:(g:Geometry)=>void;onSelect:(id:string)=>void;onHuntSelect:(id:string)=>void;onHuntPlace:(coords:[number,number])=>void;huntMode:boolean;huntMoving:boolean;onReady:()=>void;onError:(s:string)=>void};
+type Props={huntMarkers:HuntMapMarker[];huntDistanceOn:boolean;measuring:boolean;onCloseMeasure:()=>void;searchResult:OfficialPlace|null;onClearSearch:()=>void;entries:Entry[];base:string;boundaryVisible:boolean;drawing:Kind|null;drawingColor:string;drawingWidth:number;drawType:'Point'|'LineString'|'Polygon';editGeometry:Geometry|null;onGeometry:(g:Geometry)=>void;onSelect:(id:string)=>void;onHuntSelect:(id:string)=>void;onHuntPlace:(coords:[number,number])=>void;huntMode:boolean;huntMoving:boolean;onReady:()=>void;onError:(s:string)=>void};
 export const MapCanvas=forwardRef<MapHandle,Props>(function MapCanvas(p,ref){const el=useRef<HTMLDivElement>(null),map=useRef<Map|null>(null),official=useRef(new VectorSource()),source=useRef(new VectorSource()),draft=useRef(new VectorSource()),gps=useRef(new VectorSource()),huntSource=useRef(new VectorSource()),huntDistanceSource=useRef(new VectorSource()),search=useRef(new VectorSource()),draw=useRef<Draw|null>(null),tiles=useRef<Record<string,TileLayer<WMTS>>>({});const callbacks=useRef(p);callbacks.current=p;const [tileProblem,setTileProblem]=useState('');const [mapInstance,setMapInstance]=useState<Map|null>(null);
 useImperativeHandle(ref,()=>({fitHunt(){const m=map.current;if(!m)return;const features=huntSource.current.getFeatures();if(!features.length)return;const extent=huntSource.current.getExtent();if(!extent||!extent.every(Number.isFinite))return;if(features.length===1){const geometry=features[0].getGeometry();if(geometry instanceof Point)m.getView().animate({center:geometry.getCoordinates(),zoom:15,duration:500});return;}m.getView().fit(extent,{padding:[145,55,190,55],maxZoom:16,duration:550});},fit(){if(map.current&&!official.current.isEmpty())map.current.getView().fit(official.current.getExtent()!,{padding:[85,45,115,45],duration:500});},focus(e){const f=format.readFeature({type:'Feature',geometry:e.geometry},{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}) as Feature;map.current?.getView().fit(f.getGeometry()!.getExtent(),{padding:[130,80,170,80],maxZoom:17,duration:450});},undo(){draw.current?.removeLastPoint();},finish(){draw.current?.finishDrawing();},geometry(){const f=draft.current.getFeatures()[0];return f?format.writeGeometryObject(f.getGeometry()!,{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}) as Geometry:null;},locate(c,a){const pt=fromLonLat(c);gps.current.clear();gps.current.addFeatures([new Feature(new Circle(pt,a/getPointResolution('EPSG:3857',1,pt))),new Feature(new Point(pt))]);map.current?.getView().animate({center:pt,zoom:16,duration:500});},boundaryCheck(c,a=0){const f=official.current.getFeatures()[0];if(!f)return 'Piir laadimata';const g=f.getGeometry()!.clone().transform('EPSG:3857','EPSG:3301') as any;const pt=transform(c,'EPSG:4326','EPSG:3301');const inside=g.intersectsCoordinate(pt);const ring=g.getLinearRing?.(0)||g;const near=ring.getClosestPoint(pt);if(Math.hypot(near[0]-pt[0],near[1]-pt[1])<=a)return 'Piiri lähedal · GPS ebatäpne';return inside?'Jahiala sees':'Väljaspool jahiala';}}),[]);
 useEffect(()=>{let disposed=false;const boundaryLayer=new VectorLayer({source:official.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.035)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]});
@@ -69,7 +69,29 @@ useEffect(()=>{
  m.getView().fit(target,{padding,maxZoom:16,duration:450});
 },[p.searchResult]);
 useEffect(()=>{huntSource.current.clear();huntSource.current.addFeatures(p.huntMarkers.map(person=>new Feature({geometry:new Point(fromLonLat(person.coordinates)),name:person.name,role:person.role,huntPositionId:person.id})));},[p.huntMarkers]);
-useEffect(()=>{huntDistanceSource.current.clear();if(!p.huntMode||p.huntDistanceIds.length!==2)return;const markers=p.huntDistanceIds.map(id=>p.huntMarkers.find(m=>m.id===id));if(!markers[0]||!markers[1])return;const geom=new LineString(markers.map(m=>fromLonLat(m!.coordinates)));const distance=measureGeometry(geom).length;huntDistanceSource.current.addFeature(new Feature({geometry:geom,distanceLabel:lengthLabel(distance)}));},[p.huntMode,p.huntDistanceIds,p.huntMarkers]);
+useEffect(()=>{
+ huntDistanceSource.current.clear();
+ if(!p.huntMode||!p.huntDistanceOn)return;
+ const hunters=p.huntMarkers.filter(marker=>marker.role==='hunter');
+ if(hunters.length<2)return;
+ // Minimaalne ühenduspuu ühendab iga küti lähima sobiva naabriga,
+ // näitamata kõiki võimalikke ristuvaid paarisjooni.
+ const points=hunters.map(marker=>transform(marker.coordinates,'EPSG:4326','EPSG:3301'));
+ const connected=new Set<number>([0]);
+ while(connected.size<hunters.length){
+  let best:{from:number;to:number;distance:number}|null=null;
+  for(const from of connected)for(let to=0;to<hunters.length;to++){
+   if(connected.has(to))continue;
+   const distance=Math.hypot(points[from][0]-points[to][0],points[from][1]-points[to][1]);
+   if(!best||distance<best.distance)best={from,to,distance};
+  }
+  if(!best)break;
+  const edge: {from:number;to:number;distance:number}=best;
+  connected.add(edge.to);
+  const geometry=new LineString([fromLonLat(hunters[edge.from].coordinates),fromLonLat(hunters[edge.to].coordinates)]);
+  huntDistanceSource.current.addFeature(new Feature({geometry,distanceLabel:lengthLabel(edge.distance)}));
+ }
+},[p.huntMode,p.huntDistanceOn,p.huntMarkers]);
 useEffect(()=>{source.current.clear();source.current.addFeatures(p.entries.map(e=>{const f=format.readFeature({type:'Feature',geometry:e.geometry,properties:{kind:e.kind,objectType:e.properties.type,label:label(e),entryId:e.id,color:mapColor(e.kind,e.properties.color),stroke_width:mapWidth(e.kind,e.properties.stroke_width)}},{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}) as Feature;return f;}));},[p.entries]);
 useEffect(()=>{for(const [name,l]of Object.entries(tiles.current))l.setVisible(name==='kaart'?p.base==='kaart':name==='foto'?p.base!=='kaart':p.base==='hybriid');},[p.base]);
 useEffect(()=>{map.current?.getLayers().getArray().find(l=>l instanceof VectorLayer&&l.getSource()===official.current)?.setVisible(p.boundaryVisible);},[p.boundaryVisible]);
