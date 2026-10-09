@@ -111,3 +111,9 @@ export async function finishHunt(huntId:string){
  if(!data)throw new Error('Jaht on juba lõpetatud või puudub sul selle lõpetamiseks jahijuhi õigus.');
  return data;
 }
+
+export async function updateHuntParticipantRole(participantId:string,role:'hunter'|'driver'|'dog_driver'){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.from('hunt_participants').update({role}).eq('id',participantId);
+ if(error)throw error;
+}
