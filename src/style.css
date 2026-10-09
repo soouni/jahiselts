@@ -237,3 +237,8 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
  .overview-is-open .overview.overview-collapsed{padding-top:10px!important}
  .overview-is-open .overview.overview-collapsed .overview-collapse{position:static!important;margin:0!important}
 }
+
+/* Jahirežiimi paneeli tühi ala ei tohi katta jahimeeste kaarditähiseid. */
+.hunt-mode-switch{pointer-events:none!important}
+.hunt-mode-switch button,.hunt-mode-switch select{pointer-events:auto!important}
+.hunt-mode-switch span{pointer-events:none!important}
