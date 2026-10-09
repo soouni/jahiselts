@@ -158,3 +158,17 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
   .overview-is-open .basemap.basemap-cycle{left:22px!important;right:auto!important}
   .overview-is-open .hunt-mode-switch{left:22px!important;right:auto!important}
 }
+
+/* Compact hunt-planning controls and keep participant selection within the viewport. */
+.hunt-fullscreen-list{min-width:0;width:100%;box-sizing:border-box;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.hunt-fullscreen-list>strong{flex:0 0 auto}
+.hunt-fullscreen-list button{flex:0 0 auto}
+@media (max-width:760px){
+ .hunt-fullscreen-bar{min-height:52px;padding:7px 10px;gap:8px;flex-wrap:nowrap}
+ .hunt-fullscreen-bar button{min-height:38px;padding:7px 10px;font-size:13px;white-space:nowrap}
+ .hunt-fullscreen-bar .hunt-map-back{min-width:0;max-width:58%;overflow:hidden;text-overflow:ellipsis}
+ .hunt-fullscreen-map{min-height:0;flex:1 1 auto}
+ .hunt-fullscreen-list{gap:6px;padding:7px 10px max(9px,env(safe-area-inset-bottom));flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}
+ .hunt-fullscreen-list>strong{font-size:12px;max-width:104px;white-space:normal;line-height:1.2}
+ .hunt-fullscreen-list button{min-height:38px;padding:6px 10px;font-size:13px;max-width:160px}
+}
