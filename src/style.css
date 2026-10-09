@@ -259,3 +259,6 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 .hunt-roster-panel .hunt-roster-summary{font-weight:700;color:#173e32;margin-top:0}
 .hunt-roster-placed{color:#21704a!important;font-weight:700}
 .hunt-roster-unplaced{color:#a65a12!important;font-weight:700}
+
+.hunt-roster-row .hunt-place-button{margin-left:auto;padding:7px 9px;border:1px solid #173e32;border-radius:9px;background:#173e32;color:white;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
+.hunt-roster-row .hunt-place-button:disabled{opacity:.5;cursor:wait}
