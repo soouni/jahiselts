@@ -278,3 +278,7 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 .measure-length-details strong{display:block;font-size:20px;font-weight:750;font-variant-numeric:tabular-nums;margin-top:4px}
 .is-collapsed .measure-length-details{gap:8px;margin-top:4px;padding-top:4px}
 .is-collapsed .measure-length-details strong{font-size:15px}
+
+/* Väike jahimeeste vahemaa sisse-välja nupp */
+.hunt-mode-switch .hunt-distance-button{width:44px!important;height:44px!important;min-height:44px!important;margin-right:10px}
+.hunt-mode-switch .hunt-distance-button.hunt-mode-active{background:#173e32!important;color:#fff!important}
