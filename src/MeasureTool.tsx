@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {Check,Ruler,RotateCcw,Square,Circle,ChevronUp,ChevronDown,X} from 'lucide-react';
 import type Map from 'ol/Map';
 import Feature from 'ol/Feature';
+import type {FeatureLike} from 'ol/Feature';
 import LineString from 'ol/geom/LineString';
 import Polygon from 'ol/geom/Polygon';
 import Point from 'ol/geom/Point';
@@ -17,7 +18,7 @@ import {circleGeometry,measureGeometry,lengthLabel,areaLabel,type Measurement} f
 const empty:Measurement={length:0,area:0,points:0,valid:false,crossed:false};
 const style=[new Style({stroke:new Stroke({color:'#18372d',width:7})}),new Style({stroke:new Stroke({color:'#ffe066',width:4}),fill:new Fill({color:'rgba(255,224,102,.15)'}),image:new CircleStyle({radius:6,fill:new Fill({color:'#ffe066'}),stroke:new Stroke({color:'#18372d',width:2})})})];
 // Lõigupikkused kuvatakse kaardil; sildid jäävad nähtavaks kuni mõõtmise sulgemiseni.
-function measurementStyles(feature:Feature<Geometry>):Style[]{
+function measurementStyles(feature:FeatureLike):Style[]{
  const geom=feature.getGeometry();
  if(!(geom instanceof LineString)&&!(geom instanceof Polygon))return style;
  const coords=geom instanceof Polygon?geom.getCoordinates()[0]:geom.getCoordinates();
