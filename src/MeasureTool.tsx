@@ -28,6 +28,7 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
   zoom.forEach(({i})=>i.setActive(false));
   let listener:EventsKey|undefined;
   let closingArea:Measurement|null=null;
+  let closingPoints:number[][]|null=null;
   const viewport=map.getViewport();
   const closeOnFirstPoint=(event:PointerEvent)=>{
    if(mode!=='LineString'||!sketch.current||!(sketch.current instanceof LineString)||event.button!==0)return;
@@ -42,6 +43,7 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
    if(!area.valid||area.crossed)return;
    event.preventDefault();event.stopPropagation();
    closingArea=area;
+   closingPoints=committed.map(point=>point.slice());
    d.finishDrawing();
   };
   viewport.addEventListener('pointerdown',closeOnFirstPoint,true);
@@ -56,10 +58,10 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
   d.on('drawend',e=>{
    if(listener)unByKey(listener);listener=undefined;
    const final=closingArea??measureGeometry(e.feature.getGeometry()!);
-   if(closingArea){const coords=(e.feature.getGeometry() as LineString).getCoordinates();const committed=coords.slice(0,-1);e.feature.setGeometry(new Polygon([[...committed,committed[0]]]));setClosedArea(closingArea.area);}
+   if(closingArea){const committed=closingPoints!;e.feature.setGeometry(new Polygon([[...committed,committed[0]]]));setClosedArea(closingArea.area);}
    setResult(final);setCommittedResult(final);setFinished(true);sketch.current=null;
   });
-  d.on('drawabort',()=>{if(listener)unByKey(listener);listener=undefined;sketch.current=null;closingArea=null;setClosedArea(null);complete.current=false;setResult(empty);setCommittedResult(empty);setCanFinish(false);});
+  d.on('drawabort',()=>{if(listener)unByKey(listener);listener=undefined;sketch.current=null;closingArea=null;closingPoints=null;setClosedArea(null);complete.current=false;setResult(empty);setCommittedResult(empty);setCanFinish(false);});
   return()=>{viewport.removeEventListener('pointerdown',closeOnFirstPoint,true);if(listener)unByKey(listener);map.removeInteraction(d);map.removeLayer(layer);source.clear();zoom.forEach(({i,active})=>i.setActive(active));draw.current=null;sketch.current=null;};
  },[map,mode,revision]);
  useEffect(()=>{if(finished)draw.current?.setActive(false);},[finished]);
