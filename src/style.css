@@ -129,3 +129,9 @@ dialog.sheet:has(.hunt-fullscreen)>.sheetbody{padding:0!important;margin:0!impor
 .hunt-finish-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
 .hunt-finish-button{border:1px solid #b94b41!important;color:#a52c25!important;background:#fff!important;font-weight:700;border-radius:12px;padding:10px 15px}
 .hunt-finish-button:disabled{opacity:.5}
+
+/* Collapsible overview: keep the map controls unobstructed. */
+button.brand{border:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
+button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e89131;outline-offset:3px}
+.overview{top:100px}
+.overview-close{position:absolute;top:12px;right:12px;border:0;background:#f4f7f5;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;color:#173f32}
