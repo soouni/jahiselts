@@ -9,13 +9,32 @@ import type Geometry from 'ol/geom/Geometry';
 import {Draw,DoubleClickZoom} from 'ol/interaction';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import {Style,Stroke,Fill,Circle as CircleStyle} from 'ol/style';
+import {Style,Stroke,Fill,Text,Circle as CircleStyle} from 'ol/style';
 import {unByKey} from 'ol/Observable';
 import type {EventsKey} from 'ol/events';
 import {circleGeometry,measureGeometry,lengthLabel,areaLabel,type Measurement} from './measurement';
 
 const empty:Measurement={length:0,area:0,points:0,valid:false,crossed:false};
 const style=[new Style({stroke:new Stroke({color:'#18372d',width:7})}),new Style({stroke:new Stroke({color:'#ffe066',width:4}),fill:new Fill({color:'rgba(255,224,102,.15)'}),image:new CircleStyle({radius:6,fill:new Fill({color:'#ffe066'}),stroke:new Stroke({color:'#18372d',width:2})})})];
+// Lõigupikkused kuvatakse kaardil; sildid jäävad nähtavaks kuni mõõtmise sulgemiseni.
+function measurementStyles(feature:Feature<Geometry>):Style[]{
+ const geom=feature.getGeometry();
+ if(!(geom instanceof LineString)&&!(geom instanceof Polygon))return style;
+ const coords=geom instanceof Polygon?geom.getCoordinates()[0]:geom.getCoordinates();
+ const labels:Style[]=[];
+ for(let i=1;i<coords.length;i++){
+  const a=coords[i-1],b=coords[i];
+  if(Math.hypot(b[0]-a[0],b[1]-a[1])<0.01)continue;
+  const length=measureGeometry(new LineString([a,b])).length;
+  labels.push(new Style({geometry:new Point([(a[0]+b[0])/2,(a[1]+b[1])/2]),text:new Text({
+   text:lengthLabel(length),font:'bold 13px sans-serif',offsetY:-14,
+   fill:new Fill({color:'#173e32'}),backgroundFill:new Fill({color:'rgba(255,255,255,0.94)'}),
+   backgroundStroke:new Stroke({color:'#d2ddd6',width:1}),padding:[4,6,4,6]
+  })}));
+ }
+ return [...style,...labels];
+}
+
 export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
  const [collapsed,setCollapsed]=useState(false);
  const [mode,setMode]=useState<'LineString'|'Polygon'|'Circle'>('LineString'),[revision,setRevision]=useState(0);
@@ -23,7 +42,7 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
  const draw=useRef<Draw|null>(null),complete=useRef(false),sketch=useRef<Geometry|null>(null);
  useEffect(()=>{
   const radiusLine=new Feature<Geometry>(),centerPoint=new Feature<Geometry>();
-  const source=new VectorSource(),layer=new VectorLayer({source,style,zIndex:100});
+  const source=new VectorSource(),layer=new VectorLayer({source,style:measurementStyles,declutter:true,zIndex:100});
   const zoom=map.getInteractions().getArray().filter(i=>i instanceof DoubleClickZoom).map(i=>({i,active:i.getActive()}));
   zoom.forEach(({i})=>i.setActive(false));
   let listener:EventsKey|undefined;
@@ -48,7 +67,7 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
   };
   viewport.addEventListener('pointerdown',closeOnFirstPoint,true);
   setResult(empty);setCommittedResult(empty);setClosedArea(null);setFinished(false);setCanFinish(false);complete.current=false;
-  const d=new Draw({source,type:mode,geometryFunction:mode==='Circle'?circleGeometry:undefined,style,stopClick:true,finishCondition:()=>complete.current});draw.current=d;
+  const d=new Draw({source,type:mode,geometryFunction:mode==='Circle'?circleGeometry:undefined,style:measurementStyles,stopClick:true,finishCondition:()=>complete.current});draw.current=d;
   map.addLayer(layer);map.addInteraction(d);
   d.on('drawstart',e=>{
    if(listener)unByKey(listener);source.clear();if(mode==='Circle')source.addFeatures([radiusLine,centerPoint]);sketch.current=e.feature.getGeometry()!;
