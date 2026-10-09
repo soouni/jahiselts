@@ -59,7 +59,7 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
    const duplicate=people.filter(p=>p.display_name.trim().split(/\s+/)[0]===firstName).length>1;
    const suffix=duplicate&&person?' '+(person.display_name.trim().split(/\s+/)[1]||'').slice(0,1)+'.':'';
    feature.setStyle(new Style({
-    image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.72}),
+    image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.72,declutterMode:'none'}),
     text:new Text({text:firstName+suffix,font:'bold 12px sans-serif',offsetY:-31,overflow:false,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:4}),padding:[2,3,2,3]})
    }));
    src.addFeature(feature);
