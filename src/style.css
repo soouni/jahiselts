@@ -142,6 +142,19 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
   .overview-is-open .hunt-mode-switch{left:376px!important;right:auto!important}
 }
 @media (max-width:760px){
-  .overview-is-open .basemap.basemap-cycle,
-  .overview-is-open .hunt-mode-switch{left:auto!important;right:12px!important}
+  /* The overview is a real scrollable mobile panel, not a hidden element. */
+  .overview-is-open .overview{
+    display:block;
+    top:calc(86px + env(safe-area-inset-top, 0px));
+    left:12px;
+    width:calc(100% - 24px);
+    max-height:calc(100dvh - 112px - env(safe-area-inset-top, 0px));
+    overflow-y:auto;
+    padding:24px;
+    z-index:9;
+  }
+  .overview-is-open .overview h1{font-size:29px;padding-right:12px}
+  /* Keep the two map controls at their normal left-side positions. */
+  .overview-is-open .basemap.basemap-cycle{left:22px!important;right:auto!important}
+  .overview-is-open .hunt-mode-switch{left:22px!important;right:auto!important}
 }
