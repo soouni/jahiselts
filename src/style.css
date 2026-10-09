@@ -242,3 +242,20 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 .hunt-mode-switch{pointer-events:none!important}
 .hunt-mode-switch button,.hunt-mode-switch select{pointer-events:auto!important}
 .hunt-mode-switch span{pointer-events:none!important}
+
+/* Jahirežiimi osalejate juhtimine */
+.hunt-mode-switch .hunt-roster-button{margin-top:8px}
+.hunt-roster-panel{position:absolute;z-index:25;top:170px;left:110px;width:min(370px,calc(100vw - 130px));max-height:min(65vh,550px);display:flex;flex-direction:column;padding:15px;background:#fff;border-radius:16px;box-shadow:0 6px 28px #0004;color:#173e32}
+.hunt-roster-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.hunt-roster-heading button{border:0;background:transparent;color:#173e32;font-size:22px;cursor:pointer}
+.hunt-roster-panel p{font-size:12px;margin:5px 0 12px;color:#52675e}
+.hunt-roster-list{overflow-y:auto;min-height:0}
+.hunt-roster-row{display:flex;align-items:center;gap:12px;padding:10px 3px;border-bottom:1px solid #e4ebe6;cursor:pointer}
+.hunt-roster-row input{width:20px;height:20px;flex-shrink:0;accent-color:#173e32}
+.hunt-roster-row span{display:flex;flex-direction:column;gap:3px}
+.hunt-roster-row small{color:#65796e}
+@media(max-width:720px){.hunt-roster-panel{top:145px;left:95px;width:calc(100vw - 110px);max-height:65vh}}
+
+.hunt-roster-panel .hunt-roster-summary{font-weight:700;color:#173e32;margin-top:0}
+.hunt-roster-placed{color:#21704a!important;font-weight:700}
+.hunt-roster-unplaced{color:#a65a12!important;font-weight:700}
