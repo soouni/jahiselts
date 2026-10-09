@@ -141,7 +141,3 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
   .overview-is-open .basemap.basemap-cycle,
   .overview-is-open .hunt-mode-switch{left:376px!important;right:auto!important}
 }
-@media (max-width:760px){
-  .overview-is-open .basemap.basemap-cycle,
-  .overview-is-open .hunt-mode-switch{left:auto!important;right:12px!important}
-}
