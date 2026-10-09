@@ -1,6 +1,6 @@
 export function markerSvg(role:'hunter'|'driver'|'dog_driver'){
  const icon=role==='dog_driver'
- ? '<g transform="translate(14 12) scale(.7) translate(-14 -12)"><rect x="5" y="7" width="18" height="10" fill="white"/><circle cx="5" cy="7" r="4" fill="white"/><circle cx="5" cy="17" r="4" fill="white"/><circle cx="23" cy="7" r="4" fill="white"/><circle cx="23" cy="17" r="4" fill="white"/></g>'
+ ? '<rect x="4" y="9" width="16" height="6" fill="white"/><circle cx="4" cy="9" r="2.8" fill="white"/><circle cx="4" cy="15" r="2.8" fill="white"/><circle cx="20" cy="9" r="2.8" fill="white"/><circle cx="20" cy="15" r="2.8" fill="white"/>'
  : role==='driver'
  ? '<path d="M8 5c-2 1-3 4-3 7l2 5 5-1 1-5-2-5zM17 13c-2 1-3 4-3 7l2 5 5-1 1-5-2-5z" transform="translate(0 -2) scale(.9)" fill="white"/><circle cx="8" cy="4" r="1.5" fill="white"/><circle cx="18" cy="12" r="1.5" fill="white"/>'
  : '<path d="M12 4h4l1 4v13H11V8zM12 3l1-2h2l1 2zM11 20h6v2h-6z" fill="white" transform="translate(-1 1)"/>';
