@@ -16,7 +16,8 @@ import type {HuntPositionRow,HuntPersonRow} from './api';
 
 import {huntMarkerUrl} from './markers';
 
-export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void}){
+export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdit=false}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void;onAssign?:(positionId:string,personId:string)=>void;onMove?:(positionId:string)=>void;canEdit?:boolean}){
+ const [editingId,setEditingId]=useState<string|null>(null);
  const [base,setBase]=useState<'kaart'|'foto'|'hybriid'>('foto');
  const layers=useRef<Record<string,TileLayer<WMTS>>>({});
  const el=useRef<HTMLDivElement>(null);
@@ -24,6 +25,7 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
  const source=useRef(new VectorSource());
  const boundary=useRef(new VectorSource());
  const onPlaceRef=useRef(onPlace);
+ const onMarkerRef=useRef((id:string)=>setEditingId(id));
  onPlaceRef.current=onPlace;
  useEffect(()=>{
   if(!el.current)return;
@@ -46,7 +48,7 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
    const extent=boundary.current.getExtent();
    if(extent&&boundary.current.getFeatures().length&&!positions.length)m.getView().fit(extent,{padding:[25,25,25,25],maxZoom:13});
   }).catch(error=>{if(!cancelled)console.error('Jahipiirkonna piir:',error);});
-  m.on('singleclick',event=>{const p=toLonLat(event.coordinate);onPlaceRef.current([p[0],p[1]]);});
+  m.on('singleclick',event=>{const hit=m.forEachFeatureAtPixel(event.pixel,f=>f.get('huntPositionId') as string|undefined,{hitTolerance:12});if(hit){onMarkerRef.current(hit);return;}setEditingId(null);const p=toLonLat(event.coordinate);onPlaceRef.current([p[0],p[1]]);});
   return()=>{cancelled=true;m.setTarget(undefined);map.current=null;layers.current={};boundary.current.clear();};
  },[]);
  useEffect(()=>{for(const [name,layer] of Object.entries(layers.current))layer.setVisible(name==='kaart'?base==='kaart':name==='foto'?base!=='kaart':base==='hybriid');},[base]);
@@ -54,6 +56,7 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
   const src=source.current;src.clear();
   positions.forEach(position=>{
    const feature=new Feature({geometry:new Point(fromLonLat(position.location.coordinates))});
+   feature.set('huntPositionId',position.id);
    const person=people.find(p=>p.id===position.assigned_participant_id);
    const firstName=person?.display_name.trim().split(/\s+/)[0]||'Vaba';
    const duplicate=people.filter(p=>p.display_name.trim().split(/\s+/)[0]===firstName).length>1;
@@ -65,5 +68,7 @@ export function HuntPositionMap({positions,people,onPlace}:{positions:HuntPositi
    src.addFeature(feature);
   });
  },[positions,people]);
- return <div style={{position:'relative',width:'100%',height:'100%'}}><div ref={el} style={{width:'100%',height:'100%',minHeight:360,borderRadius:12,overflow:'hidden',border:'1px solid #ccd8d0'}} aria-label="Aju positsioonide kaart. Vajuta kaardile, et lisada positsioon."/><button type="button" style={{position:'absolute',top:8,right:8,zIndex:2,padding:'6px 9px',fontSize:12,maxWidth:'62%',minHeight:36,borderRadius:8,background:'white',color:'#153b30',fontWeight:700}} onClick={()=>setBase(b=>b==='kaart'?'foto':b==='foto'?'hybriid':'kaart')}>Aluskaart: {base==='kaart'?'Kaart':base==='foto'?'Ortofoto':'Hübriid'} ↻</button><small style={{position:'absolute',bottom:4,right:8,zIndex:2,background:'rgba(255,255,255,.85)',color:'#153b30'}}>Aluskaart: Maa- ja Ruumiamet</small></div>;
+ const editing=positions.find(p=>p.id===editingId);
+ const assigned=people.find(p=>p.id===editing?.assigned_participant_id);
+ return <div style={{position:'relative',width:'100%',height:'100%'}}><div ref={el} style={{width:'100%',height:'100%',minHeight:360,borderRadius:12,overflow:'hidden',border:'1px solid #ccd8d0'}} aria-label="Aju positsioonide kaart. Vajuta kaardile, et lisada positsioon."/><button type="button" style={{position:'absolute',top:8,right:8,zIndex:2,padding:'6px 9px',fontSize:12,maxWidth:'62%',minHeight:36,borderRadius:8,background:'white',color:'#153b30',fontWeight:700}} onClick={()=>setBase(b=>b==='kaart'?'foto':b==='foto'?'hybriid':'kaart')}>Aluskaart: {base==='kaart'?'Kaart':base==='foto'?'Ortofoto':'Hübriid'} ↻</button>{editing&&<div style={{position:'absolute',left:8,bottom:34,zIndex:5,background:'#fff',borderRadius:10,padding:12,maxWidth:'min(340px,calc(100% - 16px))',boxShadow:'0 4px 18px #0004',color:'#153b30'}}><div style={{display:'flex',justifyContent:'space-between',gap:16,alignItems:'center'}}><strong>{assigned?.display_name||'Vaba positsioon'} · K{editing.number}</strong><button type="button" onClick={()=>setEditingId(null)} aria-label="Sulge positsiooni muutmine">✕</button></div>{canEdit&&<><label style={{display:'block',marginTop:10}}>Jahimees<select aria-label="Muuda positsiooni jahimeest" style={{display:'block',width:'100%',marginTop:5}} value={editing.assigned_participant_id||''} onChange={e=>onAssign?.(editing.id,e.target.value)}><option value="">Vaba positsioon</option>{people.map(p=><option key={p.id} value={p.id}>{p.display_name}</option>)}</select></label><button type="button" style={{marginTop:8}} onClick={()=>{onMove?.(editing.id);setEditingId(null);}}>Muuda asukohta kaardil</button></>}{!canEdit&&<small>Positsiooni muutmiseks on vaja jahijuhi või administraatori õigusi.</small>}</div>}<small style={{position:'absolute',bottom:4,right:8,zIndex:2,background:'rgba(255,255,255,.85)',color:'#153b30'}}>Aluskaart: Maa- ja Ruumiamet</small></div>;
 }
