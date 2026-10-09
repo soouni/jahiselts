@@ -76,6 +76,12 @@ export async function listRoster():Promise<RosterPerson[]>{
  const {data,error}=await db.from('hunt_roster').select('id,user_id,display_name,default_role').order('display_name');
  if(error)throw error;return data||[];
 }
+/** Omanik seob püsiva nimekirja inimese seltsi kasutajakontoga. */
+export async function linkRosterAccount(rosterId:string,userId:string|null){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.rpc('owner_link_roster_account',{target_roster_id:rosterId,target_user_id:userId});
+ if(error)throw error;
+}
 export async function addRosterPerson(name:string,role:'hunter'|'driver'|'dog_driver',userId?:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_roster').insert({display_name:name.trim(),default_role:role,user_id:userId||null});if(error)throw error;
