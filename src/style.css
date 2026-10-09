@@ -268,3 +268,6 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 .hunt-role-stat small{font-size:10px;color:#52675e}
 .hunt-role-select{max-width:115px;min-width:86px;margin-left:auto;padding:6px 3px;border:1px solid #b8ccc0;border-radius:8px;background:white;color:#173e32;font-size:12px}
 .hunt-roster-row{flex-wrap:wrap}
+
+.hunt-role-stat .hunt-role-fraction{font-size:25px;font-weight:750;line-height:1.15;font-variant-numeric:tabular-nums}
+.hunt-role-stat .hunt-role-fraction small{font-size:16px;font-weight:500;color:#52675e}
