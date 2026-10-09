@@ -7,7 +7,7 @@ declare
  vertex jsonb;
  first_vertex jsonb;
  last_vertex jsonb;
- geom public.geometry;
+ geom extensions.geometry;
  x double precision;
  y double precision;
 begin
@@ -38,11 +38,11 @@ begin
   first_vertex:=ring->0;last_vertex:=ring->(jsonb_array_length(ring)-1);
   if first_vertex<>last_vertex then raise exception 'Aju ala polügoon peab olema suletud.';end if;
   begin
-   geom:=public.ST_SetSRID(public.ST_GeomFromGeoJSON(new_area::text),4326);
+   geom:=extensions.ST_SetSRID(extensions.ST_GeomFromGeoJSON(new_area::text),4326);
   exception when others then
    raise exception 'Aju ala GeoJSON geomeetria ei ole korrektne.';
   end;
-  if not public.ST_IsValid(geom) or public.ST_IsEmpty(geom) or public.ST_Area(geom::public.geography)<1 then
+  if not extensions.ST_IsValid(geom) or extensions.ST_IsEmpty(geom) or extensions.ST_Area(geom::extensions.geography)<1 then
    raise exception 'Aju ala on vigane, iselõikuv või liiga väike.';
   end if;
  end if;
