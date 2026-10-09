@@ -18,7 +18,7 @@ const style=[new Style({stroke:new Stroke({color:'#18372d',width:7})}),new Style
 export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
  const [collapsed,setCollapsed]=useState(false);
  const [mode,setMode]=useState<'LineString'|'Polygon'|'Circle'>('LineString'),[revision,setRevision]=useState(0);
- const [result,setResult]=useState(empty),[finished,setFinished]=useState(false),[canFinish,setCanFinish]=useState(false);
+ const [result,setResult]=useState(empty),[committedResult,setCommittedResult]=useState(empty),[finished,setFinished]=useState(false),[canFinish,setCanFinish]=useState(false);
  const draw=useRef<Draw|null>(null),complete=useRef(false),sketch=useRef<Geometry|null>(null);
  useEffect(()=>{
   const radiusLine=new Feature<Geometry>(),centerPoint=new Feature<Geometry>();
@@ -26,19 +26,19 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
   const zoom=map.getInteractions().getArray().filter(i=>i instanceof DoubleClickZoom).map(i=>({i,active:i.getActive()}));
   zoom.forEach(({i})=>i.setActive(false));
   let listener:EventsKey|undefined;
-  setResult(empty);setFinished(false);setCanFinish(false);complete.current=false;
+  setResult(empty);setCommittedResult(empty);setFinished(false);setCanFinish(false);complete.current=false;
   const d=new Draw({source,type:mode,geometryFunction:mode==='Circle'?circleGeometry:undefined,style,stopClick:true,finishCondition:()=>complete.current});draw.current=d;
   map.addLayer(layer);map.addInteraction(d);
   d.on('drawstart',e=>{
    if(listener)unByKey(listener);source.clear();if(mode==='Circle')source.addFeatures([radiusLine,centerPoint]);sketch.current=e.feature.getGeometry()!;
-   const update=()=>{const g=sketch.current!;if(mode==='Circle'){radiusLine.setGeometry(new LineString([g.get('measurementCenter'),g.get('measurementEdge')]));centerPoint.setGeometry(new Point(g.get('measurementCenter')));}const committed=measureGeometry(g,true);setResult({...measureGeometry(g),lastSegment:committed.lastSegment});complete.current=committed.valid;setCanFinish(complete.current);};
+   const update=()=>{const g=sketch.current!;if(mode==='Circle'){radiusLine.setGeometry(new LineString([g.get('measurementCenter'),g.get('measurementEdge')]));centerPoint.setGeometry(new Point(g.get('measurementCenter')));}const committed=measureGeometry(g,true);setResult(measureGeometry(g));setCommittedResult(committed);complete.current=committed.valid;setCanFinish(complete.current);};
    listener=sketch.current.on('change',update);update();
   });
   d.on('drawend',e=>{
    if(listener)unByKey(listener);listener=undefined;
-   setResult(measureGeometry(e.feature.getGeometry()!));setFinished(true);sketch.current=null;
+   const final=measureGeometry(e.feature.getGeometry()!);setResult(final);setCommittedResult(final);setFinished(true);sketch.current=null;
   });
-  d.on('drawabort',()=>{if(listener)unByKey(listener);listener=undefined;sketch.current=null;complete.current=false;setResult(empty);setCanFinish(false);});
+  d.on('drawabort',()=>{if(listener)unByKey(listener);listener=undefined;sketch.current=null;complete.current=false;setResult(empty);setCommittedResult(empty);setCanFinish(false);});
   return()=>{if(listener)unByKey(listener);map.removeInteraction(d);map.removeLayer(layer);source.clear();zoom.forEach(({i,active})=>i.setActive(active));draw.current=null;sketch.current=null;};
  },[map,mode,revision]);
  useEffect(()=>{if(finished)draw.current?.setActive(false);},[finished]);
@@ -46,7 +46,7 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
  return <section className={`measure-panel${collapsed?' is-collapsed':''}`} aria-label="Kaardil mõõtmine">
   <header><strong>Mõõda kaardil</strong><div className="measure-header-actions"><button className="measure-toggle" aria-expanded={!collapsed} aria-label={collapsed?'Ava mõõtmispaneel':'Vähenda mõõtmispaneeli, mõõtmine jätkub'} onClick={()=>setCollapsed(v=>!v)}>{collapsed?<ChevronDown size={18}/>:<ChevronUp size={18}/>} {collapsed?'Ava':'Vähenda'}</button><button className="iconbtn" aria-label="Sulge mõõtmine ja eemalda mõõtjoon" onClick={onClose}><X size={20}/></button></div></header>
   <div hidden={collapsed}><div className="measure-modes" role="group" aria-label="Mõõtmise tüüp"><button aria-pressed={mode==='LineString'} onClick={()=>setMode('LineString')}><Ruler size={18}/> Pikkus</button><button aria-pressed={polygon} onClick={()=>setMode('Polygon')}><Square size={18}/> Pindala</button><button aria-pressed={circle} onClick={()=>setMode('Circle')}><Circle size={18}/> Ring</button></div></div>
-  <div className="measure-value"><span>{circle?'Raadius':polygon?'Pindala':'Kogupikkus'}{!finished?' · mõõtmisel':''}</span><output>{result.crossed?'—':circle?lengthLabel(result.radius||0):polygon?areaLabel(result.area):lengthLabel(result.length)}</output>{!polygon&&!circle&&<div className="measure-last-segment"><span>Viimane lõik</span><strong>{lengthLabel(result.lastSegment||0)}</strong>{!collapsed&&<small>Kahe viimase märgitud punkti vahel</small>}</div>}{circle&&<div className="measure-circle-area"><span>Pindala</span><strong>{areaLabel(result.area)}</strong><small>{(result.area/10000).toLocaleString('et-EE',{maximumFractionDigits:4})} ha · Ümbermõõt {lengthLabel(result.length)}</small></div>}{polygon&&<small>{result.crossed?'Piir ristub iseendaga. Võta punkt tagasi või alusta uuesti.':(result.area>0?(result.area/10000).toLocaleString('et-EE',{maximumFractionDigits:4})+' ha · ':'')+'Ümbermõõt '+lengthLabel(result.length)}</small>}</div>
+  <div className="measure-value"><span>{circle?'Raadius':polygon?'Pindala':finished?'Kogupikkus':'Jooksev lõik · hiirekursorini'}</span><output>{result.crossed?'—':circle?lengthLabel(result.radius||0):polygon?areaLabel(result.area):lengthLabel(finished?result.length:Math.max(0,result.length-committedResult.length))}</output>{!polygon&&!circle&&<div className="measure-length-details"><div><span>Kogupikkus</span><strong>{lengthLabel(committedResult.length)}</strong></div><div><span>Viimane lõik</span><strong>{lengthLabel(committedResult.lastSegment||0)}</strong></div></div>}{circle&&<div className="measure-circle-area"><span>Pindala</span><strong>{areaLabel(result.area)}</strong><small>{(result.area/10000).toLocaleString('et-EE',{maximumFractionDigits:4})} ha · Ümbermõõt {lengthLabel(result.length)}</small></div>}{polygon&&<small>{result.crossed?'Piir ristub iseendaga. Võta punkt tagasi või alusta uuesti.':(result.area>0?(result.area/10000).toLocaleString('et-EE',{maximumFractionDigits:4})+' ha · ':'')+'Ümbermõõt '+lengthLabel(result.length)}</small>}</div>
   <p hidden={collapsed}>{finished?'Mõõtmine valmis. Uue mõõtmise alustamiseks vajuta „Uuesti”.':circle?'Puuduta ringi keskpunkti, seejärel soovitud kaugusel ringi serva.':polygon?'Märgi ala piir vähemalt kolme punktiga ja vajuta „Lõpeta”.':'Märgi joonele vähemalt kaks punkti ja vajuta „Lõpeta”.'}</p>
   <div className="measure-actions">{!finished&&!collapsed&&<button disabled={!result.points} onClick={()=>{if(circle)setRevision(v=>v+1);else draw.current?.removeLastPoint();}} aria-label="Võta viimane mõõtepunkt tagasi"><RotateCcw size={18}/> Tagasi</button>}{(!collapsed||finished)&&<button onClick={()=>setRevision(v=>v+1)}>Uuesti</button>}{!finished&&<button className="primary" disabled={!canFinish} onClick={()=>{if(complete.current)draw.current?.finishDrawing();}}><Check size={18}/> Lõpeta</button>}</div>
   <small hidden={collapsed} className="measure-note">Ajutine mõõtmine · seltsi kaardile ei salvestata.</small>
