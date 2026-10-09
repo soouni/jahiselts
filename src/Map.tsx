@@ -13,14 +13,14 @@ import type {OfficialPlace} from './gazetteerSearch';
 import type WMTS from 'ol/source/WMTS';import VectorSource from 'ol/source/Vector';import VectorLayer from 'ol/layer/Vector';import TileLayer from 'ol/layer/Tile';
 import {createBasemapSource} from './basemaps';
 import {mapColor,colorOutline,mapWidth} from './mapColors';
-import {Fill,Stroke,Style,Circle as CircleStyle,Text,Icon} from 'ol/style';import {Draw,Modify} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,toLonLat,transform} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
+import {Fill,Stroke,Style,Circle as CircleStyle,Text,Icon} from 'ol/style';import {Draw,Modify,DragPan} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,toLonLat,transform} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
 import type {Entry,Geometry,Kind} from './types';import {label} from './types';import 'ol/ol.css';
 proj4.defs('EPSG:3301','+proj=lcc +lat_0=57.51755393055556 +lon_0=24 +lat_1=59.33333333333334 +lat_2=58 +x_0=500000 +y_0=6375000 +ellps=GRS80 +units=m +no_defs');register(proj4);
 const format=new GeoJSON();
 const pointIcons=Object.fromEntries(placeTypes.map(t=>[t,new Icon({src:symbolUrl(t),width:symbolSize,height:symbolSize})]));
 export type HuntMapMarker={id:string;name:string;role:string;coordinates:[number,number]};
 export type MapHandle={fit:()=>void;focus:(e:Entry)=>void;undo:()=>void;finish:()=>void;locate:(coords:number[],accuracy:number)=>void;boundaryCheck:(coords:number[],accuracy?:number)=>string;geometry:()=>Geometry|null;fitHunt:()=>void};
-type Props={huntMarkers:HuntMapMarker[];huntDistanceOn:boolean;measuring:boolean;onCloseMeasure:()=>void;searchResult:OfficialPlace|null;onClearSearch:()=>void;entries:Entry[];base:string;boundaryVisible:boolean;drawing:Kind|null;drawingColor:string;drawingWidth:number;drawType:'Point'|'LineString'|'Polygon';editGeometry:Geometry|null;onGeometry:(g:Geometry)=>void;onSelect:(id:string)=>void;onHuntSelect:(id:string)=>void;onHuntPlace:(coords:[number,number])=>void;huntMode:boolean;huntMoving:boolean;onReady:()=>void;onError:(s:string)=>void};
+type Props={huntMarkers:HuntMapMarker[];huntDistanceOn:boolean;measuring:boolean;onCloseMeasure:()=>void;searchResult:OfficialPlace|null;onClearSearch:()=>void;entries:Entry[];base:string;boundaryVisible:boolean;drawing:Kind|null;drawingColor:string;drawingWidth:number;drawType:'Point'|'LineString'|'Polygon';editGeometry:Geometry|null;onGeometry:(g:Geometry)=>void;onSelect:(id:string)=>void;onHuntSelect:(id:string)=>void;onHuntPlace:(coords:[number,number])=>void;huntMode:boolean;huntMoving:boolean;huntCanDrag:boolean;onHuntDrag:(id:string,coords:[number,number])=>void;onReady:()=>void;onError:(s:string)=>void};
 export const MapCanvas=forwardRef<MapHandle,Props>(function MapCanvas(p,ref){const el=useRef<HTMLDivElement>(null),map=useRef<Map|null>(null),official=useRef(new VectorSource()),source=useRef(new VectorSource()),draft=useRef(new VectorSource()),gps=useRef(new VectorSource()),huntSource=useRef(new VectorSource()),huntDistanceSource=useRef(new VectorSource()),search=useRef(new VectorSource()),draw=useRef<Draw|null>(null),tiles=useRef<Record<string,TileLayer<WMTS>>>({});const callbacks=useRef(p);callbacks.current=p;const [tileProblem,setTileProblem]=useState('');const [mapInstance,setMapInstance]=useState<Map|null>(null);
 useImperativeHandle(ref,()=>({fitHunt(){const m=map.current;if(!m)return;const features=huntSource.current.getFeatures();if(!features.length)return;const extent=huntSource.current.getExtent();if(!extent||!extent.every(Number.isFinite))return;if(features.length===1){const geometry=features[0].getGeometry();if(geometry instanceof Point)m.getView().animate({center:geometry.getCoordinates(),zoom:15,duration:500});return;}m.getView().fit(extent,{padding:[145,55,190,55],maxZoom:16,duration:550});},fit(){if(map.current&&!official.current.isEmpty())map.current.getView().fit(official.current.getExtent()!,{padding:[85,45,115,45],duration:500});},focus(e){const f=format.readFeature({type:'Feature',geometry:e.geometry},{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}) as Feature;map.current?.getView().fit(f.getGeometry()!.getExtent(),{padding:[130,80,170,80],maxZoom:17,duration:450});},undo(){draw.current?.removeLastPoint();},finish(){draw.current?.finishDrawing();},geometry(){const f=draft.current.getFeatures()[0];return f?format.writeGeometryObject(f.getGeometry()!,{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}) as Geometry:null;},locate(c,a){const pt=fromLonLat(c);gps.current.clear();gps.current.addFeatures([new Feature(new Circle(pt,a/getPointResolution('EPSG:3857',1,pt))),new Feature(new Point(pt))]);map.current?.getView().animate({center:pt,zoom:16,duration:500});},boundaryCheck(c,a=0){const f=official.current.getFeatures()[0];if(!f)return 'Piir laadimata';const g=f.getGeometry()!.clone().transform('EPSG:3857','EPSG:3301') as any;const pt=transform(c,'EPSG:4326','EPSG:3301');const inside=g.intersectsCoordinate(pt);const ring=g.getLinearRing?.(0)||g;const near=ring.getClosestPoint(pt);if(Math.hypot(near[0]-pt[0],near[1]-pt[1])<=a)return 'Piiri lähedal · GPS ebatäpne';return inside?'Jahiala sees':'Väljaspool jahiala';}}),[]);
 useEffect(()=>{let disposed=false;const boundaryLayer=new VectorLayer({source:official.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.035)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]});
@@ -40,7 +40,47 @@ const huntLayer=new VectorLayer({source:huntSource.current,declutter:false,style
 const huntDistanceLayer=new VectorLayer({source:huntDistanceSource.current,zIndex:110,style:feature=>{const geom=feature.getGeometry() as LineString;const coords=geom.getCoordinates();return [new Style({stroke:new Stroke({color:'#fff',width:6,lineDash:[9,7]})}),new Style({stroke:new Stroke({color:'#176c52',width:3,lineDash:[9,7]})}),new Style({geometry:new Point([(coords[0][0]+coords[1][0])/2,(coords[0][1]+coords[1][1])/2]),text:new Text({text:feature.get('distanceLabel'),font:'bold 14px system-ui',fill:new Fill({color:'#173e32'}),backgroundFill:new Fill({color:'#fff'}),backgroundStroke:new Stroke({color:'#176c52',width:1}),padding:[5,8,5,8]})})];}});
 const searchLayer=new VectorLayer({source:search.current,style:[new Style({stroke:new Stroke({color:'#fff',width:8})}),new Style({stroke:new Stroke({color:'#d72f79',width:4}),fill:new Fill({color:'rgba(215,47,121,.10)'}),image:new CircleStyle({radius:10,fill:new Fill({color:'#d72f79'}),stroke:new Stroke({color:'#fff',width:3})})})]});
 const m=new Map({target:el.current!,view:new View({center:fromLonLat([24.887,58.638]),zoom:11}),controls:defaultControls({zoom:false,rotate:false,attribution:false}),layers:[boundaryLayer,entriesLayer,draftLayer,gpsLayer,searchLayer,huntLayer,huntDistanceLayer]});map.current=m;setMapInstance(m);
-m.on('singleclick',ev=>{if(callbacks.current.drawing||callbacks.current.measuring)return;if(callbacks.current.huntMode){if(callbacks.current.huntMoving){const c=toLonLat(ev.coordinate);callbacks.current.onHuntPlace([c[0],c[1]]);return;}const resolution=m.getView().getResolution()||1;
+// Mouse drag is immediate; on touch a 450 ms long press activates dragging.
+const viewport=m.getViewport();
+let drag:{id:string;feature:Feature;start:[number,number];active:boolean;pointerId:number;touch:boolean;timer:number|null;moved:boolean}|null=null;
+let suppressClick=false;
+const dragPans=m.getInteractions().getArray().filter(i=>i instanceof DragPan);
+const restorePan=()=>dragPans.forEach(i=>i.setActive(true));
+const nearest=(event:PointerEvent)=>{
+ const rect=viewport.getBoundingClientRect();const pixel:[number,number]=[event.clientX-rect.left,event.clientY-rect.top];
+ return huntSource.current.getFeatures().map(feature=>{const point=(feature.getGeometry() as Point).getCoordinates();const p=m.getPixelFromCoordinate(point);return {feature,distance:Math.hypot(p[0]-pixel[0],p[1]-pixel[1])};}).filter(item=>item.distance<=34).sort((a,b)=>a.distance-b.distance)[0]?.feature;
+};
+const activateDrag=()=>{if(!drag)return;drag.active=true;dragPans.forEach(i=>i.setActive(false));};
+const down=(event:PointerEvent)=>{
+ if(!callbacks.current.huntMode||!callbacks.current.huntCanDrag||callbacks.current.huntMoving||callbacks.current.measuring||callbacks.current.drawing||event.button!==0)return;
+ const feature=nearest(event);if(!feature)return;
+ const id=feature.get('huntPositionId') as string;if(!id)return;
+ drag={id,feature,start:[event.clientX,event.clientY],active:false,pointerId:event.pointerId,touch:event.pointerType!=='mouse',timer:null,moved:false};
+ if(event.pointerType==='mouse')activateDrag();
+ else drag.timer=window.setTimeout(activateDrag,450);
+};
+const move=(event:PointerEvent)=>{
+ if(!drag||event.pointerId!==drag.pointerId)return;
+ if(!drag.active){if(Math.hypot(event.clientX-drag.start[0],event.clientY-drag.start[1])>10){if(drag.timer!==null)clearTimeout(drag.timer);drag=null;}return;}
+ event.preventDefault();event.stopPropagation();
+ const rect=viewport.getBoundingClientRect();const coordinate=m.getCoordinateFromPixel([event.clientX-rect.left,event.clientY-rect.top]);
+ if(!coordinate)return;
+ (drag.feature.getGeometry() as Point).setCoordinates(coordinate);drag.moved=true;
+};
+const end=(event:PointerEvent)=>{
+ if(!drag||event.pointerId!==drag.pointerId)return;
+ if(drag.timer!==null)clearTimeout(drag.timer);
+ const finished=drag;drag=null;restorePan();
+ if(finished.active&&finished.moved){event.preventDefault();event.stopPropagation();suppressClick=true;
+  const coordinate=(finished.feature.getGeometry() as Point).getCoordinates();const lonLat=toLonLat(coordinate);
+  callbacks.current.onHuntDrag(finished.id,[lonLat[0],lonLat[1]]);
+ }
+};
+viewport.addEventListener('pointerdown',down,true);
+viewport.addEventListener('pointermove',move,true);
+viewport.addEventListener('pointerup',end,true);
+viewport.addEventListener('pointercancel',end,true);
+m.on('singleclick',ev=>{if(suppressClick){suppressClick=false;return;}if(callbacks.current.drawing||callbacks.current.measuring)return;if(callbacks.current.huntMode){if(callbacks.current.huntMoving){const c=toLonLat(ev.coordinate);callbacks.current.onHuntPlace([c[0],c[1]]);return;}const resolution=m.getView().getResolution()||1;
 const candidates=huntSource.current.getFeatures().map(feature=>{
  const pixel=m.getPixelFromCoordinate((feature.getGeometry() as Point).getCoordinates());
  return {id:feature.get('huntPositionId') as string,distance:Math.hypot(pixel[0]-ev.pixel[0],pixel[1]-ev.pixel[1])};
@@ -51,7 +91,7 @@ m.forEachFeatureAtPixel(ev.pixel,f=>{const id=f.get('entryId');if(id){callbacks.
 fetch(import.meta.env.BASE_URL+'data/boundary.geojson').then(r=>{if(!r.ok)throw Error();return r.json();}).then(j=>{if(disposed)return;official.current.addFeatures(format.readFeatures(j,{dataProjection:'EPSG:4326',featureProjection:'EPSG:3857'}));if(!callbacks.current.searchResult&&!callbacks.current.measuring)m.getView().fit(official.current.getExtent()!,{padding:[90,50,110,50]});callbacks.current.onReady();}).catch(()=>callbacks.current.onError('Ametliku piiri laadimine ebaõnnestus.'));
 fetch(import.meta.env.BASE_URL+'data/wmts.xml').then(r=>{if(!r.ok)throw Error();return r.text();}).then(xml=>{if(disposed)return;const cap=new WMTSCapabilities().read(xml);for(const name of ['kaart','foto','hybriid']){const s=createBasemapSource(cap,name);s.on('tileloaderror',()=>{if(!disposed&&tiles.current[name]?.getVisible())setTileProblem('Aluskaart ei lae. Kontrolli ühendust või vali teine aluskaart.');});s.on('tileloadend',()=>{if(!disposed&&tiles.current[name]?.getVisible())setTileProblem('');});const layer=new TileLayer({source:s,visible:name==='kaart'});tiles.current[name]=layer;m.getLayers().insertAt(['kaart','foto','hybriid'].indexOf(name),layer);}setBase(callbacks.current.base);}).catch(()=>{if(!disposed)setTileProblem('Aluskaardi kirjeldus ei avanenud. Laadi leht uuesti.');});
 function setBase(b:string){for(const [name,l]of Object.entries(tiles.current))l.setVisible(name==='kaart'?b==='kaart':name==='foto'?b!=='kaart':b==='hybriid');}
-return()=>{disposed=true;m.setTarget(undefined);map.current=null;official.current.clear();};},[]);
+return()=>{viewport.removeEventListener('pointerdown',down,true);viewport.removeEventListener('pointermove',move,true);viewport.removeEventListener('pointerup',end,true);viewport.removeEventListener('pointercancel',end,true);if(drag?.timer!==null&&drag?.timer!==undefined)clearTimeout(drag.timer);restorePan();disposed=true;m.setTarget(undefined);map.current=null;official.current.clear();};},[]);
 useEffect(()=>{
  search.current.clear();const place=p.searchResult,m=map.current;if(!place||!m)return;
  let shape:import('ol/geom/Geometry').default=new Point(fromLonLat(place.coordinates));
