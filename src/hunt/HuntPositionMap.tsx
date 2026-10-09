@@ -83,11 +83,11 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
  useEffect(()=>{
   const m=map.current;if(!m||!areaDrawing||!canEdit)return;
   const draw=new Draw({type:'Polygon',source:areaSource.current});drawInteraction.current=draw;m.addInteraction(draw);
-  draw.on('drawstart',()=>areaSource.current.clear());
+  draw.on('drawstart',()=>{areaSource.current.clear();});
   draw.on('drawend',event=>{
    const geometry=event.feature.getGeometry();if(!(geometry instanceof Polygon))return;
    const coordinates=geometry.getCoordinates().map(ring=>ring.map(point=>toLonLat(point) as [number,number]));
-   areaDrawCallback.current?.({type:'Polygon',coordinates});setAreaDrawing(false);
+   if(coordinates[0]?.length>=4){areaDrawCallback.current?.({type:'Polygon',coordinates});}setAreaDrawing(false);
   });
   return()=>{m.removeInteraction(draw);drawInteraction.current=null;};
  },[areaDrawing,canEdit]);
