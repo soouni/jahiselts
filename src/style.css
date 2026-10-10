@@ -282,3 +282,7 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 /* Väike jahimeeste vahemaa sisse-välja nupp */
 .hunt-mode-switch .hunt-distance-button{width:44px!important;height:44px!important;min-height:44px!important;margin-right:10px}
 .hunt-mode-switch .hunt-distance-button.hunt-mode-active{background:#173e32!important;color:#fff!important}
+
+/* Compact hunt GPS button positioned immediately below the map compass. */
+.hunt-gps-fab{top:294px}
+@media(max-width:760px){.hunt-gps-fab{top:262px}}
