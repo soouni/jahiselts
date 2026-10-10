@@ -286,3 +286,6 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 /* Compact hunt GPS button positioned immediately below the map compass. */
 .hunt-gps-fab{top:294px}
 @media(max-width:760px){.hunt-gps-fab{top:262px}}
+
+.hunt-gps-panel{top:352px;max-height:calc(100dvh - 480px);overflow-y:auto}
+@media(max-width:760px){.hunt-gps-panel{top:320px;max-height:calc(100dvh - 430px)}}
