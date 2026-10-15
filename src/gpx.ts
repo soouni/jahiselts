@@ -17,6 +17,8 @@ const entryDescription=(entry:GpxEntry)=>[
 const garminSymbol=(entry:Entry)=>{
   const symbols:Record<string,string>={
     'Jahitorn':'Tree Stand',
+    'Tiik':'Water Source',
+    'Muu veekogu':'Water Source',
     'Söödakoht':'Food Source',
     'Jahimaja':'Lodge',
     'Parkimiskoht':'Parking Area',
@@ -51,7 +53,7 @@ function geometryTracks(entry:GpxEntry){
 }
 
 export function garminGpx(entries:Entry[],boundary?:any){
-  const usefulPlaceTypes=new Set(['Jahimaja','Jahitorn','Soolakivi','Söödakoht','Kogunemiskoht','Parkimiskoht']);
+  const usefulPlaceTypes=new Set(['Jahimaja','Jahitorn','Soolakivi','Söödakoht','Kogunemiskoht','Parkimiskoht','Tiik','Muu veekogu']);
   const permanent=entries.filter(entry=>!entry.deleted_at&&(
     (entry.kind==='place'&&usefulPlaceTypes.has(entry.properties.type))||
     (entry.kind==='line'&&['Siht','Metsatee'].includes(entry.properties.type))

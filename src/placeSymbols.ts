@@ -8,6 +8,8 @@ export const placeSymbols:Record<string,{color:string;path:string}>={
  'Jahitorn':{color:'#27623e',path:'<path d="M6 4h20v12h-5l5 13h-6l-4-11-4 11H6l5-13H6Z"/>'},
  'Soolakivi':{color:'#8a5c23',path:'<path d="m16 3 13 13-13 13L3 16Z"/>'},
  'Söödakoht':{color:'#58722e',path:'<path d="M3 8h26l-5 18H8Z"/>'},
+ 'Tiik':{color:'#1676b8',path:'<ellipse cx="16" cy="17" rx="13" ry="9"/><path d="M7 16q3-3 6 0t6 0t6 0M9 21q3-3 6 0t6 0" fill="none" stroke="white" stroke-width="1.6"/>'},
+ 'Muu veekogu':{color:'#1676b8',path:'<path d="M16 2C13 8 5 14 5 20a11 11 0 0 0 22 0C27 14 19 8 16 2Z"/><path d="M9 20q3-3 7 0t7 0" fill="none" stroke="white" stroke-width="1.6"/>'},
  'Sild / ületuskoht':{color:'#225e8a',path:'<path d="M3 7h7v6h12V7h7v18h-7v-6H10v6H3Z"/>'},
  'Kogunemiskoht':{color:'#225e8a',path:'<circle cx="16" cy="16" r="12"/>'},
  'Parkimiskoht':{color:'#225e8a',path:'<path fill-rule="evenodd" d="M7 3h12a9 9 0 0 1 0 18h-5v8H7Zm7 6v6h5a3 3 0 0 0 0-6Z"/>'},
