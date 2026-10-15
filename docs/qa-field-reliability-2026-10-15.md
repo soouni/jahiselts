@@ -24,7 +24,7 @@ Avalehe võrguühendusega laadimine valideerib HTML-i uuesti, et eelmine brauser
 
 ## Piirangud ja füüsiline vastuvõtutest
 
-Täielik eraldi Supabase Auth/PostgREST/Storage API testikomplekt vajab endiselt eraldi aktiivset testprojekti ja testkontosid. SQL õiguste test ei ole sama mis kogu API test. PGlite katsed ei ole mitme PostgreSQL-ühenduse koormustest.
+15.10.2026 käivitas Martti eraldi testprojektis `pipwbfmgmuiisrvnnnmw` mõlemad päris Auth/PostgREST/Storage läbivtestide komplektid (`test:rls`, `test:hunt-operations`). Jagatud terminali kuvatõmmisel (19:34:49) on mõlema komplekti PASS-tulemused ja lõppkinnitus „VALMIS: mõlemad läbivtestide komplektid läbisid.” See katab ka tavaliikme positsiooni võtmise/kinnitamise ja reaalajas asukoha õigused. See tõend ei asenda päris telefoni andurikatseid. PGlite katsed ei ole mitme PostgreSQL-ühenduse koormustest.
 
 Enne välirežiimi täielikku vastuvõttu tee vähemalt iPhone Safari ja Android Chrome seadmega:
 
