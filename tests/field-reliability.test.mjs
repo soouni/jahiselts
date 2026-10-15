@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {gpsUsable,canConfirmGps,createRefreshRunner} from '../src/hunt/reliability.ts';
-import {readOfflinePosition,saveOfflinePosition,clearOfflinePosition,OFFLINE_POSITION_TTL} from '../src/hunt/offlinePosition.ts';
+import {readLastOfflinePosition,readOfflinePosition,saveOfflinePosition,clearOfflinePosition,OFFLINE_POSITION_TTL} from '../src/hunt/offlinePosition.ts';
 
 test('GPS confirmation rejects stopped, old, inaccurate and invalid fixes',()=>{
  const now=100000,fix={coords:[24,58],accuracy:15,at:now};
@@ -27,8 +27,8 @@ test('offline own position is account scoped, expires, and never stores extra pa
  const map=new Map(),store={getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};
  const data={userId:'a',huntId:'h',driveId:'d',title:'Jaht',number:1,coordinates:[24,58],base:'hybriid',otherParticipants:[{name:'private'}]};
  saveOfflinePosition(store,data,1000);assert.equal(readOfflinePosition(store,'b',1000),null);
- assert.deepEqual(readOfflinePosition(store,'a',1000).coordinates,[24,58]);assert.equal([...map.values()][0].includes('private'),false);
- assert.equal(readOfflinePosition(store,'a',1000+OFFLINE_POSITION_TTL),null);
+ assert.deepEqual(readOfflinePosition(store,'a',1000).coordinates,[24,58]);assert.equal([...map.values()][0].includes('private'),false);assert.equal(readLastOfflinePosition(store,1000)?.userId,'a');
+ assert.equal(readOfflinePosition(store,'a',1000+OFFLINE_POSITION_TTL),null);assert.equal(readLastOfflinePosition(store,1000+OFFLINE_POSITION_TTL),null);
  saveOfflinePosition(store,data,2000);clearOfflinePosition(store,'a');assert.equal(map.size,0);
  map.set('parnjoe-own-position-v1:a','{broken');assert.equal(readOfflinePosition(store,'a'),null);
 });
