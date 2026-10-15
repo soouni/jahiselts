@@ -3,7 +3,7 @@ import type {RosterPerson} from './api';
 import {HuntPositionMap} from './HuntPositionMap';
 import {huntChoices,huntPeople,addHuntPerson,huntPositions,addHuntPosition,assignHuntPosition,removeHuntPerson,moveHuntPosition,removeHuntPosition} from './api';
 import type {ClubChoice,HuntRow,HuntPersonRow,HuntPositionRow} from './api';
-import {createHunt,listHunts,finishHunt,assignHuntLeader} from './api';
+import {createHunt,listHunts,setHuntStatus,activateHuntDrive,finishHuntDrive,assignHuntLeader} from './api';
 import {db} from '../api';
 import {useEffect} from 'react';
 import {useState} from 'react';
@@ -13,7 +13,7 @@ type DraftDrive={id:string;title:string;positions:number};
 type DraftHunt={title:string;type:HuntType;allowSelfSelection:boolean;drives:DraftDrive[]};
 const initial:DraftHunt={title:'',type:'drive',allowSelfSelection:false,drives:[{id:'1',title:'Aju 1',positions:0}]};
 
-/** Kohalik planeerimisvaade. Andmebaasiga ühendamine tuleb järgmises etapis. */
+/** Jahi loomise, rollide, asukohtade ja oleku halduse vaade. */
 export function HuntPlanner({onExit,clubRole='member'}:{onExit:()=>void;clubRole?:string}){
  const [draft,setDraft]=useState<DraftHunt>(initial);
  const [notice,setNotice]=useState('');
@@ -41,7 +41,9 @@ export function HuntPlanner({onExit,clubRole='member'}:{onExit:()=>void;clubRole
  const canLinkAccounts=clubRole==='owner';
  const canManage=Boolean(selected&&selected.status!=='finished'&&(clubRole==='owner'||clubRole==='admin'||selected.leader_id===currentUid));
  useEffect(()=>{db?.auth.getUser().then(({data})=>{setCurrentUid(data.user?.id||'');setCanFinish(Boolean(selected&&(clubRole==='owner'||clubRole==='admin'||data.user?.id===selected.leader_id)));});},[selected,clubRole]);
- async function completeSelectedHunt(){if(!selected||working||!canManage||selected.status==='finished')return;if(!window.confirm('Kas lõpetada jaht „'+selected.title+'”? Jaht jääb ajalukku, kuid seda ei saa enam aktiivse jahina kasutada.'))return;setWorking(true);try{await finishHunt(selected.id);setSelected({...selected,status:'finished'});setExisting(await listHunts());setPlacing(false);setMovingId(null);setFullMap(false);setNotice('Jaht lõpetatud. Osalejad ja positsioonid on ajaloo jaoks alles.');}catch(e){setNotice('Jahi lõpetamine ebaõnnestus: '+String(e));}finally{setWorking(false);}}
+ async function refreshSelected(){if(!selected)return;const rows=await listHunts() as HuntRow[];setExisting(rows);const fresh=rows.find(row=>row.id===selected.id);if(fresh){setSelected(fresh);setDriveId(fresh.hunt_drives?.find(d=>d.status==='active')?.id||driveId);}}
+ async function runLifecycle(action:()=>Promise<unknown>,message:string){if(!selected||working||!canManage)return;setWorking(true);try{await action();await refreshSelected();setNotice(message);}catch(e){setNotice('Toiming ebaõnnestus: '+String(e));}finally{setWorking(false);}}
+ async function completeSelectedHunt(){if(!selected||working||!canManage||selected.status==='finished')return;if(!window.confirm('Kas lõpetada jaht „'+selected.title+'”? Jaht jääb ajalukku, kuid seda ei saa enam aktiivse jahina kasutada.'))return;await runLifecycle(()=>setHuntStatus(selected.id,'finished'),'Jaht lõpetatud. Osalejad ja positsioonid on ajaloo jaoks alles.');setPlacing(false);setMovingId(null);setFullMap(false);}
 
  useEffect(()=>{listRoster().then(setRoster).catch(e=>setNotice('Nimekirja laadimine: '+String(e)));},[]);
  async function createRosterEntry(){if(!canCreate||!newName.trim())return;setWorking(true);try{await addRosterPerson(newName,newRole);setRoster(await listRoster());setNewName('');}catch(e){setNotice(String(e));}finally{setWorking(false);}}
@@ -71,6 +73,8 @@ export function HuntPlanner({onExit,clubRole='member'}:{onExit:()=>void;clubRole
  <h3>{selected.title}</h3>
  {(clubRole==='owner'||clubRole==='admin')&&selected.status!=='finished'&&<div className="field"><span>Määra jahijuht</span><select value={leaderChoice||selected.leader_id} onChange={e=>setLeaderChoice(e.target.value)}><option value={selected.leader_id}>Praegune jahijuht</option>{choices.filter(p=>p.user_id!==selected.leader_id).map(p=><option key={p.user_id} value={p.user_id}>{p.display_name}</option>)}</select><button type="button" disabled={working||!leaderChoice||leaderChoice===selected.leader_id} onClick={async()=>{setWorking(true);try{await assignHuntLeader(selected.id,leaderChoice);setSelected({...selected,leader_id:leaderChoice});setExisting(await listHunts());setLeaderChoice('');setNotice('Jahijuht määratud.');}catch(e){setNotice(String(e));}finally{setWorking(false);}}}>Salvesta jahijuht</button></div>}
  <div className="hunt-finish-row"><span className="muted">{selected.status==='finished'?'Jaht lõpetatud':'Staatus: '+(selected.status==='active'?'aktiivne':selected.status==='paused'?'peatatud':'planeeritud')}</span>{canFinish&&selected.status!=='finished'&&<button type="button" className="hunt-finish-button" disabled={working||!canManage} onClick={completeSelectedHunt}>{working?'Palun oota…':'Lõpeta jaht'}</button>}</div>
+ {canManage&&selected.status!=='finished'&&<div className="hunt-lifecycle-actions">{selected.status==='planned'?<button type="button" className="primary" disabled={working||!selected.hunt_drives?.length} onClick={()=>void runLifecycle(()=>activateHuntDrive(selected.hunt_drives[0].id),'Jaht ja esimene aju on aktiivsed.')}>Alusta jahti</button>:<button type="button" disabled={working} onClick={()=>void runLifecycle(()=>setHuntStatus(selected.id,selected.status==='active'?'paused':'active'),selected.status==='active'?'Jaht peatati.':'Jaht jätkub.')}>{selected.status==='active'?'Peata jaht':'Jätka jahti'}</button>}</div>}
+ {canManage&&selected.status!=='finished'&&<div className="hunt-drive-lifecycle"><strong>Ajude olek</strong>{selected.hunt_drives?.slice().sort((a,b)=>a.sequence-b.sequence).map(d=><div className="memberrow" key={d.id}><span>{d.sequence}. {d.title}</span><small>{d.status==='active'?'aktiivne':d.status==='finished'?'lõpetatud':'planeeritud'}</small>{d.status==='active'?<button type="button" disabled={working} onClick={()=>void runLifecycle(()=>finishHuntDrive(d.id),'Aju lõpetati.')}>Lõpeta aju</button>:d.status!=='finished'&&selected.status!=='planned'&&<button type="button" disabled={working||selected.status==='paused'} onClick={()=>void runLifecycle(()=>activateHuntDrive(d.id),d.title+' on aktiivne.')}>Alusta aju</button>}</div>)}</div>}
  <label className="field"><span>Vali aju</span><select value={driveId} onChange={e=>{setDriveId(e.target.value);setPlacing(false);setMovingId(null);}}>{selected.hunt_drives?.slice().sort((a,b)=>a.sequence-b.sequence).map(d=><option key={d.id} value={d.id}>{d.sequence}. {d.title}</option>)}</select></label>
  <h3>Jahimehed ja ajajad</h3>
  <div className="hunt-counts"><strong>Kütid {positions.filter(pos=>people.some(p=>p.id===pos.assigned_participant_id&&(p.role!=='driver'&&p.role!=='dog_driver'))).length}/{people.filter(p=>(p.role!=='driver'&&p.role!=='dog_driver')).length}</strong><strong>Ajajad {positions.filter(pos=>people.some(p=>p.id===pos.assigned_participant_id&&(p.role==='driver'||p.role==='dog_driver'))).length}/{people.filter(p=>(p.role==='driver'||p.role==='dog_driver')).length}</strong></div>
@@ -95,14 +99,14 @@ export function HuntPlanner({onExit,clubRole='member'}:{onExit:()=>void;clubRole
  </div>}
  {!selected&&<> 
  {canCreate&&<>
-  <p className="muted">Loo jahipäev ja järjestikused ajud. Positsioonide kaardile määramine lisandub järgmises etapis.</p>
+  <p className="muted">Loo jahipäev ja järjestikused ajud. Lisa ajude asukohad ja osalejad pärast jahi salvestamist.</p>
   <label className="field"><span>Jahi nimi</span><input value={draft.title} maxLength={120} placeholder="Näiteks laupäevane ühisjaht" onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
   <label className="field"><span>Jahiliik</span><select value={draft.type} onChange={e=>setDraft({...draft,type:e.target.value as HuntType})}><option value="drive">Ajujaht</option><option value="stand">Varitsusjaht</option><option value="other">Muu</option></select></label>
   <label className="checkrow"><span>Luba jahimeestel ise vaba positsiooni valida</span><input type="checkbox" checked={draft.allowSelfSelection} onChange={e=>setDraft({...draft,allowSelfSelection:e.target.checked})}/></label>
   <h3>Järjestikused ajud</h3>
   {draft.drives.map((d,i)=><div className="memberrow" key={d.id}><strong>{i+1}.</strong><input aria-label={'Aju '+(i+1)+' nimi'} value={d.title} maxLength={100} onChange={e=>setDraft(h=>({...h,drives:h.drives.map(x=>x.id===d.id?{...x,title:e.target.value}:x)}))}/><button type="button" disabled={draft.drives.length===1} onClick={()=>setDraft(h=>({...h,drives:h.drives.filter(x=>x.id!==d.id)}))}>Eemalda</button></div>)}
   <button type="button" onClick={addDrive}>+ Lisa järgmine aju</button>
-  <p className="muted">Positsioonid, eesnimed, GPS-kinnitused ja jahijuhi teated lisanduvad järgmistes etappides. Korraga saab aktiivne olla üks aju.</p>
+  <p className="muted">Lisa osalejad ja positsioonid pärast salvestamist. Korraga saab aktiivne olla üks aju.</p>
   <button type="button" className="primary full" onClick={save} disabled={saving}>{saving?'Salvestan…':'Salvesta jaht'}</button>
   {notice&&<p role="status" className="notice">{notice}</p>}
  </>}
