@@ -23,7 +23,8 @@ test('GPS sharing and arrival checks stay authenticated and participant scoped',
  assert.match(sql,/create policy hunt_locations_update[\s\S]*?with check[\s\S]*?participant\.user_id=\(select auth\.uid\(\)\)/);
  assert.match(sql,/create or replace function public\.confirm_my_hunt_position[\s\S]*?participant\.user_id=\(select auth\.uid\(\)\)/);
  assert.match(sql,/revoke all on function public\.share_my_hunt_location[\s\S]*?from public,anon/);
- assert.doesNotMatch(sql,/security definer/);
+ for(const name of ['set_hunt_status','activate_hunt_drive','finish_hunt_drive'])assert.match(core,new RegExp('function public\\.'+name+'[\\s\\S]*?security invoker'));
+ assert.doesNotMatch(location,/security definer/);
 });
 
 test('live locations have coordinate bounds and are deleted at lifecycle boundaries',()=>{
