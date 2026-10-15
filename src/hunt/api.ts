@@ -150,9 +150,9 @@ export async function claimHuntPosition(positionId:string){
  const {data,error}=await db.rpc('claim_hunt_position',{target_position_id:positionId});
  if(error)throw error;return data as HuntPositionRow;
 }
-export async function confirmMyHuntPosition(positionId:string,coordinates:[number,number],accuracy:number){
+export async function confirmMyHuntPosition(positionId:string,coordinates:[number,number],accuracy:number,measuredAt:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
- const {data,error}=await db.rpc('confirm_my_hunt_position',{target_position_id:positionId,current_location:{type:'Point',coordinates},current_accuracy_m:accuracy});
+ const {data,error}=await db.rpc('confirm_my_hunt_position',{target_position_id:positionId,current_location:{type:'Point',coordinates},current_accuracy_m:accuracy,measured_at:measuredAt});
  if(error)throw error;return data as HuntPositionRow;
 }
 export async function huntLocations(huntId:string):Promise<HuntLocationRow[]>{
@@ -167,4 +167,10 @@ export async function shareMyHuntLocation(huntId:string,coordinates:[number,numb
 }
 export async function stopMyHuntLocation(huntId:string){
  if(!db)return;const {error}=await db.rpc('stop_my_hunt_location',{target_hunt_id:huntId});if(error)throw error;
+}
+
+export async function placeHuntParticipant(driveId:string,participantId:string,coordinates:[number,number]){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('place_hunt_participant',{target_drive_id:driveId,target_participant_id:participantId,new_location:{type:'Point',coordinates}});
+ if(error)throw error;return data as HuntPositionRow;
 }

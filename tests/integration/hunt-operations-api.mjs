@@ -57,6 +57,7 @@ try{
  assert(true,'admin määrab aktiivse liikme jahijuhiks');
  const {data:memberCanManage,error:memberManageError}=await member.client.rpc('can_manage_hunt',{target_hunt_id:huntId});
  assert(!memberManageError&&memberCanManage===true,'aktiivne juhiks määratud liige saab jahti hallata');
+ const {error:restoreLeaderError}=await admin.client.rpc('assign_hunt_leader',{target_hunt_id:huntId,new_leader_id:admin.user.id});if(restoreLeaderError)throw restoreLeaderError;
  const {data:viewerStillCannotManage,error:viewerAfterAssignError}=await viewer.client.rpc('can_manage_hunt',{target_hunt_id:huntId});
  assert(!viewerAfterAssignError&&viewerStillCannotManage===false,'vaataja ei saa haldusõigusi ka pärast juhiks määramise katset');
 
@@ -64,12 +65,12 @@ try{
  await expectDenied(viewer.client.rpc('set_hunt_status',{target_hunt_id:huntId,new_status:'active'}),'vaataja ei muuda jahi olekut');
  await expectDenied(member.client.rpc('set_hunt_status',{target_hunt_id:randomUUID(),new_status:'active'}),'jahijuht ei muuda olematut jahti');
 
- const {data:participant,error:participantError}=await member.client.from('hunt_participants').insert({hunt_id:huntId,user_id:member.user.id,display_name:'Test jahijuht',role:'hunter',status:'present'}).select('id').single();
+ const {data:participant,error:participantError}=await admin.client.from('hunt_participants').insert({hunt_id:huntId,user_id:member.user.id,display_name:'Test tavaliige',role:'hunter',status:'present'}).select('id').single();
  if(participantError)throw participantError;
- const {data:position,error:positionError}=await member.client.from('hunt_positions').insert({drive_id:drive.id,number:1,location:{type:'Point',coordinates:[24.887,58.638]}}).select('id').single();
+ const {data:position,error:positionError}=await admin.client.from('hunt_positions').insert({drive_id:drive.id,number:1,location:{type:'Point',coordinates:[24.887,58.638]}}).select('id').single();
  if(positionError)throw positionError;
 
- const {data:activeDrive,error:activateError}=await member.client.rpc('activate_hunt_drive',{target_drive_id:drive.id});
+ const {data:activeDrive,error:activateError}=await admin.client.rpc('activate_hunt_drive',{target_drive_id:drive.id});
  if(activateError)throw activateError;
  assert(activeDrive.status==='active','määratud jahijuht alustab aju ja jahi');
  const {data:activeHunt,error:activeHuntError}=await member.client.from('hunts').select('status').eq('id',huntId).single();
@@ -85,11 +86,11 @@ try{
 
  const {data:claimed,error:claimError}=await member.client.rpc('claim_hunt_position',{target_position_id:position.id});
  if(claimError)throw claimError;
- assert(claimed.assigned_participant_id===participant.id,'jahijuht võtab vaba positsiooni ise');
- const {data:confirmed,error:confirmError}=await member.client.rpc('confirm_my_hunt_position',{target_position_id:position.id,current_location:{type:'Point',coordinates:[24.887,58.638]},current_accuracy_m:8});
+ assert(claimed.assigned_participant_id===participant.id,'tavaline osaleja võtab vaba positsiooni ise');
+ const {data:confirmed,error:confirmError}=await member.client.rpc('confirm_my_hunt_position',{target_position_id:position.id,current_location:{type:'Point',coordinates:[24.887,58.638]},current_accuracy_m:8,measured_at:new Date().toISOString()});
  if(confirmError)throw confirmError;
  assert(Boolean(confirmed.confirmed_at)&&Number(confirmed.confirmation_distance_m)===0,'osaleja kinnitab enda määratud positsiooni GPS-iga');
- await expectDenied(viewer.client.rpc('confirm_my_hunt_position',{target_position_id:position.id,current_location:{type:'Point',coordinates:[24.887,58.638]},current_accuracy_m:8}),'vaataja ei kinnita teise osaleja positsiooni');
+ await expectDenied(viewer.client.rpc('confirm_my_hunt_position',{target_position_id:position.id,current_location:{type:'Point',coordinates:[24.887,58.638]},current_accuracy_m:8,measured_at:new Date().toISOString()}),'vaataja ei kinnita teise osaleja positsiooni');
 
  const measuredAt=new Date().toISOString();
  const {data:location,error:locationError}=await member.client.rpc('share_my_hunt_location',{target_hunt_id:huntId,current_location:{type:'Point',coordinates:[24.887,58.638]},current_accuracy_m:12,current_heading_deg:90,measured_at:measuredAt});
@@ -115,7 +116,7 @@ try{
  const {data:finishedHunt,error:finishHuntError}=await admin.client.rpc('set_hunt_status',{target_hunt_id:huntId,new_status:'finished'});
  if(finishHuntError)throw finishHuntError;
  assert(finishedHunt.status==='finished','admin lõpetab jahi');
- await expectDenied(admin.client.rpc('set_hunt_status',{target_hunt_id:huntId,new_status:'active'}),'lõpetatud jahti ei saa uuesti avada');
+ await expectDenied(member.client.rpc('set_hunt_status',{target_hunt_id:huntId,new_status:'active'}),'lõpetatud jahti ei saa uuesti avada');
 
  console.log(checks.join('\n'));
 }finally{

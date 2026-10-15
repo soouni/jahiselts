@@ -127,3 +127,13 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 .hunt-lifecycle-actions,.hunt-drive-lifecycle{display:grid;gap:8px;margin:12px 0}.hunt-drive-lifecycle{padding:12px;border-radius:12px;background:var(--soft)}.hunt-drive-lifecycle>.memberrow{margin:0}
 @media(max-width:760px){.hunt-sync-status{top:121px}}
 .hunt-confirmed{display:block;margin-top:3px;color:#26724d;font-size:11px}
+
+/* Keep field controls usable on small screens, with large text and in landscape. */
+.offline-position-open{position:absolute;left:50%;transform:translateX(-50%);top:100px;z-index:19;max-width:calc(100vw - 24px);padding:10px 14px;background:#fff;box-shadow:0 3px 16px #173e3228;overflow-wrap:anywhere}
+.hunt-sync-status{max-width:calc(100vw - 24px);white-space:normal;text-align:center;overflow-wrap:anywhere}
+.hunt-sheet>header>div,.hunt-compass-row>div:last-child{min-width:0;overflow-wrap:anywhere}
+.hunt-sheet button{white-space:normal;overflow-wrap:anywhere}
+.offline-card>button{width:100%;margin:5px 0}
+@media(max-width:375px){.hunt-compass-row{flex-wrap:wrap}.hunt-compass-row>div:last-child{flex-basis:140px}.hunt-navigation-value{flex-wrap:wrap;gap:5px 12px}.hunt-sheet{padding:12px}.hunt-role-stats{grid-template-columns:1fr}.hunt-statusbar{font-size:11px}.hunt-statusbar strong{min-width:0}.offline-position-open{top:80px}}
+@media(max-height:520px){:root{--map-compass-top:92px;--map-compass-size:76px}.hunt-sheet{left:12px;right:auto;top:80px;bottom:12px;transform:none;width:min(420px,calc(100vw - 136px));max-height:none;border-radius:16px;padding:12px}.hunt-participants-sheet{max-height:none}.hunt-statusbar{top:12px;left:50%;max-width:calc(100vw - 440px)}.hunt-sync-status{top:51px;max-width:calc(100vw - 300px)}.hunt-dock{left:auto;right:12px;bottom:12px;transform:none;width:auto;max-width:calc(100vw - 24px)}.hunt-dock button{min-height:48px;padding:6px 10px}.hunt-sheet-actions>*{flex-basis:150px}}
+@media(max-height:520px) and (max-width:760px){.hunt-statusbar{top:80px;left:12px;transform:none;max-width:calc(100vw - 140px)}.hunt-sync-status{top:116px;left:12px;transform:none;max-width:calc(100vw - 140px)}.hunt-sheet{top:150px;bottom:12px;width:calc(100vw - 148px)}.hunt-dock{width:104px;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:4px}.hunt-dock button{padding:4px 2px;font-size:10px;min-height:56px}.hunt-dock button svg{width:19px;height:19px}.hunt-dock small{font-size:10px}}

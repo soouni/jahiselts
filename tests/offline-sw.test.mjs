@@ -10,7 +10,7 @@ test('first successful visit sends the loaded app shell to the service worker',(
  assert.match(app,/type:'CACHE_APP_SHELL'/);
  assert.match(worker,/type==='CACHE_APP_SHELL'/);
  assert.match(worker,/Promise\.allSettled\(urls\.map\(url=>cache\.add/);
- assert.match(worker,/type:'OFFLINE_SHELL_READY'/);
+ assert.match(worker,/'OFFLINE_SHELL_READY'/);
 });
 
 test('offline cache accepts only same-origin resources inside its scope',()=>{
@@ -20,7 +20,7 @@ test('offline cache accepts only same-origin resources inside its scope',()=>{
 
 test('map tile storage is bounded, package status is explicit and navigation has an offline fallback',()=>{
  assert.match(worker,/const MAX_TILES=2500/);
- assert.match(worker,/keys\.slice\(0,keys\.length-MAX_TILES\)/);
+ assert.match(worker,/candidates\.slice\(0,keys\.length-MAX_TILES\)/);
  assert.match(worker,/req\.mode==='navigate'/);
  assert.match(worker,/match\(SCOPE\)\|\|Response\.error\(\)/);
  assert.match(worker,/type==='CACHE_MAP_PACKAGE'/);
