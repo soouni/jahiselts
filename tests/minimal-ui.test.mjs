@@ -21,11 +21,11 @@ test('layers and observation filters share one map-content surface',()=>{
 });
 
 test('field mode uses one exclusive surface and a dedicated action dock',()=>{
- assert.match(app,/useState<'position'\|'participants'\|'weather'\|'more'\|null>\(null\)/);
+ assert.match(app,/useState<'position'\|'participants'\|'more'\|null>\(null\)/);
  assert.match(docks,/className="bottomnav hunt-dock"/);
  assert.match(ui,/huntSurface==='position'/);
  assert.match(ui,/huntSurface==='participants'/);
- assert.match(ui,/huntSurface==='weather'/);
+ assert.match(docks,/aria-pressed=\{windEnabled\}/);
  assert.match(ui,/huntSurface==='more'/);
  assert.doesNotMatch(ui,/huntGpsPanelOpen|huntWindOpen|offlinePanel/);
 });
