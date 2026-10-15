@@ -21,7 +21,8 @@ export function MapActionDock({canAdd,locating,filtersActive,onSearch,onContent,
 }
 
 type HuntActionDockProps={
- active:'position'|'participants'|'weather'|'more'|null;
+ active:'position'|'participants'|'more'|null;
+ windEnabled:boolean;
  positionLabel:string;
  distanceLabel?:string;
  onParticipants:()=>void;
@@ -30,11 +31,11 @@ type HuntActionDockProps={
  onMore:()=>void;
 };
 
-export function HuntActionDock({active,positionLabel,distanceLabel,onParticipants,onPosition,onWeather,onMore}:HuntActionDockProps){
+export function HuntActionDock({active,windEnabled,positionLabel,distanceLabel,onParticipants,onPosition,onWeather,onMore}:HuntActionDockProps){
  return <nav className="bottomnav hunt-dock" aria-label="Jahirežiimi tööriistad">
   <button aria-pressed={active==='participants'} onClick={onParticipants}><Users/><span>Osalejad</span></button>
   <button className="add" aria-label={`GPS ja minu jahikoht: ${positionLabel}`} aria-pressed={active==='position'} onClick={onPosition}><Navigation/><span>GPS</span><small>{distanceLabel||positionLabel}</small></button>
-  <button aria-pressed={active==='weather'} onClick={onWeather}><Wind/><span>Tuul</span></button>
+  <button aria-pressed={windEnabled} onClick={onWeather}><Wind/><span>Tuul</span></button>
   <button aria-pressed={active==='more'} onClick={onMore}><Ellipsis/><span>Rohkem</span></button>
  </nav>;
 }
