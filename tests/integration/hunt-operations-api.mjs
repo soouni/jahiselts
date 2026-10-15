@@ -7,9 +7,10 @@ const missing=required.filter(key=>!process.env[key]);
 if(missing.length)throw Error(`Puuduvad testkeskkonna muutujad: ${missing.join(', ')}`);
 if(process.env.RLS_TEST_ACK!=='I_UNDERSTAND_THIS_IS_A_DISPOSABLE_PROJECT')throw Error('Testid kirjutavad andmebaasi. Kinnita, et kasutad eraldi ajutist Supabase testprojekti.');
 const url=new URL(process.env.RLS_TEST_URL);
-if(url.hostname!==`${projectRef}.supabase.co`)throw Error(`Peatasin töö: testid võivad muuta ainult ajutist projekti ${projectRef}.`);
+if(url.origin!==`https://${projectRef}.supabase.co`)throw Error(`Peatasin töö: testid võivad muuta ainult ajutist projekti ${projectRef}.`);
 
 const createAccount=()=>createClient(url.href,process.env.RLS_TEST_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
+const anonymous=createAccount();
 async function login(role){
  const account=createAccount();
  const {data,error}=await account.auth.signInWithPassword({email:process.env[`RLS_TEST_${role}_EMAIL`],password:process.env[`RLS_TEST_${role}_PASSWORD`]});
@@ -26,18 +27,38 @@ async function expectDenied(promise,label){const {data,error}=await promise;asse
 const suffix=randomUUID();
 let huntId=null;
 let secondHuntId=null;
+let outsiderId=null;
 
 try{
+ for(const table of ['hunts','hunt_drives','hunt_participants','hunt_positions','hunt_roster','hunt_locations']){
+  await expectDenied(anonymous.from(table).select('*').limit(1),`anon ei pääse tabelisse ${table}`);
+ }
+ const outsiderEmail=`security-outsider-${suffix}@example.invalid`,outsiderPassword=randomUUID()+randomUUID();
+ const {data:outsiderData,error:outsiderError}=await adminClient.auth.admin.createUser({email:outsiderEmail,password:outsiderPassword,email_confirm:true});
+ if(outsiderError)throw outsiderError;
+ outsiderId=outsiderData.user.id;
+ const outsider=createAccount();
+ const {error:outsiderLoginError}=await outsider.auth.signInWithPassword({email:outsiderEmail,password:outsiderPassword});
+ if(outsiderLoginError)throw outsiderLoginError;
  const {data:hunt,error:huntError}=await admin.client.from('hunts').insert({title:`API test ${suffix}`,type:'drive',leader_id:admin.user.id,allow_self_selection:true}).select('id').single();
  if(huntError)throw huntError;
  huntId=hunt.id;
+ await expectDenied(outsider.rpc('assign_hunt_leader',{target_hunt_id:huntId,new_leader_id:member.user.id}),'liikmesuseta sisselogitud konto ei saa jahijuhti määrata');
  const {data:drive,error:driveError}=await admin.client.from('hunt_drives').insert({hunt_id:huntId,sequence:1,title:'API test drive'}).select('id').single();
  if(driveError)throw driveError;
  await expectDenied(member.client.rpc('set_hunt_status',{target_hunt_id:huntId,new_status:'active'}),'tavaline liige ei halda jahti enne jahijuhiks määramist');
  await expectDenied(member.client.from('hunt_participants').insert({hunt_id:huntId,user_id:member.user.id,display_name:'Keelatud testosaleja',role:'hunter'}),'tavaline liige ei lisa teise juhi jahi osalejaid');
+ await expectDenied(admin.client.rpc('assign_hunt_leader',{target_hunt_id:huntId,new_leader_id:viewer.user.id}),'admin ei saa vaatajat jahijuhiks määrata');
+ const {data:viewerCanManage,error:viewerManageError}=await viewer.client.rpc('can_manage_hunt',{target_hunt_id:huntId});
+ assert(!viewerManageError&&viewerCanManage===false,'vaataja ei saa haldusõigusi enne juhiks määramist');
+ await expectDenied(viewer.client.rpc('assign_hunt_leader',{target_hunt_id:huntId,new_leader_id:viewer.user.id}),'vaataja ei saa ise end jahijuhiks määrata');
  const {error:leaderError}=await admin.client.rpc('assign_hunt_leader',{target_hunt_id:huntId,new_leader_id:member.user.id});
  if(leaderError)throw leaderError;
  assert(true,'admin määrab aktiivse liikme jahijuhiks');
+ const {data:memberCanManage,error:memberManageError}=await member.client.rpc('can_manage_hunt',{target_hunt_id:huntId});
+ assert(!memberManageError&&memberCanManage===true,'aktiivne juhiks määratud liige saab jahti hallata');
+ const {data:viewerStillCannotManage,error:viewerAfterAssignError}=await viewer.client.rpc('can_manage_hunt',{target_hunt_id:huntId});
+ assert(!viewerAfterAssignError&&viewerStillCannotManage===false,'vaataja ei saa haldusõigusi ka pärast juhiks määramise katset');
 
  await expectDenied(viewer.client.from('hunt_participants').insert({hunt_id:huntId,display_name:'Keelatud testosaleja',role:'hunter'}),'vaataja ei lisa jahi osalejat');
  await expectDenied(viewer.client.rpc('set_hunt_status',{target_hunt_id:huntId,new_status:'active'}),'vaataja ei muuda jahi olekut');
@@ -101,4 +122,5 @@ try{
  // The service key is accepted only for the explicitly named disposable test project.
  if(secondHuntId){const {error}=await adminClient.from('hunts').delete().eq('id',secondHuntId);if(error)console.error('Teise testjahi kustutamine ebaõnnestus:',error.message);}
  if(huntId){const {error}=await adminClient.from('hunts').delete().eq('id',huntId);if(error)console.error('Testjahi kustutamine ebaõnnestus:',error.message);}
+ if(outsiderId){const {error}=await adminClient.auth.admin.deleteUser(outsiderId);if(error)console.error('Testkonto kustutamine ebaõnnestus:',error.message);}
 }
