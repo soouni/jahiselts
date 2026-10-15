@@ -1,6 +1,7 @@
 /** Opt-in, account-scoped snapshot. Never persists other participants or live GPS. */
 export type OfflinePosition={version:1;userId:string;huntId:string;driveId:string;title:string;number:number;coordinates:[number,number];savedAt:number;expiresAt:number;base:string};
 const PREFIX='parnjoe-own-position-v1:';
+const LAST_OWNER=PREFIX+'last-owner';
 export const OFFLINE_POSITION_TTL=12*60*60*1000;
 type Store=Pick<Storage,'getItem'|'setItem'|'removeItem'>;
 export function readOfflinePosition(storage:Store,userId:string,now=Date.now()):OfflinePosition|null{
@@ -12,6 +13,9 @@ export function readOfflinePosition(storage:Store,userId:string,now=Date.now()):
 }
 export function saveOfflinePosition(storage:Store,position:Omit<OfflinePosition,'version'|'savedAt'|'expiresAt'>,now=Date.now()){
  const snapshot:OfflinePosition={version:1,userId:position.userId,huntId:position.huntId,driveId:position.driveId,title:position.title,number:position.number,coordinates:[...position.coordinates],base:position.base,savedAt:now,expiresAt:now+OFFLINE_POSITION_TTL};
- storage.setItem(PREFIX+position.userId,JSON.stringify(snapshot));return snapshot;
+ storage.setItem(PREFIX+position.userId,JSON.stringify(snapshot));storage.setItem(LAST_OWNER,position.userId);return snapshot;
 }
-export function clearOfflinePosition(storage:Store,userId:string){try{if(userId)storage.removeItem(PREFIX+userId);}catch{/* A blocked store cannot hold a readable snapshot. */}}
+export function readLastOfflinePosition(storage:Store,now=Date.now()):OfflinePosition|null{
+ try{const owner=storage.getItem(LAST_OWNER);return owner?readOfflinePosition(storage,owner,now):null;}catch{return null;}
+}
+export function clearOfflinePosition(storage:Store,userId:string){try{if(userId){storage.removeItem(PREFIX+userId);if(storage.getItem(LAST_OWNER)===userId)storage.removeItem(LAST_OWNER);}}catch{/* A blocked store cannot hold a readable snapshot. */}}
