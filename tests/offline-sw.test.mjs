@@ -18,9 +18,13 @@ test('offline cache accepts only same-origin resources inside its scope',()=>{
  assert.doesNotMatch(worker,/supabase[^\n]*cache\.put/i);
 });
 
-test('map tiles remain bounded and navigation has an offline fallback',()=>{
- assert.match(worker,/const MAX_TILES=450/);
+test('map tile storage is bounded, package status is explicit and navigation has an offline fallback',()=>{
+ assert.match(worker,/const MAX_TILES=2500/);
  assert.match(worker,/keys\.slice\(0,keys\.length-MAX_TILES\)/);
  assert.match(worker,/req\.mode==='navigate'/);
  assert.match(worker,/match\(SCOPE\)\|\|Response\.error\(\)/);
+ assert.match(worker,/type==='CACHE_MAP_PACKAGE'/);
+ assert.match(worker,/OFFLINE_MAP_PROGRESS/);
+ assert.match(worker,/OFFLINE_MAP_READY/);
+ assert.match(worker,/preparedAt:new Date\(\)\.toISOString\(\)/);
 });

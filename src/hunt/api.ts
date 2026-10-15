@@ -17,16 +17,17 @@ export async function createHunt(draft:HuntDraft){
 }
 export async function listHunts(){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
- const {data,error}=await db.from('hunts').select('id,title,type,status,leader_id,allow_self_selection,created_at,hunt_drives(id,sequence,title,status,area_geojson)').order('created_at',{ascending:false}).limit(40);
+ const {data,error}=await db.from('hunts').select('id,title,type,status,leader_id,allow_self_selection,starts_at,created_at,updated_at,hunt_drives(id,hunt_id,sequence,title,status,area_geojson,started_at,finished_at,updated_at)').order('created_at',{ascending:false}).limit(40);
  if(error)throw error;
  return data||[];
 }
 
 export type ClubChoice={user_id:string;display_name:string};
-export type HuntDriveRow={id:string;sequence:number;title:string;status:string;area_geojson?:{type:'Polygon';coordinates:[number,number][][]}|null};
-export type HuntRow={id:string;title:string;type:string;status:string;leader_id:string;allow_self_selection:boolean;hunt_drives:HuntDriveRow[]};
+export type HuntDriveRow={id:string;hunt_id?:string;sequence:number;title:string;status:string;area_geojson?:{type:'Polygon';coordinates:[number,number][][]}|null;started_at?:string|null;finished_at?:string|null;updated_at?:string};
+export type HuntRow={id:string;title:string;type:string;status:string;leader_id:string;allow_self_selection:boolean;starts_at?:string|null;updated_at?:string;hunt_drives:HuntDriveRow[]};
 export type HuntPersonRow={id:string;hunt_id:string;user_id:string|null;display_name:string;role:string;status:string;roster_id:string|null};
-export type HuntPositionRow={id:string;drive_id:string;number:number;location:{type:'Point';coordinates:[number,number]};assigned_participant_id:string|null;confirmed_at:string|null};
+export type HuntPositionRow={id:string;drive_id:string;number:number;location:{type:'Point';coordinates:[number,number]};assigned_participant_id:string|null;confirmed_at:string|null;confirmation_accuracy_m?:number|null;confirmation_distance_m?:number|null};
+export type HuntLocationRow={participant_id:string;hunt_id:string;user_id:string;location:{type:'Point';coordinates:[number,number]};accuracy_m:number;heading_deg:number|null;recorded_at:string;received_at:string};
 export async function huntChoices():Promise<ClubChoice[]>{
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {data,error}=await db.rpc('hunt_member_choices');if(error)throw error;return data||[];
@@ -127,4 +128,43 @@ export async function updateHuntParticipantRole(participantId:string,role:'hunte
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.from('hunt_participants').update({role}).eq('id',participantId);
  if(error)throw error;
+}
+
+export async function setHuntStatus(huntId:string,status:'active'|'paused'|'finished'){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('set_hunt_status',{target_hunt_id:huntId,new_status:status});
+ if(error)throw error;return data as HuntRow;
+}
+export async function activateHuntDrive(driveId:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('activate_hunt_drive',{target_drive_id:driveId});
+ if(error)throw error;return data as HuntDriveRow;
+}
+export async function finishHuntDrive(driveId:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('finish_hunt_drive',{target_drive_id:driveId});
+ if(error)throw error;return data as HuntDriveRow;
+}
+export async function claimHuntPosition(positionId:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('claim_hunt_position',{target_position_id:positionId});
+ if(error)throw error;return data as HuntPositionRow;
+}
+export async function confirmMyHuntPosition(positionId:string,coordinates:[number,number],accuracy:number){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('confirm_my_hunt_position',{target_position_id:positionId,current_location:{type:'Point',coordinates},current_accuracy_m:accuracy});
+ if(error)throw error;return data as HuntPositionRow;
+}
+export async function huntLocations(huntId:string):Promise<HuntLocationRow[]>{
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.from('hunt_locations').select('*').eq('hunt_id',huntId);
+ if(error)throw error;return data||[];
+}
+export async function shareMyHuntLocation(huntId:string,coordinates:[number,number],accuracy:number,heading:number|null,recordedAt:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('share_my_hunt_location',{target_hunt_id:huntId,current_location:{type:'Point',coordinates},current_accuracy_m:accuracy,current_heading_deg:heading,measured_at:recordedAt});
+ if(error)throw error;return data as HuntLocationRow;
+}
+export async function stopMyHuntLocation(huntId:string){
+ if(!db)return;const {error}=await db.rpc('stop_my_hunt_location',{target_hunt_id:huntId});if(error)throw error;
 }

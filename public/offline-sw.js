@@ -1,10 +1,11 @@
-/* Pärnjõe jahikaardi võrguühenduseta kasutamise esimene etapp.
-   Salvestatakse ainult juba vaadatud avalikud Maa- ja Ruumiameti kaardipaanid.
+/* Pärnjõe jahikaardi võrguühenduseta kasutamine.
+   Salvestatakse vaadatud või kasutaja valitud avalikud Maa- ja Ruumiameti kaardipaanid.
    Supabase'i andmeid ega kasutaja päringuid ei salvestata teenusetöötajaga. */
 const SHELL='parnjoe-shell-v2';
 const TILES='parnjoe-map-tiles-v1';
-const MAX_TILES=450;
+const MAX_TILES=2500;
 const SCOPE=self.registration.scope;
+const PACKAGE_META=new URL('offline-package.json',SCOPE).href;
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(SHELL).then(cache=>cache.add(SCOPE)).catch(()=>{}));
  self.skipWaiting();
@@ -44,5 +45,16 @@ self.addEventListener('message',event=>{
   event.source?.postMessage({type:'OFFLINE_SHELL_READY'});
  })());
  if(event.data?.type==='CLEAR_OFFLINE_MAP')event.waitUntil(caches.delete(TILES).then(()=>event.source?.postMessage({type:'OFFLINE_MAP_CLEARED'})));
- if(event.data?.type==='OFFLINE_MAP_STATUS')event.waitUntil(caches.open(TILES).then(cache=>cache.keys()).then(keys=>event.source?.postMessage({type:'OFFLINE_MAP_STATUS',count:keys.length})));
+ if(event.data?.type==='CACHE_MAP_PACKAGE')event.waitUntil((async()=>{
+  const urls=[...new Set(Array.isArray(event.data.urls)?event.data.urls:[])].filter(value=>{try{return new URL(value).hostname==='tiles.maaamet.ee';}catch{return false;}}).slice(0,MAX_TILES);
+  const cache=await caches.open(TILES);let completed=0,failed=0;
+  for(let offset=0;offset<urls.length;offset+=6){
+   await Promise.all(urls.slice(offset,offset+6).map(async url=>{try{const request=new Request(url,{mode:'cors'});if(!await cache.match(request)){const response=await fetch(request);if(!response.ok)throw new Error();await cache.put(request,response.clone());}completed++;}catch{failed++;}}));
+   event.source?.postMessage({type:'OFFLINE_MAP_PROGRESS',completed,failed,total:urls.length});
+  }
+  const metadata={name:String(event.data.name||'Jahiala'),base:String(event.data.base||''),completed,failed,total:urls.length,preparedAt:new Date().toISOString()};
+  await cache.put(PACKAGE_META,new Response(JSON.stringify(metadata),{headers:{'Content-Type':'application/json'}}));
+  await trim(cache);event.source?.postMessage({type:'OFFLINE_MAP_READY',metadata});
+ })());
+ if(event.data?.type==='OFFLINE_MAP_STATUS')event.waitUntil((async()=>{const cache=await caches.open(TILES),keys=await cache.keys();let metadata=null;try{const response=await cache.match(PACKAGE_META);if(response)metadata=await response.json();}catch{}event.source?.postMessage({type:'OFFLINE_MAP_STATUS',count:keys.filter(key=>key.url!==PACKAGE_META).length,metadata});})());
 });
