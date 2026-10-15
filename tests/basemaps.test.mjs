@@ -50,7 +50,7 @@ for(const name of ['kaart','foto','hybriid'])test(`real ${name} tile from the ap
  assert.ok(url);
  const parsed=new URL(url);
  assert.equal(parsed.searchParams.get('ASUTUS'),'PARNJOE_JAHISELTS');
- const r=await fetch(url,{headers:{Origin:'https://parnjoe-jahikaart.ojamaa.chatgpt.site'},signal:AbortSignal.timeout(20000)});
+ const r=await fetch(url,{headers:{Origin:'https://soouni.github.io'},signal:AbortSignal.timeout(20000)});
  assert.equal(r.status,200);
  assert.equal(r.headers.get('access-control-allow-origin'),'*');
  assert.equal(r.headers.get('content-type'),name==='foto'?'image/jpeg':'image/png');
