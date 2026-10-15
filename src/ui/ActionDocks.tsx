@@ -26,11 +26,14 @@ type HuntActionDockProps={
  distanceLabel?:string;
  onParticipants:()=>void;
  onPosition:()=>void;
+ measuring:boolean;
+ onMeasure:()=>void;
 };
 
-export function HuntActionDock({active,positionLabel,distanceLabel,onParticipants,onPosition}:HuntActionDockProps){
+export function HuntActionDock({active,positionLabel,distanceLabel,onParticipants,onPosition,measuring,onMeasure}:HuntActionDockProps){
  return <nav className="bottomnav hunt-dock" aria-label="Jahirežiimi tööriistad">
   <button aria-pressed={active==='participants'} onClick={onParticipants}><Users/><span>Osalejad</span></button>
   <button className="add" aria-label={`GPS ja minu jahikoht: ${positionLabel}`} aria-pressed={active==='position'} onClick={onPosition}><Navigation/><span>GPS</span><small>{distanceLabel||positionLabel}</small></button>
+  <button aria-pressed={measuring} onClick={onMeasure}><Ruler/><span>Mõõda</span></button>
  </nav>;
 }
