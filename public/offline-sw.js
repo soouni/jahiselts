@@ -30,7 +30,7 @@ self.addEventListener('fetch',event=>{
  if(url.origin!==self.location.origin||!url.pathname.startsWith(new URL(SCOPE).pathname))return;
  if(req.mode==='navigate'&&![new URL(SCOPE).pathname,new URL('index.html',SCOPE).pathname].includes(url.pathname))return;
  if(req.mode==='navigate'){
-  event.respondWith(fetch(req).then(async response=>{if(response.ok){const cache=await caches.open(SHELL);await cache.put(SCOPE,response.clone());}return response;}).catch(async()=>await (await caches.open(SHELL)).match(SCOPE)||Response.error()));return;
+  event.respondWith(fetch(req,{cache:'no-cache'}).then(async response=>{if(response.ok){const cache=await caches.open(SHELL);await cache.put(SCOPE,response.clone());}return response;}).catch(async()=>await (await caches.open(SHELL)).match(SCOPE)||Response.error()));return;
  }
  if(/\.(?:geojson|xml)$/.test(url.pathname)){
   event.respondWith((async()=>{const cache=await caches.open(SHELL);try{const response=await fetch(req);if(response.ok){try{await cache.put(req,response.clone());}catch{}return response;}const saved=await cache.match(req);return saved||response;}catch{return await cache.match(req)||Response.error();}})());return;
