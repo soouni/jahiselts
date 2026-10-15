@@ -6,7 +6,7 @@ const missing=required.filter(k=>!process.env[k]);
 if(missing.length)throw Error(`Puuduvad testkeskkonna muutujad: ${missing.join(', ')}`);
 if(process.env.RLS_TEST_ACK!=='I_UNDERSTAND_THIS_IS_A_DISPOSABLE_PROJECT')throw Error('Testid kirjutavad andmebaasi. Kinnita, et kasutad eraldi ajutist Supabase testprojekti.');
 const url=process.env.RLS_TEST_URL;
-if(/asvbfhbmegmeuvvtgvor|prod|production/i.test(new URL(url).hostname))throw Error('Tootmiskeskkonnas käivitamine on keelatud.');
+if(new URL(url).origin!=='https://pipwbfmgmuiisrvnnnmw.supabase.co')throw Error('Testid võivad muuta ainult kinnitatud ajutist projekti pipwbfmgmuiisrvnnnmw.');
 const client=()=>createClient(url,process.env.RLS_TEST_PUBLISHABLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 async function login(prefix){const c=client();const {data,error}=await c.auth.signInWithPassword({email:process.env[`RLS_TEST_${prefix}_EMAIL`],password:process.env[`RLS_TEST_${prefix}_PASSWORD`]});if(error)throw error;return c;}
 async function rpc(c,name,args){const {data,error}=await c.rpc(name,args);if(error)throw error;return data;}

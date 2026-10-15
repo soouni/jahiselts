@@ -6,3 +6,4 @@ tests/integration/.test-users.env
 .sites-runtime/
 *.tsbuildinfo
 supabase/migrations/*_temporary_rls_test_users.sql
+supabase/.temp/

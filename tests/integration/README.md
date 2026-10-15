@@ -2,9 +2,11 @@
 
 `rls-api.mjs` kontrollib admini, liikme, vaataja ja deaktiveeritud liikme andmebaasiõigusi ning fotode ligipääsu. Test loob kaardiobjekte, vaatlusi, auditikirjeid ja foto testfaili, seejärel pehme kustutab testkirjed. Käivita seda ainult eraldi projektis `pipwbfmgmuiisrvnnnmw`.
 
-`hunt-operations-api.mjs` kontrollib jahi elutsükli ning GPS-õigusi: admin määrab jahijuhi, jahijuht alustab aju, vaataja ei saa jahi andmeid muuta ega asukohti vaadata, osaleja saab võtta ja kinnitada enda positsiooni ning jagada oma asukohta. Test lõpetab jahid ja kustutab oma testkirjed. Käivita seda ainult eraldi projektis `pipwbfmgmuiisrvnnnmw`.
+`hunt-operations-api.mjs` kontrollib jahi elutsükli ning GPS-õigusi: admin määrab aktiivse liikme jahijuhiks, kuid ei saa määrata vaatajat; vaataja ei saa end ise juhiks määrata, jahi andmeid muuta ega asukohti vaadata; osaleja saab võtta ja kinnitada enda positsiooni ning jagada oma asukohta. Test lõpetab jahid ja kustutab oma testkirjed. Käivita seda ainult eraldi projektis `pipwbfmgmuiisrvnnnmw`.
 
 ## Testkasutajate loomine
+
+Jahi API test loob ka ühe ajutise kinnitatud Auth konto ilma seltsi liikmesuseta, et kontrollida puuduva rolli kaudu õiguste tõstmise keeldu. Konto kustutatakse testi koristuses.
 
 `bootstrap-test-users.mjs` loob kordumatud Auth kontod, seob rollid rakenduse `join_club()` kaudu ning lisab kutseridad Supabase CLI ajutise migratsiooniga. Skript peatub, kui projektiviide või URL ei klapi kinnitatud testprojektiga. See vajab Node.js-i, projektikaustas tehtud `supabase login` ja `supabase link` samme ning testprojekti Supabase Secret/service_role võtit.
 
