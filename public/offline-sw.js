@@ -1,7 +1,7 @@
 /* Pärnjõe jahikaardi võrguühenduseta kasutamise esimene etapp.
    Salvestatakse ainult juba vaadatud avalikud Maa- ja Ruumiameti kaardipaanid.
    Supabase'i andmeid ega kasutaja päringuid ei salvestata teenusetöötajaga. */
-const SHELL='parnjoe-shell-v1';
+const SHELL='parnjoe-shell-v2';
 const TILES='parnjoe-map-tiles-v1';
 const MAX_TILES=450;
 const SCOPE=self.registration.scope;
@@ -37,6 +37,12 @@ self.addEventListener('fetch',event=>{
  }
 });
 self.addEventListener('message',event=>{
+ if(event.data?.type==='CACHE_APP_SHELL')event.waitUntil((async()=>{
+  const scope=new URL(SCOPE),cache=await caches.open(SHELL);
+  const urls=[...new Set(Array.isArray(event.data.urls)?event.data.urls:[])].filter(value=>{try{const url=new URL(value);return url.origin===scope.origin&&url.pathname.startsWith(scope.pathname);}catch{return false;}});
+  await Promise.allSettled(urls.map(url=>cache.add(new Request(url,{credentials:'same-origin'}))));
+  event.source?.postMessage({type:'OFFLINE_SHELL_READY'});
+ })());
  if(event.data?.type==='CLEAR_OFFLINE_MAP')event.waitUntil(caches.delete(TILES).then(()=>event.source?.postMessage({type:'OFFLINE_MAP_CLEARED'})));
  if(event.data?.type==='OFFLINE_MAP_STATUS')event.waitUntil(caches.open(TILES).then(cache=>cache.keys()).then(keys=>event.source?.postMessage({type:'OFFLINE_MAP_STATUS',count:keys.length})));
 });
