@@ -72,14 +72,13 @@ dialog.sheet:has(.hunt-fullscreen)>.sheetbody{padding:0!important;margin:0!impor
 @media(max-width:600px){.hunt-fullscreen-bar{gap:6px;min-height:58px}.hunt-fullscreen-bar strong{display:none}.hunt-map-back{font-size:14px!important}.hunt-fullscreen-list{flex-shrink:0}}
 
 
-/* Kaks vaikset kaardikontrolli: aluskaart ja jahirežiimi sisenemine. */
+/* Püsiv vasak tööriistarida: aluskaart, jaht, mõõtmine, tuul, seaded. */
 .basemap.basemap-cycle,.hunt-mode-switch{position:absolute;left:22px;z-index:8}
 .basemap.basemap-cycle{top:108px;padding:0;background:transparent;box-shadow:none}
-.hunt-mode-switch{top:182px}
-.basemap-cycle-button,.hunt-round-button{width:60px;height:60px;min-height:60px;padding:0;border:0;border-radius:50%;background:#fff;color:#111;box-shadow:0 3px 16px #0003}
+.hunt-mode-switch{top:182px;display:flex;flex-direction:column;gap:14px;max-height:calc(100dvh - 210px);overflow-y:auto;scrollbar-width:none;border-radius:30px;padding-bottom:4px}
+.basemap-cycle-button,.hunt-round-button{width:60px;height:60px;min-height:60px;flex-shrink:0;padding:0;border:0;border-radius:50%;background:#fff;color:#111;box-shadow:0 3px 16px #0003}
 .basemap-layer-svg{display:block;width:36px;height:36px}
 .hunt-antlers{width:37px;height:37px;stroke-width:3.8}
-.hunt-active .basemap{display:none}
 @media(max-width:760px){.basemap.basemap-cycle{top:86px}.hunt-mode-switch{top:156px}.basemap-cycle-button,.hunt-round-button{width:56px;height:56px;min-height:56px}}
 
 .hunt-finish-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:10px 0 18px}
@@ -141,3 +140,11 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 .personal-navigation{border-top:1px solid #e4ebe6;margin-top:14px;padding-top:12px}.personal-navigation summary{display:flex;align-items:center;gap:8px;cursor:pointer;min-height:44px;font-weight:750}.personal-navigation summary::after{content:"⌄";margin-left:auto}.personal-nav-actions{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}.personal-nav-actions>*{flex:1 1 150px;min-width:0}.personal-navigation button,.personal-nav-actions a{min-height:44px;padding:10px 12px;display:flex;align-items:center;justify-content:center;gap:7px}.personal-nav-actions a{background:var(--ink);color:white;border-radius:12px;text-decoration:none;font-weight:650}.personal-navigation small{display:block;font-size:12px;line-height:1.5;color:var(--muted)}.personal-walk{display:flex;align-items:center;gap:14px;padding:12px 0}.personal-walk>svg{width:32px;height:32px;flex-shrink:0}.personal-map-link{display:block;padding:10px 0;min-height:44px;color:var(--ink);text-underline-offset:3px}.personal-car{display:grid;gap:8px;margin-top:12px;padding:12px;background:var(--soft);border-radius:12px}.personal-car>strong{display:flex;align-items:center;gap:8px}.personal-navigation a:focus-visible,.personal-navigation summary:focus-visible{outline:3px solid #218466;outline-offset:3px}
 
 .wind-map-arrows{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.72}.wind-map-status{position:absolute;left:24px;bottom:146px;z-index:16;width:min(285px,calc(100vw - 48px));padding:10px 12px;background:#fffffff2;border-radius:14px;box-shadow:var(--shadow);color:var(--ink)}.wind-map-status>div{display:flex;align-items:center;gap:9px}.wind-map-status strong{font-size:18px}.wind-map-status small{display:block;font-size:11px;line-height:1.45;color:var(--muted)}.wind-map-status .iconbtn{margin-left:auto;padding:6px;min-width:44px;min-height:44px;flex-shrink:0}.wind-map-status>div>div{min-width:0;flex:1}@media(max-width:760px){.wind-map-status{left:12px;bottom:calc(126px + env(safe-area-inset-bottom));width:min(270px,calc(100vw - 24px))}}@media(max-height:520px){.wind-map-status{left:auto;right:12px;bottom:140px;width:235px}}
+
+.hunt-round-button[aria-pressed=true],.hunt-round-button[aria-expanded=true]{background:var(--ink);color:white;box-shadow:0 0 0 2px white,0 3px 16px #0003}.hunt-round-button>svg:not(.hunt-antlers){width:25px;height:25px}.hunt-dock{width:260px;max-width:calc(100vw - 24px)}.hunt-active .measure-panel{left:98px;z-index:20}.hunt-active.is-measuring .hunt-dock{display:none}
+@media(max-width:760px){.hunt-active .measure-panel{left:86px;right:12px;top:156px;bottom:auto;width:auto;max-height:calc(100dvh - 190px)}.hunt-mode-switch{max-height:calc(100dvh - 290px)}}
+@media(max-height:520px){.hunt-active .basemap.basemap-cycle{top:80px;left:12px}.hunt-active .basemap-cycle-button,.hunt-active .hunt-round-button{width:44px;height:44px;min-height:44px}.hunt-active .basemap-layer-svg{width:28px;height:28px}.hunt-active .hunt-antlers{width:29px;height:29px}.hunt-active .hunt-mode-switch{top:132px;left:12px;gap:8px;max-height:calc(100dvh - 144px)}.hunt-active .hunt-statusbar{left:80px;transform:none;max-width:calc(100vw - 230px)}.hunt-active .hunt-sync-status{left:80px;transform:none;max-width:calc(100vw - 230px)}.hunt-active .hunt-sheet{left:80px;width:min(420px,calc(100vw - 216px))}.hunt-active .measure-panel{left:80px;right:auto;top:150px;width:min(420px,calc(100vw - 216px));max-height:calc(100dvh - 162px)}.hunt-dock{width:220px}}
+@media(max-height:520px) and (max-width:760px){.hunt-dock{width:104px}}
+
+@media(min-height:521px){.hunt-active .wind-map-status{left:98px;max-width:calc(100vw - 110px)}}
+@media(max-width:760px) and (min-height:521px){.hunt-active .hunt-statusbar,.hunt-active .hunt-sync-status{left:90px;transform:none;max-width:calc(100vw - 102px)}.hunt-active .wind-map-status{left:86px;max-width:calc(100vw - 98px)}}

@@ -25,7 +25,7 @@ test('field mode uses one exclusive surface and a dedicated action dock',()=>{
  assert.match(docks,/className="bottomnav hunt-dock"/);
  assert.match(ui,/huntSurface==='position'/);
  assert.match(ui,/huntSurface==='participants'/);
- assert.match(docks,/aria-pressed=\{windEnabled\}/);
+ assert.match(app,/aria-pressed=\{windEnabled\}/);
  assert.match(ui,/huntSurface==='more'/);
  assert.doesNotMatch(ui,/huntGpsPanelOpen|huntWindOpen|offlinePanel/);
 });
