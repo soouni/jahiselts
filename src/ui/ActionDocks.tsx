@@ -33,7 +33,7 @@ type HuntActionDockProps={
 export function HuntActionDock({active,positionLabel,distanceLabel,onParticipants,onPosition,onWeather,onMore}:HuntActionDockProps){
  return <nav className="bottomnav hunt-dock" aria-label="Jahirežiimi tööriistad">
   <button aria-pressed={active==='participants'} onClick={onParticipants}><Users/><span>Osalejad</span></button>
-  <button className="add" aria-pressed={active==='position'} onClick={onPosition}><Navigation/><span>{positionLabel}</span>{distanceLabel&&<small>{distanceLabel}</small>}</button>
+  <button className="add" aria-label={`GPS ja minu jahikoht: ${positionLabel}`} aria-pressed={active==='position'} onClick={onPosition}><Navigation/><span>GPS</span><small>{distanceLabel||positionLabel}</small></button>
   <button aria-pressed={active==='weather'} onClick={onWeather}><Wind/><span>Tuul</span></button>
   <button aria-pressed={active==='more'} onClick={onMore}><Ellipsis/><span>Rohkem</span></button>
  </nav>;
