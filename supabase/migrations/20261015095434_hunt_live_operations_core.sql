@@ -1,3 +1,68 @@
+-- Fresh installs must define management authorization before dependent policies.
+-- This mirrors the already-deployed management rules; the later security
+-- migration reasserts the same helper for existing installations.
+create or replace function public.can_manage_hunt(target_hunt_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.hunts h
+    join public.memberships m on m.user_id = (select auth.uid())
+    where h.id = target_hunt_id
+      and h.status <> 'finished'
+      and m.active = true
+      and (
+        m.role in ('owner', 'admin')
+        or (m.role = 'member' and h.leader_id = (select auth.uid()))
+      )
+  );
+$$;
+
+revoke all on function public.can_manage_hunt(uuid) from public, anon;
+grant execute on function public.can_manage_hunt(uuid) to authenticated;
+
+
+drop policy if exists hunts_insert on public.hunts;
+create policy hunts_insert on public.hunts for insert to authenticated with check(leader_id=(select auth.uid()) and public.my_role() in ('owner','admin'));
+drop policy if exists hunts_update on public.hunts;
+create policy hunts_update on public.hunts for update to authenticated using(public.can_manage_hunt(id)) with check(public.my_role() in ('owner','admin') or (public.my_role()='member' and leader_id=(select auth.uid())));
+drop policy if exists drives_insert on public.hunt_drives;
+create policy drives_insert on public.hunt_drives for insert to authenticated with check(exists(select 1 from public.hunts h where h.id=hunt_id and h.status='planned' and public.can_manage_hunt(h.id)));
+drop policy if exists drives_update on public.hunt_drives;
+create policy drives_update on public.hunt_drives for update to authenticated using(public.can_manage_hunt(hunt_id)) with check(public.can_manage_hunt(hunt_id));
+drop policy if exists participants_insert on public.hunt_participants;
+create policy participants_insert on public.hunt_participants for insert to authenticated with check(public.can_manage_hunt(hunt_id));
+drop policy if exists participants_update on public.hunt_participants;
+create policy participants_update on public.hunt_participants for update to authenticated using(public.can_manage_hunt(hunt_id)) with check(public.can_manage_hunt(hunt_id));
+drop policy if exists hunt_participants_leader_delete on public.hunt_participants;
+create policy hunt_participants_leader_delete on public.hunt_participants for delete to authenticated using(public.can_manage_hunt(hunt_id));
+drop policy if exists positions_insert on public.hunt_positions;
+create policy positions_insert on public.hunt_positions for insert to authenticated with check(exists(select 1 from public.hunt_drives d where d.id=drive_id and public.can_manage_hunt(d.hunt_id)));
+drop policy if exists hunt_positions_leader_update on public.hunt_positions;
+create policy hunt_positions_leader_update on public.hunt_positions for update to authenticated using(exists(select 1 from public.hunt_drives d where d.id=drive_id and public.can_manage_hunt(d.hunt_id))) with check(exists(select 1 from public.hunt_drives d where d.id=drive_id and public.can_manage_hunt(d.hunt_id)));
+drop policy if exists hunt_positions_leader_delete on public.hunt_positions;
+create policy hunt_positions_leader_delete on public.hunt_positions for delete to authenticated using(exists(select 1 from public.hunt_drives d where d.id=drive_id and public.can_manage_hunt(d.hunt_id)));
+
+-- Preserve the deployed guard when replaying the management policies.
+create or replace function public.protect_hunt_update()
+returns trigger language plpgsql security definer set search_path='' as $$
+declare actor_role text:=public.my_role();
+begin
+ if old.status='finished' then raise exception 'Lõpetatud jahti ei saa muuta'; end if;
+ if actor_role is null or actor_role not in ('owner','admin') then
+  if new.leader_id is distinct from old.leader_id then raise exception 'Jahijuhti saab muuta ainult omanik või administraator'; end if;
+  if new.created_at is distinct from old.created_at then raise exception 'Jahi loomise aega ei saa muuta'; end if;
+ end if;
+ return new;
+end; $$;
+revoke all on function public.protect_hunt_update() from public,anon,authenticated;
+drop trigger if exists protect_hunt_update on public.hunts;
+create trigger protect_hunt_update before update on public.hunts for each row execute function public.protect_hunt_update();
+
 -- Active hunt operations: explicit lifecycle, arrival confirmation and
 -- privacy-preserving live locations. All mutations remain subject to RLS.
 
