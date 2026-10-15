@@ -7,7 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "test": "node --test tests/*.test.mjs",
-    "test:rls": "node --env-file=tests/integration/.test-users.env tests/integration/rls-api.mjs"
+    "test:rls": "node --env-file=tests/integration/.test-users.env tests/integration/rls-api.mjs",
+    "test:hunt-operations": "node --env-file=tests/integration/.test-users.env tests/integration/hunt-operations-api.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
