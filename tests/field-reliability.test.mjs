@@ -64,3 +64,7 @@ test('later map browsing cannot evict the selected offline package',async()=>{
  const w=workerFixture(),tile='https://tiles.maaamet.ee/tm/wmts/protected';await w.cache.put(tile,new Response('saved'));await w.cache.put(w.scope+'offline-package.json',new Response(JSON.stringify({urls:[tile],total:1})));for(let i=0;i<2500;i++)await w.cache.put('https://tiles.maaamet.ee/tm/wmts/old'+i,new Response('old'));
  w.context.fetch=async()=>new Response('new');await w.fetch('https://tiles.maaamet.ee/tm/wmts/new');assert.ok(await w.cache.match(tile));assert.ok(await w.cache.match(w.scope+'offline-package.json'));assert.ok(w.entries.size<=2500);
 });
+
+test('online application navigation revalidates HTML instead of reusing an old HTTP cache entry',async()=>{
+ const w=workerFixture();let policy;w.context.fetch=async(_request,options)=>{policy=options?.cache;return new Response('NEW APP');};assert.equal(await (await w.navigate(w.scope)).text(),'NEW APP');assert.equal(policy,'no-cache');
+});

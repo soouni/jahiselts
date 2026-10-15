@@ -11,9 +11,11 @@
 - Väikese ekraani ja madala rõhtvaate CSS: keritavad paneelid, murduvad tekstid, nuppude mahtumine. Dialoogidel on pealkirjaga seotud ligipääsetav nimi.
 - `qa/layout.html` võimaldab päris rakendust vaadata 320×568, 390×844, 740×360, 768×1024, 1024×768 ja 1366×768 raamides. See ei emuleeri Safari mootorit, mobiiliklaviatuuri ega seadme andureid.
 
+Avalehe võrguühendusega laadimine valideerib HTML-i uuesti, et eelmine brauseri HTTP-vahemälu ei peidaks avaldatud uuendust.
+
 ## Kontrollitud
 
-- `LIVE_MAP_TESTS=1 npm test`: 48/48 läbis, 0 vahele jäetud. Sisaldab kolme päris aluskaardipäringut, PostgreSQL-i õiguste käitumist ning teenusetöötaja veastsenaariume.
+- `LIVE_MAP_TESTS=1 npm test`: 49/49 läbis, 0 vahele jäetud. Sisaldab kolme päris aluskaardipäringut, PostgreSQL-i õiguste käitumist ning teenusetöötaja veastsenaariume.
 - `npm run build`: korras.
 - `npm audit --omit=dev`: 0 teadaolevat haavatavust.
 - Migratsioon `20261015133355_qa_participant_operations.sql` rakendatud tootmises.
