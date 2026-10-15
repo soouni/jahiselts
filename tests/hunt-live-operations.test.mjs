@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const sql=readFileSync(new URL('../supabase/migrations/20261015080824_hunt_live_operations.sql',import.meta.url),'utf8').toLowerCase();
+const core=readFileSync(new URL('../supabase/migrations/20261015095434_hunt_live_operations_core.sql',import.meta.url),'utf8').toLowerCase();
+const location=readFileSync(new URL('../supabase/migrations/20261015095440_hunt_live_location.sql',import.meta.url),'utf8').toLowerCase();
+const sql=core+'\n'+location;
 
 test('hunt operations serialize active sessions and drive transitions',()=>{
  assert.match(sql,/create unique index if not exists hunts_one_active[\s\S]*?where status='active'/);
