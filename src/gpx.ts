@@ -14,6 +14,24 @@ const entryDescription=(entry:GpxEntry)=>[
   entry.properties.description
 ].filter(Boolean).join(' · ');
 
+const garminSymbol=(type:string):[string,string]=>{
+  const symbols:Record<string,[string,string]>={
+    'Maja':['Residence','Blue'],
+    'Kõrvalhoone':['Building','Gray'],
+    'Sild / ületuskoht':['Bridge','Blue'],
+    'Jahitorn':['Hunting Area','Orange'],
+    'Soolakivi':['Forest','Green'],
+    'Jahimaja':['Lodge','Blue'],
+    'Söödakoht':['Food Source','Green'],
+    'Kogunemiskoht':['Meeting Point','Blue'],
+    'Parkimiskoht':['Parking Area','Blue'],
+    'Tiik':['Water Source','Blue'],
+    'Muu veekogu':['Water Source','Blue'],
+    'Orientiir':['Flag, Blue','Blue']
+  };
+  return symbols[type]||['Flag, Blue','Blue'];
+};
+
 function track(name:string,coordinates:any[],description=''){
   const points=coordinates
     .filter(point=>Array.isArray(point)&&point.length>=2)
@@ -46,11 +64,20 @@ export function garminGpx(entries:Entry[],boundary?:any,exportedAt=new Date()){
   const permanent=entries.filter(entry=>!entry.deleted_at&&
     ['place','line','area'].includes(entry.kind)
   );
-  // Export all permanent point, line, and area objects as tracks only.
-  const tracks=permanent.map(geometryTracks).join('');
+  // Restore the proven v7 waypoint structure, keeping all active point types.
+  const waypoints=permanent.filter(entry=>entry.kind==='place'&&entry.geometry.type==='Point')
+    .map(entry=>{
+      const [lon,lat]=entry.geometry.coordinates;
+      const type=entry.properties.type||'Orientiir';
+      const [symbol,color]=garminSymbol(type);
+      return `<wpt lat="${lat}" lon="${lon}"><name>${xmlEscape(entryName(entry))}</name><desc>${xmlEscape(entryDescription(entry))}</desc><type>${xmlEscape(type)}</type><sym>${xmlEscape(symbol)}</sym><extensions><gpxx:WaypointExtension><gpxx:SymbolColor>${color}</gpxx:SymbolColor><gpxx:SymbolStyle>1</gpxx:SymbolStyle></gpxx:WaypointExtension></extensions></wpt>`;
+    }).join('');
+  const tracks=permanent.filter(entry=>entry.kind==='line'||entry.kind==='area').map(geometryTracks).join('');
   const boundaryEntry:GpxEntry|null=boundary?{geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}}:null;
-  const boundaryTrack=boundaryEntry?geometryTracks(boundaryEntry):'';
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart ${version} UTC</name><desc>JAH1000125 püsivad seltsiobjektid · eksport ${version} UTC</desc><time>${exportedAt.toISOString()}</time></metadata>${boundaryTrack}${tracks}</gpx>`;
+  const boundaryTrack=boundaryEntry
+    ?geometryTracks(boundaryEntry).replace('<trk><name>Pärnjõe jahipiir</name>','<trk><name>JAHIALA PIIR - PÄRNJÕE</name><type>Hunting Area</type><extensions><gpxx:TrackExtension><gpxx:DisplayColor>Red</gpxx:DisplayColor></gpxx:TrackExtension></extensions>')
+    :'';
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3"><metadata><name>Pärnjõe jahiseltsi kaart ${version} UTC</name><desc>JAH1000125 püsivad seltsiobjektid · eksport ${version} UTC</desc><time>${exportedAt.toISOString()}</time></metadata>${waypoints}${boundaryTrack}${tracks}</gpx>`;
 }
 
 export async function downloadGarminGpx(entries:Entry[]){
