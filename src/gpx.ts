@@ -88,7 +88,12 @@ export async function downloadGarminGpx(entries:Entry[]){
       const geojson=await response.json();
       boundary=geojson.type==='FeatureCollection'?geojson.features?.[0]?.geometry:geojson.type==='Feature'?geojson.geometry:geojson;
     }
-  }catch{}
+    if(!boundary)throw new Error('Jahiala piiri geomeetriat ei leitud boundary.geojson failist');
+  }catch(error){
+    console.error('Garmini GPX eksport katkestati: jahiala piir puudub',error);
+    window.alert('GPX-faili ei loodud, sest jahiala piiri ei õnnestunud laadida. Proovi uuesti; ilma piirita faili ei ekspordita.');
+    return;
+  }
   const exportedAt=new Date();
   const version=exportedAt.toISOString().slice(0,16).replace('T','_').replace(':','-');
   const url=URL.createObjectURL(new Blob([garminGpx(entries,boundary,exportedAt)],{type:'application/gpx+xml;charset=utf-8'}));
