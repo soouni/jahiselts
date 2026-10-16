@@ -52,7 +52,8 @@ function geometryTracks(entry:GpxEntry){
   return '';
 }
 
-export function garminGpx(entries:Entry[],boundary?:any){
+export function garminGpx(entries:Entry[],boundary?:any,exportedAt=new Date()){
+  const version=exportedAt.toISOString().slice(0,16).replace('T','_').replace(':','-');
   // Export all active permanent map objects, including custom types and areas.
   const permanent=entries.filter(entry=>!entry.deleted_at&&
     ['place','line','area'].includes(entry.kind)
@@ -67,7 +68,7 @@ export function garminGpx(entries:Entry[],boundary?:any){
   const tracks=permanent.filter(entry=>entry.kind==='line'||entry.kind==='area').map(geometryTracks).join('');
   const boundaryEntry:GpxEntry|null=boundary?{geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}}:null;
   const boundaryTrack=boundaryEntry?geometryTracks(boundaryEntry):'';
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart</name><desc>JAH1000125 püsivad seltsiobjektid</desc><time>${new Date().toISOString()}</time></metadata>${waypoints}${boundaryTrack}${tracks}</gpx>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart ${version} UTC</name><desc>JAH1000125 püsivad seltsiobjektid · eksport ${version} UTC</desc><time>${exportedAt.toISOString()}</time></metadata>${waypoints}${boundaryTrack}${tracks}</gpx>`;
 }
 
 export async function downloadGarminGpx(entries:Entry[]){
@@ -79,10 +80,12 @@ export async function downloadGarminGpx(entries:Entry[]){
       boundary=geojson.type==='FeatureCollection'?geojson.features?.[0]?.geometry:geojson.type==='Feature'?geojson.geometry:geojson;
     }
   }catch{}
-  const url=URL.createObjectURL(new Blob([garminGpx(entries,boundary)],{type:'application/gpx+xml;charset=utf-8'}));
+  const exportedAt=new Date();
+  const version=exportedAt.toISOString().slice(0,16).replace('T','_').replace(':','-');
+  const url=URL.createObjectURL(new Blob([garminGpx(entries,boundary,exportedAt)],{type:'application/gpx+xml;charset=utf-8'}));
   const anchor=document.createElement('a');
   anchor.href=url;
-  anchor.download='parnjoe-garmin.gpx';
+  anchor.download=`parnjoe-garmin-${version}-UTC.gpx`;
   anchor.click();
   setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
