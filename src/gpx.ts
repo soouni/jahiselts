@@ -53,17 +53,18 @@ function geometryTracks(entry:GpxEntry){
     ring,
     description
   ))).join('');
-  if(geometry.type==='Point')return track(name,[geometry.coordinates],description);
-  if(geometry.type==='MultiPoint')return geometry.coordinates.map((coordinates:any[],index:number)=>track(`${name} ${index+1}`,[coordinates],description)).join('');
   return '';
 }
 
 export function garminGpx(entries:Entry[],boundary?:any,exportedAt=new Date()){
   const version=exportedAt.toISOString().slice(0,16).replace('T','_').replace(':','-');
-  // Export all active permanent map objects, including custom types and areas.
-  const permanent=entries.filter(entry=>!entry.deleted_at&&
-    ['place','line','area'].includes(entry.kind)
-  );
+  // Match the proven October 2 v7 export: named map points and linear/area tracks.
+  // New object types can be restored to the live export after this compatibility test.
+  const v7Types=new Set(['Maja','Kõrvalhoone','Sild / ületuskoht','Jahitorn','Soolakivi','Jahimaja','Söödakoht','Kogunemiskoht','Orientiir']);
+  const permanent=entries.filter(entry=>!entry.deleted_at&&(
+    (entry.kind==='place'&&v7Types.has(entry.properties.type))||
+    entry.kind==='line'||entry.kind==='area'
+  ));
   // Restore the proven v7 waypoint structure, keeping all active point types.
   const waypoints=permanent.filter(entry=>entry.kind==='place'&&entry.geometry.type==='Point')
     .map(entry=>{
@@ -88,7 +89,12 @@ export async function downloadGarminGpx(entries:Entry[]){
       const geojson=await response.json();
       boundary=geojson.type==='FeatureCollection'?geojson.features?.[0]?.geometry:geojson.type==='Feature'?geojson.geometry:geojson;
     }
-  }catch{}
+    if(!boundary)throw new Error('boundary.geojson did not contain a boundary geometry');
+  }catch(error){
+    console.error('Garmin v7 export: hunting boundary unavailable',error);
+    window.alert('GPX eksport katkestati: jahiala piiri ei õnnestunud laadida.');
+    return;
+  }
   const exportedAt=new Date();
   const version=exportedAt.toISOString().slice(0,16).replace('T','_').replace(':','-');
   const url=URL.createObjectURL(new Blob([garminGpx(entries,boundary,exportedAt)],{type:'application/gpx+xml;charset=utf-8'}));
