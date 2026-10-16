@@ -53,11 +53,10 @@ function geometryTracks(entry:GpxEntry){
 }
 
 export function garminGpx(entries:Entry[],boundary?:any){
-  const usefulPlaceTypes=new Set(['Jahimaja','Jahitorn','Soolakivi','Söödakoht','Kogunemiskoht','Parkimiskoht','Tiik','Muu veekogu']);
-  const permanent=entries.filter(entry=>!entry.deleted_at&&(
-    (entry.kind==='place'&&usefulPlaceTypes.has(entry.properties.type))||
-    (entry.kind==='line'&&['Siht','Metsatee'].includes(entry.properties.type))
-  ));
+  // Export all active permanent map objects, including custom types and areas.
+  const permanent=entries.filter(entry=>!entry.deleted_at&&
+    ['place','line','area'].includes(entry.kind)
+  );
   const waypoints=permanent
     .filter(entry=>entry.kind==='place'&&entry.geometry.type==='Point')
     .map(entry=>{
@@ -65,7 +64,7 @@ export function garminGpx(entries:Entry[],boundary?:any){
       const description=entryDescription(entry);
       return `<wpt lat="${lat}" lon="${lon}"><name>${xmlEscape(entryName(entry))}</name>${description?`<desc>${xmlEscape(description)}</desc>`:''}<type>${xmlEscape(entry.properties.type||'Koht')}</type><sym>${xmlEscape(garminSymbol(entry))}</sym></wpt>`;
     }).join('');
-  const tracks=permanent.filter(entry=>entry.kind==='line').map(geometryTracks).join('');
+  const tracks=permanent.filter(entry=>entry.kind==='line'||entry.kind==='area').map(geometryTracks).join('');
   const boundaryEntry:GpxEntry|null=boundary?{geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}}:null;
   const boundaryTrack=boundaryEntry?geometryTracks(boundaryEntry):'';
   return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart</name><desc>JAH1000125 püsivad seltsiobjektid</desc><time>${new Date().toISOString()}</time></metadata>${waypoints}${boundaryTrack}${tracks}</gpx>`;
