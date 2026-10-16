@@ -14,10 +14,6 @@ const entryDescription=(entry:GpxEntry)=>[
   entry.properties.description
 ].filter(Boolean).join(' · ');
 
-// Request a minimal dot marker for every exported waypoint.
-// The Garmin device controls the actual appearance and size.
-const garminSymbol=(_entry:Entry)=>'Dot';
-
 function track(name:string,coordinates:any[],description=''){
   const points=coordinates
     .filter(point=>Array.isArray(point)&&point.length>=2)
@@ -39,6 +35,8 @@ function geometryTracks(entry:GpxEntry){
     ring,
     description
   ))).join('');
+  if(geometry.type==='Point')return track(name,[geometry.coordinates],description);
+  if(geometry.type==='MultiPoint')return geometry.coordinates.map((coordinates:any[],index:number)=>track(`${name} ${index+1}`,[coordinates],description)).join('');
   return '';
 }
 
@@ -48,18 +46,11 @@ export function garminGpx(entries:Entry[],boundary?:any,exportedAt=new Date()){
   const permanent=entries.filter(entry=>!entry.deleted_at&&
     ['place','line','area'].includes(entry.kind)
   );
-  // Export every active point regardless of its custom type.
-  const waypoints=permanent
-    .filter(entry=>entry.kind==='place'&&entry.geometry.type==='Point')
-    .map(entry=>{
-      const [lon,lat]=entry.geometry.coordinates;
-      const description=entryDescription(entry);
-      return `<wpt lat="${lat}" lon="${lon}"><name>${xmlEscape(entryName(entry))}</name>${description?`<desc>${xmlEscape(description)}</desc>`:''}<type>${xmlEscape(entry.properties.type||'Koht')}</type><sym>${xmlEscape(garminSymbol(entry))}</sym></wpt>`;
-    }).join('');
-  const tracks=permanent.filter(entry=>entry.kind==='line'||entry.kind==='area').map(geometryTracks).join('');
+  // Export all permanent point, line, and area objects as tracks only.
+  const tracks=permanent.map(geometryTracks).join('');
   const boundaryEntry:GpxEntry|null=boundary?{geometry:boundary,properties:{name:'Pärnjõe jahipiir',type:'Jahipiir'}}:null;
   const boundaryTrack=boundaryEntry?geometryTracks(boundaryEntry):'';
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart ${version} UTC</name><desc>JAH1000125 püsivad seltsiobjektid · eksport ${version} UTC</desc><time>${exportedAt.toISOString()}</time></metadata>${waypoints}${boundaryTrack}${tracks}</gpx>`;
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pärnjõe jahiseltsi kaart" xmlns="http://www.topografix.com/GPX/1/1"><metadata><name>Pärnjõe jahiseltsi kaart ${version} UTC</name><desc>JAH1000125 püsivad seltsiobjektid · eksport ${version} UTC</desc><time>${exportedAt.toISOString()}</time></metadata>${boundaryTrack}${tracks}</gpx>`;
 }
 
 export async function downloadGarminGpx(entries:Entry[]){
