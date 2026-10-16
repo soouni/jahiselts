@@ -58,8 +58,10 @@ export function garminGpx(entries:Entry[],boundary?:any,exportedAt=new Date()){
   const permanent=entries.filter(entry=>!entry.deleted_at&&
     ['place','line','area'].includes(entry.kind)
   );
+  // Keep the earlier Garmin waypoint selection to avoid a map full of generic blue flags.
+  const usefulPlaceTypes=new Set(['Jahimaja','Jahitorn','Soolakivi','Söödakoht','Kogunemiskoht','Parkimiskoht','Tiik','Muu veekogu']);
   const waypoints=permanent
-    .filter(entry=>entry.kind==='place'&&entry.geometry.type==='Point')
+    .filter(entry=>entry.kind==='place'&&entry.geometry.type==='Point'&&usefulPlaceTypes.has(entry.properties.type))
     .map(entry=>{
       const [lon,lat]=entry.geometry.coordinates;
       const description=entryDescription(entry);
