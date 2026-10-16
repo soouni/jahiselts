@@ -14,19 +14,9 @@ const entryDescription=(entry:GpxEntry)=>[
   entry.properties.description
 ].filter(Boolean).join(' · ');
 
-const garminSymbol=(entry:Entry)=>{
-  const symbols:Record<string,string>={
-    'Jahitorn':'Tree Stand',
-    'Tiik':'Water Source',
-    'Muu veekogu':'Water Source',
-    'Söödakoht':'Food Source',
-    'Jahimaja':'Lodge',
-    'Parkimiskoht':'Parking Area',
-    'Soolakivi':'Water Source',
-    'Kogunemiskoht':'Pin, Green'
-  };
-  return symbols[entry.properties.type]||'Flag, Blue';
-};
+// Use a neutral compact Garmin waypoint marker instead of large category icons.
+// The Alpha 300i determines the actual on-screen symbol size.
+const garminSymbol=(_entry:Entry)=>'Waypoint';
 
 function track(name:string,coordinates:any[],description=''){
   const points=coordinates
