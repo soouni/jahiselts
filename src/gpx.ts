@@ -14,19 +14,9 @@ const entryDescription=(entry:GpxEntry)=>[
   entry.properties.description
 ].filter(Boolean).join(' · ');
 
-const garminSymbol=(entry:Entry)=>{
-  const symbols:Record<string,string>={
-    'Jahitorn':'Tree Stand',
-    'Tiik':'Water Source',
-    'Muu veekogu':'Water Source',
-    'Söödakoht':'Food Source',
-    'Jahimaja':'Lodge',
-    'Parkimiskoht':'Parking Area',
-    'Soolakivi':'Water Source',
-    'Kogunemiskoht':'Pin, Green'
-  };
-  return symbols[entry.properties.type]||'Flag, Blue';
-};
+// Request a minimal dot marker for every exported waypoint.
+// The Garmin device controls the actual appearance and size.
+const garminSymbol=(_entry:Entry)=>'Dot';
 
 function track(name:string,coordinates:any[],description=''){
   const points=coordinates
