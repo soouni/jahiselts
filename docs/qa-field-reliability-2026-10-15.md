@@ -26,4 +26,10 @@ Avalehe võrguühendusega laadimine valideerib HTML-i uuesti, et eelmine brauser
 
 15.10.2026 käivitas Martti eraldi testprojektis `pipwbfmgmuiisrvnnnmw` mõlemad päris Auth/PostgREST/Storage läbivtestide komplektid (`test:rls`, `test:hunt-operations`). Jagatud terminali kuvatõmmisel (19:34:49) on mõlema komplekti PASS-tulemused ja lõppkinnitus „VALMIS: mõlemad läbivtestide komplektid läbisid.” See katab ka tavaliikme positsiooni võtmise/kinnitamise ja reaalajas asukoha õigused. See tõend ei asenda päris telefoni andurikatseid. PGlite katsed ei ole mitme PostgreSQL-ühenduse koormustest.
 
-Füüsilise vastuvõtu sammud ja tulemuste vorm asuvad eraldi juhendis: [iPhone Safari ja Android Chrome'i asukohaprivaatsuse vastuvõtutest](mobile-location-privacy-acceptance-2026-10-19.md). Test on tegemata, kuni mõlema platvormi tulemused on seal kirja pandud. Juhend täiendab seda QA ülevaadet ainult telefoni, GPS-i, asukohajagamise, võrguühenduse ja konto vahetamise kontrollidega; siinsetes automaattestides neid seadmeanduri omadusi ei simuleerita.
+Asukohaprivaatsuse, telefoni GPS-i, võrguühenduse ja konto vahetamise üksikasjalikud sammud ning tulemuste vorm asuvad eraldi juhendis: [iPhone Safari ja Android Chrome'i asukohaprivaatsuse vastuvõtutest](mobile-location-privacy-acceptance-2026-10-19.md). Test on tegemata, kuni mõlema platvormi tulemused on seal kirja pandud. Lisaks kontrolli mõlema telefoniga järgmisi üldisi välirežiimi kasutusvooge:
+
+1. Juhataja määrab koha; tavaliige avab selle ja proovib saabumist kinnitada. Võõrast kohta ei saa muuta. Kaks osalejat proovivad sama vaba kohta: ainult üks peab saama selle.
+2. Taasta ühendus ja ava elus jaht uuesti. Muuda juhataja seadmes kohta; teine telefon peab nägema uut kohta ja eduka sünkroonimise aega.
+3. Kontrolli püsti/külili vaadet, otsingu klaviatuuri, suurendatud teksti ja paneelide kerimist. Ükski oluline nupp ei tohi jääda kättesaamatuks.
+
+Need käsitsi tehtavad kontrollid ei asendu automaattestidega ega `qa/layout.html` ekraaniraamidega.
