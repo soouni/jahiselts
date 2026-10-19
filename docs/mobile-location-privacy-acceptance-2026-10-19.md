@@ -68,7 +68,7 @@ Enne kumbagi platvormi:
 
 - [ ] Alusta A-ga asukoha jagamist ja kontrolli B vaates, et A asukoht on nähtav.
 - [ ] Logi A-st välja ilma eelnevalt jagamist käsitsi lõpetamata.
-- [ ] Kontrolli B vaates, kas A serverisse salvestatud aktiivne asukoht eemaldati või jäi alles. Oodatav privaatsuskäitumine tuleb enne vastuvõttu kokku leppida; kui see jääb alles, käsitle seda lahendamist vajava leiuna, mitte testi õnnestumisena.
+- [ ] Oodatav: väljalogimine lõpetab A asukoha jagamise ja eemaldab tema aktiivse serveriasukoha. Kontrolli B vaates; kui punkt jääb alles, testi tulemus on ebaõnnestunud ning see tuleb registreerida parandamist vajava leiuna.
 - [ ] Logi samas seadmes sisse kontoga B. Oodatav: B-le ei kuvata A kohalikke salvestatud jahikoha ega auto asukoha andmeid.
 - [ ] Logi B-st välja ja kontrolli, et väljalogimise järel ei saa A kohalikke salvestatud koordinaate anonüümselt avada.
 - Tulemus / märkused: ______________________________
