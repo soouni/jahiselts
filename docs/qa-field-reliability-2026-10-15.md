@@ -26,11 +26,4 @@ Avalehe võrguühendusega laadimine valideerib HTML-i uuesti, et eelmine brauser
 
 15.10.2026 käivitas Martti eraldi testprojektis `pipwbfmgmuiisrvnnnmw` mõlemad päris Auth/PostgREST/Storage läbivtestide komplektid (`test:rls`, `test:hunt-operations`). Jagatud terminali kuvatõmmisel (19:34:49) on mõlema komplekti PASS-tulemused ja lõppkinnitus „VALMIS: mõlemad läbivtestide komplektid läbisid.” See katab ka tavaliikme positsiooni võtmise/kinnitamise ja reaalajas asukoha õigused. See tõend ei asenda päris telefoni andurikatseid. PGlite katsed ei ole mitme PostgreSQL-ühenduse koormustest.
 
-Enne välirežiimi täielikku vastuvõttu tee vähemalt iPhone Safari ja Android Chrome seadmega:
-
-1. Juhataja määrab koha; tavaliige avab selle, käivitab GPS-i ja kompassi ning kinnitab saabumise. Võõrast kohta ei saa muuta. Kaks osalejat proovivad sama vaba kohta: ainult üks peab saama selle.
-2. Keela GPS-luba, luba uuesti; kontrolli aegunud ja ebatäpset mõõtmist. Lukusta ekraan 2 minutiks ja naase. Vana asukohta ei tohi esitada värskena.
-3. Salvesta oma koht ning laadi aluskaart alla. Lülita lennurežiim sisse, laadi leht uuesti ja ava salvestatud koht. GPS võib töötada, kuid jagamine ja kinnitamine ei tohi teeselda serveriedu.
-4. Taasta ühendus ja ava elus jaht uuesti. Muuda juhataja seadmes kohta; teine telefon peab nägema uut kohta ja eduka sünkroonimise aega.
-5. Kontrolli püsti/külili vaadet, otsingu klaviatuuri, suurendatud teksti ja paneelide kerimist. Ükski oluline nupp ei tohi jääda kättesaamatuks.
-6. Lõpeta asukoha jagamine ja logi välja. Salvestatud oma koha avamise võimalus peab kaduma. Kontrolli ka teise kontoga sisselogimist.
+Füüsilise vastuvõtu sammud ja tulemuste vorm asuvad eraldi juhendis: [iPhone Safari ja Android Chrome'i asukohaprivaatsuse vastuvõtutest](mobile-location-privacy-acceptance-2026-10-19.md). Test on tegemata, kuni mõlema platvormi tulemused on seal kirja pandud. Juhend täiendab seda QA ülevaadet ainult telefoni, GPS-i, asukohajagamise, võrguühenduse ja konto vahetamise kontrollidega; siinsetes automaattestides neid seadmeanduri omadusi ei simuleerita.
