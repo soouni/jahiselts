@@ -6,7 +6,7 @@ Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest,
 
 - **Jahirežiimi kaardinuppude nähtavad sildid** — muudatuses `src/main.tsx`, `src/style.css` ja `tests/minimal-ui.test.mjs`: aluskaart näitab valitud tüüpi; külgriba ümmarguste ikoonnuppude all on lühikesed sildid. Üldmõõtmine jääb jahimeestevaheliste vahemaade tööriistast eraldi. Sildid mahuvad nupu laiusesse ja alumine silt on keritav. PR #81 ülevaatusel; pole veel põhiharusse ühendatud. Kontroll: 53 testi läbis, 3 välise kaarditeenuse testi jäid vahele; build läbis.
 
-- **`SECURITY DEFINER` funktsioonide lähteinventuur** — dokumenteerib praeguse `main` haru autentitud RPC-de, privaatsete teostusfunktsioonide ja triggerite õigused, rollikontrollid, testiviited ning kontrollimata osad. Ainult koodivaatus; tootmiskatalooge ega andmeid ei kontrollitud. PR #80 ühendati põhiharusse 21.10.2026.
+- **`SECURITY DEFINER` funktsioonide lähteinventuur** — dokumenteerib praeguse `main` haru autentitud RPC-de, privaatsete teostusfunktsioonide ja triggerite õigused, rollikontrollid, testiviited ning kontrollimata osad. Ainult koodivaatus; tootmiskatalooge ega andmeid ei kontrollitud. Eraldi PR #80-s; pole veel põhiharusse ühendatud.
 
 ## 2026-10-19
 
