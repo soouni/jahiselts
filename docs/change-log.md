@@ -29,3 +29,8 @@ Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest,
 - **Ilmateade jahikaardi sees** — kandidaatharu `feat/parnjoe-hourly-weather`: M-menüü ilmateade avab lehe sees Pärnjõe jahipiirkonna järgmise kuue täistunni prognoosi. Kuvatakse ilmaikoon, temperatuur, sademed, tuule suund/kiirus ja puhangud; allikas Open-Meteo. Sama püsipunkt kui kaardi tuulekihil, seadme GPS-i ei kasutata. Kellaajad Eesti ajas, andmete laadimise aeg nähtav. Viimane avalik prognoos salvestatakse seadmesse; tõrke korral näidatakse allesolevaid tulevasi tunde ja vananemismärget. Üle 30 minuti vanused andmed märgitakse aegunuks; prognoos uueneb avatud paneelis 15 minuti järel. Laadimisel 12 s ajalimiit, käsitsi uuendamine ja veateade. Veel põhiharusse ühendamata. Ilmateenistuse välislink on selles vaates asendatud Open-Meteoga.
 
 Kontroll: 59 testi läbis, 3 välise kaarditeenuse testi jäeti vahele; build ja `git diff --check` läbisid. Päris Open-Meteo päring tagastas HTTP 200 ja brauseripäringuid lubava CORS-päise; saadud vastuse töötlemine andis 6 tulevast tundi. Brauseri visuaalset kontrolli selles keskkonnas ei tehtud.
+
+
+## 2026-10-22 · Kolme agendi kasutustest
+
+- **Avaliku lehe brauseritest** — mobiili, põhitoimingute ja ligipääsetavuse testagendid kontrollisid lehte päris Chrome’is. Kinnitati kuus erinevat puudust: mobiili peidetud infopaneel, ringmõõtmise liigsed sildid, modaali fookuse taastumine, kaardi klaviatuuritee puudumine, mõõtmise pealkirja kattumine ja 8 px aluskaardisilt. Sammud, töötanud teekonnad, piirangud ja ekraanipildid on failis `docs/browser-test-report-2026-10-22.md`. Testid ei hõlmanud sisselogitud kasutust ega päris mobiilseadet. Koodi ega seltsi andmeid ei muudetud; parandused on veel tegemata.
