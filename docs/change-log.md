@@ -2,6 +2,12 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-10-22
+
+- **Ilmateade M-menüüs** — kandidaatharu `feat/parnjoe-weather`: kontomenüüsse lisatud „Ilmateade“, mis avab Ilmateenistuse (EMHI) Pärnjõe küla asukohaprognoosi uuel vahelehel. Püsikoordinaadid 58.631909 N, 24.927124 E on kontrollitud Ilmateenistuse koharegistrist (asukoht 6616); seadme GPS-i ei kasutata. Ilmateenistuse mudelprognoosi andmeliides vastas kontrollimisel 503-ga, seetõttu kohalikke ilmanäitajaid ei dubleerita ning kasutatakse ametlikku asukohaprognoosi otselinki. Veebilehele veel avaldamata.
+
+- **Pärnjõe püsiv tuuleandmete asukoht** — kandidaatharu `fix/parnjoe-weather-point`: tuule kiiruse ja suuna päring kasutab ametliku jahipiirkonna keskme lähedast püsipunkti (58.639 N, 24.892 E). Kasutaja GPS, määratud jahikoht ja kaardi liigutamine ilmaandmete asukohta ei mõjuta; GPS pole tuule kuvamiseks vajalik. Lisatud kontroll, et päringu punkt asub ametliku jahipiirkonna sees. Veel põhiharusse ühendamata.
+
 ## 2026-10-21
 
 - **Jahirežiimi kaardinuppude nähtavad sildid** — muudatuses `src/main.tsx`, `src/style.css` ja `tests/minimal-ui.test.mjs`: aluskaart näitab valitud tüüpi; külgriba ümmarguste ikoonnuppude all on lühikesed sildid. Üldmõõtmine jääb jahimeestevaheliste vahemaade tööriistast eraldi. Sildid mahuvad nupu laiusesse ja alumine silt on keritav. PR #81 ülevaatusel; pole veel põhiharusse ühendatud. Kontroll: 53 testi läbis, 3 välise kaarditeenuse testi jäid vahele; build läbis.
