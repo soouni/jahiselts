@@ -22,3 +22,8 @@ Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest,
 ## 2026-10-22
 
 - **Väiksem veekogu märk ühe lainega** — kandidaatharu `fix/smaller-water-symbol`: tiigi ja muu veekogu sinises ringis on üks laine. Tavakuva suurus vähenes 32 pikslilt 20 pikslile, valitud märgil 40 pikslilt 26 pikslile. Kaart, legend ja redaktor kasutavad sama märki. Veel põhiharusse ühendamata.
+
+
+## 2026-10-22 · Ilmateate lingi täpsustus
+
+- **Pärnjõe püsiv asukohanumber** — Ilmateenistuse lingis kasutatakse koordinaatide asemel koharegistri ID-d 6616. Kontrollitud, et ametlik leht seab andmepäringu `locationId=6616`. Lehe HTTP 200 vastus ei kinnita prognoosi kuvamist: andmeserver vastas kontrollis 503-ga ja kasutaja kuvatõmmisel prognoos ei laadinud. Serveritõrge pole selle URL-i muudatusega lahendatud. Veel põhiharusse ühendamata.
