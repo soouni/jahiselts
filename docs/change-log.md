@@ -12,3 +12,7 @@ Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest,
 
 - **Võrguvaba kaardi valmisoleku selgem olek** — kandidaat muudatuses `src/main.tsx`: eristab rakenduse valmisoleku kaardipaketi seisust, kuvab allalaadimise edenemist ning annab võrguühenduseta olekus märku, et jahiinfo võib olla aegunud. Ühendati PR #79-s 19.10.2026. Kontroll: 52 testi läbis, 3 välise kaarditeenuse testi jäid vahele; tootmisbuild läbis.
 - **Asukohaprivaatsuse telefonitest** — iPhone Safari ja Android Chrome’i vastuvõtutesti dokumentatsioon esitati eraldi PR-is. Test vajab kahte testkontot ja eraldi testprojekti; tootmisandmeid ei kasutata.
+
+## 2026-10-22
+
+- **Väiksem veekogu märk ühe lainega** — kandidaatharu `fix/smaller-water-symbol`: tiigi ja muu veekogu sinises ringis on üks laine. Tavakuva suurus vähenes 32 pikslilt 20 pikslile, valitud märgil 40 pikslilt 26 pikslile. Kaart, legend ja redaktor kasutavad sama märki. Veel põhiharusse ühendamata.

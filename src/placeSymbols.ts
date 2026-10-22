@@ -1,7 +1,7 @@
 // Shared by the map, editor and legend. Unknown types remain neutral landmarks.
 export const symbolSize=20;
 export function isWaterSymbol(type:unknown){return type==='Tiik'||type==='Muu veekogu';}
-export function placeSymbolSize(type:unknown,selected=false){return isWaterSymbol(type)?selected?40:32:symbolSize;}
+export function placeSymbolSize(type:unknown,selected=false){return isWaterSymbol(type)?selected?26:20:symbolSize;}
 const house='<path d="M3 14 16 3l13 11h-4v15H7V14Z"/>';
 export const placeSymbols:Record<string,{color:string;path:string}>={
  'Jahimaja':{color:'#c45a12',path:house},
@@ -19,4 +19,4 @@ export const placeSymbols:Record<string,{color:string;path:string}>={
 };
 export const placeTypes=Object.keys(placeSymbols);
 export function symbolType(type:unknown){return typeof type==='string'&&placeSymbols[type]?type:'Orientiir';}
-export function symbolUrl(type:unknown){if(isWaterSymbol(type))return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="17" r="15" fill="#102e26" opacity=".25"/><circle cx="16" cy="15.5" r="14" fill="#1676b8" stroke="white" stroke-width="2"/><path d="M7 12.5q3-3 6 0t6 0t6 0M7 19q3-3 6 0t6 0t6 0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>');const {color,path}=placeSymbols[symbolType(type)];return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><g fill="${color}" stroke="white" stroke-width="3" stroke-linejoin="round" paint-order="stroke fill">${path}</g></svg>`);}
+export function symbolUrl(type:unknown){if(isWaterSymbol(type))return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="17" r="15" fill="#102e26" opacity=".25"/><circle cx="16" cy="15.5" r="14" fill="#1676b8" stroke="white" stroke-width="2"/><path d="M7 16q4.5-5 9 0t9 0" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>');const {color,path}=placeSymbols[symbolType(type)];return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><g fill="${color}" stroke="white" stroke-width="3" stroke-linejoin="round" paint-order="stroke fill">${path}</g></svg>`);}
