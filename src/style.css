@@ -158,3 +158,7 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 
 /* Captions stay inside the scroll rail width; bottom padding keeps the final label scrollable. */
 @media(max-height:520px){.hunt-active .tool-caption{font-size:7px}}
+
+/* Forecast links share the account menu button layout. */
+a.menurow{text-decoration:none;min-height:48px;color:inherit}
+a.menurow:hover{background:var(--soft)}
