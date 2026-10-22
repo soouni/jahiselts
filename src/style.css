@@ -162,3 +162,16 @@ button.brand:focus-visible,.overview-close:focus-visible{outline:3px solid #e891
 /* Forecast links share the account menu button layout. */
 a.menurow{text-decoration:none;min-height:48px;color:inherit}
 a.menurow:hover{background:var(--soft)}
+
+/* Hourly weather uses the existing account sheet on phones and desktops. */
+.weather-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.weather-heading h3{margin:0;font-size:23px}.weather-heading p{margin:3px 0 0;color:var(--muted)}
+.weather-refresh{flex-shrink:0;padding:9px 10px;font-size:13px}
+.weather-table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+.weather-table th,.weather-table td{padding:10px 5px;text-align:center;border-bottom:1px solid #e4ebe6;white-space:nowrap}
+.weather-table thead{background:var(--soft)}.weather-table thead th{font-size:12px;line-height:1.4}
+.weather-table th:first-child{text-align:left}.weather-table small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:3px}
+.weather-temperature{display:flex;justify-content:center;align-items:center;gap:5px}.weather-icon{display:inline-flex;color:#286b76}
+.weather-updated,.weather-source{font-size:12px!important;color:var(--muted);line-height:1.5}.weather-source a{text-decoration:underline}
+.weather-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media(max-width:360px){.weather-table th,.weather-table td{padding:9px 3px}.weather-temperature{gap:2px}.weather-refresh span{display:none}}
