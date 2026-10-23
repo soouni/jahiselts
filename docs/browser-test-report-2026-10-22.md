@@ -52,3 +52,21 @@ Need on brauseris korratud leiud, mitte üksnes lähtekoodist tehtud oletused. P
 2. QA-02: ringmõõtmise liigsete siltide eemaldamine.
 3. QA-03 ja QA-04: klaviatuuriga kasutamise parandamine.
 4. QA-05 ja QA-06: kattumine ja väikeste siltide loetavus.
+
+
+## Paranduskandidaat · 23.10.2026
+
+Kõik kuus leidu on parandatud harus `fix/browser-test-findings`; avalik leht muutub pärast PR-i ühendamist ja avaldamist.
+
+| ID | Muudatus | Kontroll |
+| --- | --- | --- |
+| QA-01 | Mobiili infopaneeli peitev reegel eemaldatud. Paneel on keritav ja kõrgus jätab alumisele ribale ruumi. | CSS-i ülevaatus ja build; visuaalne kordustest ootel. |
+| QA-02 | Ringipolygoni tehnilisi servi ei sildistata; raadiusjoone silt ja tavaliste mõõtmiste sildid säilivad. | Käitumistestid aktiivse ja lõpetatud ringi, raadiusjoone ning tavaliste joonte/hulknurkade jaoks. |
+| QA-03 | Dialoog suletakse enne eemaldamist ja fookus taastub avamisnupule; arvestatud ka dialoogi vahetamisega. | Fookuse taastamise, eemaldamise ja dialoogivahetuse käitumistestid. |
+| QA-04 | Kaart on Tabiga fokusseeritav, nähtava fookuse ja nooleklahvide/+/- juhisega. | OpenLayersi panoraamimise/suumimise testid; sisestusväljade klahve ei tarbita. Brauseri Tab-tee kordustest ootel. |
+| QA-05 | Arvuti mõõtmispaneel paigutatud aluskaardinupu kõrvale; avatud infopaneeli nihkereegel mõõtmisel ei rakendu. | CSS-i ülevaatus ja build; visuaalne kordustest ootel. |
+| QA-06 | Tööriistasildid suurendatud 12 px-ni, madalas jahivaates 11 px-ni; lisatud laiust ja kerimisvaru. | CSS-i ülevaatus ja build; visuaalne kordustest ootel. |
+
+Paranduskandidaadi testbrauser ei saanud kohaliku arendusserveriga ühendust (`ERR_CONNECTION_REFUSED`), sest brauseri ja tööruumi localhost on eraldi. Seetõttu ei ole paranduste visuaalne brauserikontroll ega päris telefoni kordustest veel kinnitatud. Ülal olevad ekraanipildid näitavad algseid vigu, mitte parandatud vaadet.
+
+Koondharu automaatkontroll: 67 testi läbis, 3 välise kaarditeenuse testi jäeti vahele; tootmisbuild ja `git diff --check` läbisid.

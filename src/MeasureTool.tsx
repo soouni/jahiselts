@@ -2,7 +2,6 @@ import {useEffect,useRef,useState} from 'react';
 import {Check,Ruler,RotateCcw,Square,Circle,ChevronUp,ChevronDown,X} from 'lucide-react';
 import type Map from 'ol/Map';
 import Feature from 'ol/Feature';
-import type {FeatureLike} from 'ol/Feature';
 import LineString from 'ol/geom/LineString';
 import Polygon from 'ol/geom/Polygon';
 import Point from 'ol/geom/Point';
@@ -10,31 +9,12 @@ import type Geometry from 'ol/geom/Geometry';
 import {Draw,DoubleClickZoom} from 'ol/interaction';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import {Style,Stroke,Fill,Text,Circle as CircleStyle} from 'ol/style';
 import {unByKey} from 'ol/Observable';
 import type {EventsKey} from 'ol/events';
 import {circleGeometry,measureGeometry,lengthLabel,areaLabel,type Measurement} from './measurement';
+import {measurementStyles} from './measurementStyles';
 
 const empty:Measurement={length:0,area:0,points:0,valid:false,crossed:false};
-const style=[new Style({stroke:new Stroke({color:'#18372d',width:7})}),new Style({stroke:new Stroke({color:'#ffe066',width:4}),fill:new Fill({color:'rgba(255,224,102,.15)'}),image:new CircleStyle({radius:6,fill:new Fill({color:'#ffe066'}),stroke:new Stroke({color:'#18372d',width:2})})})];
-// Lõigupikkused kuvatakse kaardil; sildid jäävad nähtavaks kuni mõõtmise sulgemiseni.
-function measurementStyles(feature:FeatureLike):Style[]{
- const geom=feature.getGeometry();
- if(!(geom instanceof LineString)&&!(geom instanceof Polygon))return style;
- const coords=geom instanceof Polygon?geom.getCoordinates()[0]:geom.getCoordinates();
- const labels:Style[]=[];
- for(let i=1;i<coords.length;i++){
-  const a=coords[i-1],b=coords[i];
-  if(Math.hypot(b[0]-a[0],b[1]-a[1])<0.01)continue;
-  const length=measureGeometry(new LineString([a,b])).length;
-  labels.push(new Style({geometry:new Point([(a[0]+b[0])/2,(a[1]+b[1])/2]),text:new Text({
-   text:lengthLabel(length),font:'bold 13px sans-serif',offsetY:-14,
-   fill:new Fill({color:'#173e32'}),backgroundFill:new Fill({color:'rgba(255,255,255,0.94)'}),
-   backgroundStroke:new Stroke({color:'#d2ddd6',width:1}),padding:[4,6,4,6]
-  })}));
- }
- return [...style,...labels];
-}
 
 export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
  const [collapsed,setCollapsed]=useState(false);

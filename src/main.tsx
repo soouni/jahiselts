@@ -1,3 +1,4 @@
+import {showDialogWithFocusReturn} from './ui/dialogFocus';
 import {WeatherPanel} from './WeatherPanel';
 import {parnjoeWindUrl,windIsCurrent,type WindReading} from './hunt/wind';
 import {PersonalNavigation} from './hunt/PersonalNavigation';
@@ -25,7 +26,13 @@ import {MapCanvas,type MapHandle} from './Map';import {db,getMembership,loadEntr
 import proj4 from 'proj4';import GeoJSON from 'ol/format/GeoJSON';import './style.css';
 const ToastContext=React.createContext('');
 const icons={area:Trees,line:Route,place:MapPin,observation:Eye,sign:Footprints};
-function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){const message=React.useContext(ToastContext);const titleId=React.useId();const d=useRef<HTMLDialogElement>(null);useEffect(()=>{d.current?.showModal();return()=>d.current?.close();},[]);return <dialog ref={d} aria-labelledby={titleId} onCancel={e=>{e.preventDefault();onClose();}} className="sheet"><header><h2 id={titleId}>{title}</h2><button className="iconbtn" aria-label="Sulge" onClick={onClose}><X/></button></header><div className="sheetbody">{message&&<div role="alert" className="notice">{message}</div>}{children}</div></dialog>;}
+function Modal({title,children,onClose}:{title:string;children:React.ReactNode;onClose:()=>void}){
+ const message=React.useContext(ToastContext),titleId=React.useId();
+ const d=useRef<HTMLDialogElement>(null),focus=useRef<ReturnType<typeof showDialogWithFocusReturn>|null>(null);
+ useEffect(()=>{if(!d.current)return;const controller=showDialogWithFocusReturn(d.current);focus.current=controller;return()=>{controller.dispose();focus.current=null;};},[]);
+ const close=()=>{focus.current?.close();onClose();};
+ return <dialog ref={d} aria-labelledby={titleId} onCancel={e=>{e.preventDefault();close();}} className="sheet"><header><h2 id={titleId}>{title}</h2><button type="button" className="iconbtn" aria-label="Sulge" onClick={close}><X/></button></header><div className="sheetbody">{message&&<div role="alert" className="notice">{message}</div>}{children}</div></dialog>;
+}
 function Field({label:txt,children}:{label:string;children:React.ReactNode}){return <label className="field"><span>{txt}</span>{children}</label>;}
 function App(){const map=useRef<MapHandle>(null);
 const [offlineTiles,setOfflineTiles]=useState(0);
