@@ -26,11 +26,10 @@ Avalehe võrguühendusega laadimine valideerib HTML-i uuesti, et eelmine brauser
 
 15.10.2026 käivitas Martti eraldi testprojektis `pipwbfmgmuiisrvnnnmw` mõlemad päris Auth/PostgREST/Storage läbivtestide komplektid (`test:rls`, `test:hunt-operations`). Jagatud terminali kuvatõmmisel (19:34:49) on mõlema komplekti PASS-tulemused ja lõppkinnitus „VALMIS: mõlemad läbivtestide komplektid läbisid.” See katab ka tavaliikme positsiooni võtmise/kinnitamise ja reaalajas asukoha õigused. See tõend ei asenda päris telefoni andurikatseid. PGlite katsed ei ole mitme PostgreSQL-ühenduse koormustest.
 
-Enne välirežiimi täielikku vastuvõttu tee vähemalt iPhone Safari ja Android Chrome seadmega:
+Asukohaprivaatsuse, telefoni GPS-i, võrguühenduse ja konto vahetamise üksikasjalikud sammud ning tulemuste vorm asuvad eraldi juhendis: [iPhone Safari ja Android Chrome'i asukohaprivaatsuse vastuvõtutest](mobile-location-privacy-acceptance-2026-10-19.md). Test on tegemata, kuni mõlema platvormi tulemused on seal kirja pandud. Lisaks kontrolli mõlema telefoniga järgmisi üldisi välirežiimi kasutusvooge:
 
-1. Juhataja määrab koha; tavaliige avab selle, käivitab GPS-i ja kompassi ning kinnitab saabumise. Võõrast kohta ei saa muuta. Kaks osalejat proovivad sama vaba kohta: ainult üks peab saama selle.
-2. Keela GPS-luba, luba uuesti; kontrolli aegunud ja ebatäpset mõõtmist. Lukusta ekraan 2 minutiks ja naase. Vana asukohta ei tohi esitada värskena.
-3. Salvesta oma koht ning laadi aluskaart alla. Lülita lennurežiim sisse, laadi leht uuesti ja ava salvestatud koht. GPS võib töötada, kuid jagamine ja kinnitamine ei tohi teeselda serveriedu.
-4. Taasta ühendus ja ava elus jaht uuesti. Muuda juhataja seadmes kohta; teine telefon peab nägema uut kohta ja eduka sünkroonimise aega.
-5. Kontrolli püsti/külili vaadet, otsingu klaviatuuri, suurendatud teksti ja paneelide kerimist. Ükski oluline nupp ei tohi jääda kättesaamatuks.
-6. Lõpeta asukoha jagamine ja logi välja. Salvestatud oma koha avamise võimalus peab kaduma. Kontrolli ka teise kontoga sisselogimist.
+1. Juhataja määrab koha; tavaliige avab selle ja proovib saabumist kinnitada. Võõrast kohta ei saa muuta. Kaks osalejat proovivad sama vaba kohta: ainult üks peab saama selle.
+2. Taasta ühendus ja ava elus jaht uuesti. Muuda juhataja seadmes kohta; teine telefon peab nägema uut kohta ja eduka sünkroonimise aega.
+3. Kontrolli püsti/külili vaadet, otsingu klaviatuuri, suurendatud teksti ja paneelide kerimist. Ükski oluline nupp ei tohi jääda kättesaamatuks.
+
+Need käsitsi tehtavad kontrollid ei asendu automaattestidega ega `qa/layout.html` ekraaniraamidega.
