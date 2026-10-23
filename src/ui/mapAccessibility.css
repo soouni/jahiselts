@@ -1,0 +1,4 @@
+.map:focus-visible{outline:3px solid #dd8d38;outline-offset:-5px}
+.map-keyboard-help{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.map:focus-visible+.map-keyboard-help{left:50%;top:100px;transform:translateX(-50%);z-index:21;width:max-content;max-width:calc(100% - 24px);height:auto;margin:0;padding:10px 14px;border-radius:10px;clip-path:none;white-space:normal;background:#173e32;color:#fff;box-shadow:0 3px 16px #0003;font-size:14px;line-height:1.5;pointer-events:none}
+@media(max-height:520px){.map:focus-visible+.map-keyboard-help{top:auto;bottom:12px;max-width:calc(100% - 300px)}}

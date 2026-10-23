@@ -38,10 +38,8 @@ test('UI shell is offline-safe and avoids the former override pile-up',()=>{
  assert.ok((app.match(/style=\{\{/g)||[]).length<15);
 });
 
-test('hunt tool captions fit inside circular controls and the scroll rail',()=>{
+test('hunt tools retain circular controls and a scrollable rail',()=>{
  assert.match(css,/\.basemap-cycle-button,\.hunt-round-button\{[^}]*border-radius:50%/);
- assert.match(css,/\.tool-caption\{[^}]*left:0;width:100%[^}]*white-space:nowrap/);
- assert.match(css,/\.hunt-mode-switch\{[^}]*overflow-y:auto[^}]*padding-bottom:16px/);
- assert.match(css,/@media\(max-height:520px\)\{\.hunt-active \.tool-caption\{font-size:7px\}\}/);
+ assert.match(css,/\.hunt-mode-switch\{[^}]*overflow-y:auto/);
  assert.match(app,/huntMode\?'Jaht sees':'Jaht'/);
 });

@@ -1,0 +1,41 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import Feature from 'ol/Feature.js';
+import LineString from 'ol/geom/LineString.js';
+import Polygon from 'ol/geom/Polygon.js';
+import Point from 'ol/geom/Point.js';
+import VectorSource from 'ol/source/Vector.js';
+import {get as getProjection} from 'ol/proj.js';
+import proj4 from 'proj4';
+import {register} from 'ol/proj/proj4.js';
+import {circleGeometry,measureGeometry} from '../src/measurement.ts';
+import {measurementStyles} from '../src/measurementStyles.ts';
+
+proj4.defs('EPSG:3301','+proj=lcc +lat_0=57.51755393055556 +lon_0=24 +lat_1=59.33333333333334 +lat_2=58 +x_0=500000 +y_0=6375000 +ellps=GRS80 +units=m +no_defs');
+register(proj4);
+const textStyles=feature=>measurementStyles(feature).filter(style=>style.getText());
+test('active and completed circle outlines never label their sampled polygon edges',()=>{
+ const projection=getProjection('EPSG:3857');
+ const center=[2770000,8100000],edge=[2770500,8100000];
+ const geometry=circleGeometry([center,center],undefined,projection);
+ const circle=new Feature(geometry);
+ assert.equal(textStyles(circle).length,0,'zero-radius sketch');
+ circleGeometry([center,edge],geometry,projection);
+ assert.ok(geometry.getCoordinates()[0].length>100,'circle still has a sampled outline');
+ assert.equal(textStyles(circle).length,0,'active nonzero circle');
+ const source=new VectorSource();source.addFeature(circle);
+ assert.equal(textStyles(source.getFeatures()[0]).length,0,'completed feature in measurement layer');
+ const measured=measureGeometry(geometry);
+ assert.ok(measured.radius>0&&measured.area>0,'radius and area remain measurable');
+ assert.ok(measurementStyles(circle).every(style=>style.getStroke()),'outline strokes remain');
+ const radiusLine=new Feature(new LineString([center,edge]));
+ assert.equal(textStyles(radiusLine).length,1,'radius line keeps its length label');
+ assert.ok(measurementStyles(radiusLine).some(style=>style.getStroke()),'radius line stays visible');
+ const centerPoint=new Feature(new Point(center));
+ assert.ok(measurementStyles(centerPoint).some(style=>style.getImage()),'center point stays visible');
+});
+test('ordinary line and polygon measurements keep all nonzero segment labels',()=>{
+ const coords=[[2770000,8100000],[2770500,8100000],[2770500,8100500]];
+ assert.equal(textStyles(new Feature(new LineString(coords))).length,2);
+ assert.equal(textStyles(new Feature(new Polygon([[...coords,coords[0]]]))).length,3);
+});

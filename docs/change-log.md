@@ -2,6 +2,12 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-10-23
+
+- **Kõigi kuue brauseritestileiu parandused** — kandidaatharu `fix/browser-test-findings`: mobiili infopaneel avaneb ja kerib; ringmõõtmisel eemaldatud tehniliste servade sildid; dialoogi sulgemine taastab fookuse; kaart on klaviatuuriga fokusseeritav ning nooleklahvide ja +/- abil juhitav; arvuti mõõtmispaneel ei kattu aluskaardinupuga; tööriistasildid suurendatud 11–12 px-ni ning kerimisruum kohandatud. Tööd tegid mobiili-, põhitoimingute ja ligipääsetavuse agendid eraldi harudes. Täpsemad kontrollid ja piirangud on brauseritestiraporti paranduste jaotises. Veel põhiharusse ühendamata ega avaldatud.
+
+Koondharu automaatkontroll: 67 testi läbis, 3 välise kaarditeenuse testi jäeti vahele; tootmisbuild ja `git diff --check` läbisid.
+
 ## 2026-10-22
 
 - **Ilmateade M-menüüs** — kandidaatharu `feat/parnjoe-weather`: kontomenüüsse lisatud „Ilmateade“, mis avab Ilmateenistuse (EMHI) Pärnjõe küla asukohaprognoosi uuel vahelehel. Püsikoordinaadid 58.631909 N, 24.927124 E on kontrollitud Ilmateenistuse koharegistrist (asukoht 6616); seadme GPS-i ei kasutata. Ilmateenistuse mudelprognoosi andmeliides vastas kontrollimisel 503-ga, seetõttu kohalikke ilmanäitajaid ei dubleerita ning kasutatakse ametlikku asukohaprognoosi otselinki. Veebilehele veel avaldamata.
