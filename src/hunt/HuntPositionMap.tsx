@@ -1,3 +1,5 @@
+import {entryMapFeatures,entryMapStyle} from '../entryMap';
+import type {Entry} from '../types';
 import {mapInteractions} from '../mapInteractions';
 import {huntAreaStyles} from './areaStyles';
 import {useEffect,useRef,useState} from 'react';
@@ -20,10 +22,11 @@ import type {HuntPositionRow,HuntPersonRow} from './api';
 
 import {huntMarkerUrl} from './markers';
 
-export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdit=false,driveArea=null,onAreaDraw}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void;onAssign?:(positionId:string,personId:string)=>void;onMove?:(positionId:string)=>void;canEdit?:boolean;driveArea?:{type:'Polygon';coordinates:[number,number][][]}|null;onAreaDraw?:(area:{type:'Polygon';coordinates:[number,number][][]})=>void}){
+export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdit=false,driveArea=null,onAreaDraw,entries=[]}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void;onAssign?:(positionId:string,personId:string)=>void;onMove?:(positionId:string)=>void;canEdit?:boolean;entries?:Entry[];driveArea?:{type:'Polygon';coordinates:[number,number][][]}|null;onAreaDraw?:(area:{type:'Polygon';coordinates:[number,number][][]})=>void}){
  const [areaDrawing,setAreaDrawing]=useState(false);
  const drawInteraction=useRef<Draw|null>(null);
  const areaSource=useRef(new VectorSource());
+ const entriesSource=useRef(new VectorSource());
  const areaDrawCallback=useRef(onAreaDraw);areaDrawCallback.current=onAreaDraw;
  const [editingId,setEditingId]=useState<string|null>(null);
  const [base,setBase]=useState<'kaart'|'foto'|'hybriid'>('foto');
@@ -37,7 +40,7 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
  onPlaceRef.current=onPlace;
  useEffect(()=>{
   if(!el.current)return;
-  const m=new Map({interactions:mapInteractions(),target:el.current,layers:[new VectorLayer({source:areaSource.current,declutter:'hunt',style:huntAreaStyles}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:'hunt'})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
+  const m=new Map({interactions:mapInteractions(),target:el.current,layers:[new VectorLayer({source:entriesSource.current,declutter:true,style:(feature,resolution)=>entryMapStyle(feature,resolution)}),new VectorLayer({source:areaSource.current,declutter:'hunt',style:huntAreaStyles}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:'hunt'})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
   map.current=m;
   let cancelled=false;
   fetch(import.meta.env.BASE_URL+'data/wmts.xml').then(r=>{if(!r.ok)throw Error('WMTS ei laadinud');return r.text();}).then(xml=>{
@@ -60,6 +63,7 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
   return()=>{cancelled=true;if(drawInteraction.current)m.removeInteraction(drawInteraction.current);m.setTarget(undefined);map.current=null;layers.current={};boundary.current.clear();};
  },[]);
  useEffect(()=>{for(const [name,layer] of Object.entries(layers.current))layer.setVisible(name==='kaart'?base==='kaart':name==='foto'?base!=='kaart':base==='hybriid');},[base]);
+ useEffect(()=>{entriesSource.current.clear();entriesSource.current.addFeatures(entryMapFeatures(entries));},[entries]);
  useEffect(()=>{
   const src=source.current;src.clear();
   positions.forEach(position=>{
