@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-10-24 · Isiklik jahiliikmete nimekuva
+
+- **Täisnimi või eesnimi kaardil** — kandidaatharu `feat/personal-hunt-name-display`: „Minu konto“ ja jahirežiimi seadetes saab iga liige valida täisnime või eesnime kuvamise. Sama jahikoosseisu eri isikute kattuva eesnime korral lisandub perenime esitäht (Rain R.). Valik rakendub kohe planeerimiskaardi positsioonidele ning põhikaardi määratud ja reaalaja asukohamärkidele; K-number ja asukoha olek säilivad. Eelistus salvestatakse selles brauseris kasutaja kaupa, teise seadmesse ei sünkroonita. Vaikimisi täisnimi. Kontroll: 73 testi läbis, 3 välise kaarditeenuse testi jäeti vahele; build ja diff-check läbisid. Testid katavad korduvad eesnimed, muutunud koosseisu, nime normaliseerimise, kontode eraldatuse ja salvestusvea. Sisselogitud vaate brauserikontroll on tegemata. Veel põhiharusse ühendamata ega avaldatud.
+
 ## 2026-10-24 · Jahiala siltide loetavus
 
 - **Mõõdusildid ala sisse ja täismeetriteks** — kandidaatharu `fix/hunt-area-label-layout`: piirjoone pikkused ümardatakse täismeetriteks (570,4 m → 570 m). Sildid nihkuvad lõigu keskelt 28 ekraanipikslit ala sissepoole; kitsas alas vähendatakse nihet. Arvestatud mõlema piiripunktide järjekorraga. Planeerimis- ja põhikaardi jahimärgid ning mõõdusildid kasutavad ühist kattumise vältimist: jahimeeste ikoonid säilivad alati, kattuv nimi või mõõdusilt võib jääda peidetuks kuni suumimise/liigutamiseni. Kontroll: 71 testi läbis, 3 välise teenuse testi jäeti vahele; build ja diff-check läbisid. Visuaalne kontroll päris telefonis on tegemata. Veel põhiharusse ühendamata ega avaldatud.

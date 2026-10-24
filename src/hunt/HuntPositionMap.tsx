@@ -1,3 +1,4 @@
+import {huntPersonName,type HuntNameDisplay} from './nameDisplay';
 import {huntAreaStyles} from './areaStyles';
 import {useEffect,useRef,useState} from 'react';
 import Map from 'ol/Map';
@@ -19,7 +20,7 @@ import type {HuntPositionRow,HuntPersonRow} from './api';
 
 import {huntMarkerUrl} from './markers';
 
-export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdit=false,driveArea=null,onAreaDraw}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void;onAssign?:(positionId:string,personId:string)=>void;onMove?:(positionId:string)=>void;canEdit?:boolean;driveArea?:{type:'Polygon';coordinates:[number,number][][]}|null;onAreaDraw?:(area:{type:'Polygon';coordinates:[number,number][][]})=>void}){
+export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdit=false,driveArea=null,onAreaDraw,nameDisplay='full'}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void;onAssign?:(positionId:string,personId:string)=>void;onMove?:(positionId:string)=>void;canEdit?:boolean;nameDisplay?:HuntNameDisplay;driveArea?:{type:'Polygon';coordinates:[number,number][][]}|null;onAreaDraw?:(area:{type:'Polygon';coordinates:[number,number][][]})=>void}){
  const [areaDrawing,setAreaDrawing]=useState(false);
  const drawInteraction=useRef<Draw|null>(null);
  const areaSource=useRef(new VectorSource());
@@ -65,16 +66,14 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
    const feature=new Feature({geometry:new Point(fromLonLat(position.location.coordinates))});
    feature.set('huntPositionId',position.id);
    const person=people.find(p=>p.id===position.assigned_participant_id);
-   const firstName=person?.display_name.trim().split(/\s+/)[0]||'Vaba';
-   const duplicate=people.filter(p=>p.display_name.trim().split(/\s+/)[0]===firstName).length>1;
-   const suffix=duplicate&&person?' '+(person.display_name.trim().split(/\s+/)[1]||'').slice(0,1)+'.':'';
+   const mapName=person?huntPersonName(person,people,nameDisplay):'Vaba';
    feature.setStyle(new Style({
     image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.72,declutterMode:'obstacle'}),
-    text:new Text({text:firstName+suffix,font:'bold 12px sans-serif',offsetY:-31,overflow:false,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:4}),padding:[2,3,2,3]})
+    text:new Text({text:mapName,font:'bold 12px sans-serif',offsetY:-31,overflow:false,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:4}),padding:[2,3,2,3]})
    }));
    src.addFeature(feature);
   });
- },[positions,people]);
+ },[positions,people,nameDisplay]);
  useEffect(()=>{
   areaSource.current.clear();
   if(driveArea?.type==='Polygon'&&driveArea.coordinates?.length){
