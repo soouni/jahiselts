@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-10-24
+
+- **Aju ala piirjoonte automaatsed pikkused** — kandidaatharu `feat/hunt-area-distances`: aju ala joonistamisel ja salvestatud ala kuvamisel näidatakse iga kahe piiripunkti vahel lõigu pikkust, ka sulgeval serval. Sama kujundus planeerimiskaardil, joonistamise eelvaates ja põhikaardil. Mõõdud arvutatakse L-EST97 meetrites, pikematel lõikudel kuvatakse kilomeetrid; korduvaid/nullpikkusega joonistuspunkte ei sildistata. Eesmärk on toetada jahijuhi hinnangut kütiliinide pikkusele; automaatset meeste arvu ei arvutata. Kontroll: täiskomplektis 69 testi läbis, 3 välist kaarditeenuse testi jäeti vahele; lõpliku dublettide käsitluse 2 sihttesti ja tootmisbuild läbisid. Brauseri visuaalset ega sisselogitud jahiplaneerimise kontrolli pole tehtud. Veel põhiharusse ühendamata ega avaldatud.
+
 ## 2026-10-23
 
 - **Kõigi kuue brauseritestileiu parandused** — kandidaatharu `fix/browser-test-findings`: mobiili infopaneel avaneb ja kerib; ringmõõtmisel eemaldatud tehniliste servade sildid; dialoogi sulgemine taastab fookuse; kaart on klaviatuuriga fokusseeritav ning nooleklahvide ja +/- abil juhitav; arvuti mõõtmispaneel ei kattu aluskaardinupuga; tööriistasildid suurendatud 11–12 px-ni ning kerimisruum kohandatud. Tööd tegid mobiili-, põhitoimingute ja ligipääsetavuse agendid eraldi harudes. Täpsemad kontrollid ja piirangud on brauseritestiraporti paranduste jaotises. Veel põhiharusse ühendamata ega avaldatud.
