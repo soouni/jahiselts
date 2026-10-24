@@ -1,3 +1,4 @@
+import {huntAreaStyles} from './areaStyles';
 import {useEffect,useRef,useState} from 'react';
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -35,7 +36,7 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
  onPlaceRef.current=onPlace;
  useEffect(()=>{
   if(!el.current)return;
-  const m=new Map({target:el.current,layers:[new VectorLayer({source:areaSource.current,style:new Style({fill:new Fill({color:'rgba(249,115,22,.15)'}),stroke:new Stroke({color:'#ea580c',width:3,lineDash:[9,5]})})}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:true})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
+  const m=new Map({target:el.current,layers:[new VectorLayer({source:areaSource.current,style:huntAreaStyles}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:true})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
   map.current=m;
   let cancelled=false;
   fetch(import.meta.env.BASE_URL+'data/wmts.xml').then(r=>{if(!r.ok)throw Error('WMTS ei laadinud');return r.text();}).then(xml=>{
@@ -82,7 +83,7 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
  },[driveArea]);
  useEffect(()=>{
   const m=map.current;if(!m||!areaDrawing||!canEdit)return;
-  const draw=new Draw({type:'Polygon',source:areaSource.current});drawInteraction.current=draw;m.addInteraction(draw);
+  const draw=new Draw({type:'Polygon',source:areaSource.current,style:huntAreaStyles});drawInteraction.current=draw;m.addInteraction(draw);
   draw.on('drawstart',()=>{areaSource.current.clear();});
   draw.on('drawend',event=>{
    const geometry=event.feature.getGeometry();if(!(geometry instanceof Polygon))return;
