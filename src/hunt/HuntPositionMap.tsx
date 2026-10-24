@@ -1,3 +1,4 @@
+import {mapInteractions} from '../mapInteractions';
 import {huntAreaStyles} from './areaStyles';
 import {useEffect,useRef,useState} from 'react';
 import Map from 'ol/Map';
@@ -36,7 +37,7 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
  onPlaceRef.current=onPlace;
  useEffect(()=>{
   if(!el.current)return;
-  const m=new Map({target:el.current,layers:[new VectorLayer({source:areaSource.current,declutter:'hunt',style:huntAreaStyles}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:'hunt'})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
+  const m=new Map({interactions:mapInteractions(),target:el.current,layers:[new VectorLayer({source:areaSource.current,declutter:'hunt',style:huntAreaStyles}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:'hunt'})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
   map.current=m;
   let cancelled=false;
   fetch(import.meta.env.BASE_URL+'data/wmts.xml').then(r=>{if(!r.ok)throw Error('WMTS ei laadinud');return r.text();}).then(xml=>{
