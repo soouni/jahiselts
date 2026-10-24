@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-10-24 · Telefoni kaardi lohistamine
+
+- **Puudutusega lohistamine ilma fookusenõudeta** — kandidaatharu `fix/touch-map-pan`: põhikaardi `tabIndex` aktiveeris OpenLayersi vaikimisi fookusenõude panoraamimisele; telefon ei pruugi puudutamisel kaardile fookust anda. Mõlemal kaardil kasutatakse nüüd selgesõnalisi vaikimisi interaktsioone `onFocusOnly:false` abil. Tab-fookus ja klaviatuurijuhtimine säilivad, samuti kahe sõrmega suumimine. Regresioonitest kordab vana fookuseblokeeringu ning kinnitab uue seadistusega sõrmelòhistamise alustamist ja kaardi keskme muutumist. Kontroll: 72 testi läbis, 3 välise kaarditeenuse testi jäeti vahele; tootmisbuild ja diff-check läbisid. Päris iPhone'i puudutustest on tegemata. Veel põhiharusse ühendamata ega avaldatud.
+
 ## 2026-10-24 · Jahiala siltide loetavus
 
 - **Mõõdusildid ala sisse ja täismeetriteks** — kandidaatharu `fix/hunt-area-label-layout`: piirjoone pikkused ümardatakse täismeetriteks (570,4 m → 570 m). Sildid nihkuvad lõigu keskelt 28 ekraanipikslit ala sissepoole; kitsas alas vähendatakse nihet. Arvestatud mõlema piiripunktide järjekorraga. Planeerimis- ja põhikaardi jahimärgid ning mõõdusildid kasutavad ühist kattumise vältimist: jahimeeste ikoonid säilivad alati, kattuv nimi või mõõdusilt võib jääda peidetuks kuni suumimise/liigutamiseni. Kontroll: 71 testi läbis, 3 välise teenuse testi jäeti vahele; build ja diff-check läbisid. Visuaalne kontroll päris telefonis on tegemata. Veel põhiharusse ühendamata ega avaldatud.
