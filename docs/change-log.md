@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-10-24 · Seltsi märgid planeerimiskaardil
+
+- **Planeerimise puuduv objektikiht** — kandidaatharu `fix/planning-map-landmarks`: jahi planeerimise kaardile antakse põhikaardil nähtavad ja rolli järgi lubatud seltsi objektid. Nähtavad on kohamärgid, sihid/jooned, metsatukad ning valitud filtritega vaatlused ja jäljed. Põhikaart ja planeerimiskaart kasutavad ühist objektide teisendust ja stiili, säilitades sümbolid, värvid, joonelaiused ja nimed. Planeerimise objektikiht on vaatamiseks; positsiooni valimine ja ala joonistamine säilivad. Kontroll: 74 testi läbis, 3 välise teenuse testi jäeti vahele; build ja diff-check läbisid. Testid katavad geomeetriate teisenduse, sümbolid, kujunduse, kustutatud objektide väljajätmise ja filtreeritud andmete tee planeerimiskaardini. Sisselogitud telefonivaate visuaalne kontroll on tegemata. Veel põhiharusse ühendamata ega avaldatud.
+
 ## 2026-10-24 · Telefoni kaardi lohistamine
 
 - **Puudutusega lohistamine ilma fookusenõudeta** — kandidaatharu `fix/touch-map-pan`: põhikaardi `tabIndex` aktiveeris OpenLayersi vaikimisi fookusenõude panoraamimisele; telefon ei pruugi puudutamisel kaardile fookust anda. Mõlemal kaardil kasutatakse nüüd selgesõnalisi vaikimisi interaktsioone `onFocusOnly:false` abil. Tab-fookus ja klaviatuurijuhtimine säilivad, samuti kahe sõrmega suumimine. Regresioonitest kordab vana fookuseblokeeringu ning kinnitab uue seadistusega sõrmelòhistamise alustamist ja kaardi keskme muutumist. Kontroll: 72 testi läbis, 3 välise kaarditeenuse testi jäeti vahele; tootmisbuild ja diff-check läbisid. Päris iPhone'i puudutustest on tegemata. Veel põhiharusse ühendamata ega avaldatud.
