@@ -36,7 +36,7 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
  onPlaceRef.current=onPlace;
  useEffect(()=>{
   if(!el.current)return;
-  const m=new Map({target:el.current,layers:[new VectorLayer({source:areaSource.current,style:huntAreaStyles}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:true})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
+  const m=new Map({target:el.current,layers:[new VectorLayer({source:areaSource.current,declutter:'hunt',style:huntAreaStyles}),new VectorLayer({source:boundary.current,style:[new Style({stroke:new Stroke({color:'#fff',width:6}),fill:new Fill({color:'rgba(27,76,57,.05)'})}),new Style({stroke:new Stroke({color:'#d97726',width:3})})]}),new VectorLayer({source:source.current,declutter:'hunt'})],view:new View({center:fromLonLat([24.887,58.638]),zoom:11})});
   map.current=m;
   let cancelled=false;
   fetch(import.meta.env.BASE_URL+'data/wmts.xml').then(r=>{if(!r.ok)throw Error('WMTS ei laadinud');return r.text();}).then(xml=>{
@@ -69,7 +69,7 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
    const duplicate=people.filter(p=>p.display_name.trim().split(/\s+/)[0]===firstName).length>1;
    const suffix=duplicate&&person?' '+(person.display_name.trim().split(/\s+/)[1]||'').slice(0,1)+'.':'';
    feature.setStyle(new Style({
-    image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.72,declutterMode:'none'}),
+    image:new Icon({src:huntMarkerUrl(person?.role||'hunter'),anchor:[0.5,0.5],scale:0.72,declutterMode:'obstacle'}),
     text:new Text({text:firstName+suffix,font:'bold 12px sans-serif',offsetY:-31,overflow:false,fill:new Fill({color:'#153b30'}),stroke:new Stroke({color:'#fff',width:4}),padding:[2,3,2,3]})
    }));
    src.addFeature(feature);

@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-10-24 · Jahiala siltide loetavus
+
+- **Mõõdusildid ala sisse ja täismeetriteks** — kandidaatharu `fix/hunt-area-label-layout`: piirjoone pikkused ümardatakse täismeetriteks (570,4 m → 570 m). Sildid nihkuvad lõigu keskelt 28 ekraanipikslit ala sissepoole; kitsas alas vähendatakse nihet. Arvestatud mõlema piiripunktide järjekorraga. Planeerimis- ja põhikaardi jahimärgid ning mõõdusildid kasutavad ühist kattumise vältimist: jahimeeste ikoonid säilivad alati, kattuv nimi või mõõdusilt võib jääda peidetuks kuni suumimise/liigutamiseni. Kontroll: 71 testi läbis, 3 välise teenuse testi jäeti vahele; build ja diff-check läbisid. Visuaalne kontroll päris telefonis on tegemata. Veel põhiharusse ühendamata ega avaldatud.
+
 ## 2026-10-24
 
 - **Aju ala piirjoonte automaatsed pikkused** — kandidaatharu `feat/hunt-area-distances`: aju ala joonistamisel ja salvestatud ala kuvamisel näidatakse iga kahe piiripunkti vahel lõigu pikkust, ka sulgeval serval. Sama kujundus planeerimiskaardil, joonistamise eelvaates ja põhikaardil. Mõõdud arvutatakse L-EST97 meetrites, pikematel lõikudel kuvatakse kilomeetrid; korduvaid/nullpikkusega joonistuspunkte ei sildistata. Eesmärk on toetada jahijuhi hinnangut kütiliinide pikkusele; automaatset meeste arvu ei arvutata. Kontroll: täiskomplektis 69 testi läbis, 3 välist kaarditeenuse testi jäeti vahele; lõpliku dublettide käsitluse 2 sihttesti ja tootmisbuild läbisid. Brauseri visuaalset ega sisselogitud jahiplaneerimise kontrolli pole tehtud. Veel põhiharusse ühendamata ega avaldatud.
