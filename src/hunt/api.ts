@@ -90,7 +90,8 @@ export async function linkRosterAccount(rosterId:string,userId:string|null){
 }
 export async function addRosterPerson(name:string,role:'hunter'|'driver'|'dog_driver',userId?:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
- const {error}=await db.from('hunt_roster').insert({display_name:name.trim(),default_role:role,user_id:userId||null});if(error)throw error;
+ if(!name.trim()||name.trim().length>120)throw new Error('Sisesta kuni 120 tähemärgiga nimi.');
+ const {data,error}=await db.from('hunt_roster').insert({display_name:name.trim(),default_role:role,user_id:userId||null}).select('id,user_id,display_name,default_role').single();if(error)throw error;return data as RosterPerson;
 }
 export async function removeRosterPerson(id:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
@@ -102,7 +103,7 @@ export async function setRosterRole(id:string,role:'hunter'|'driver'|'dog_driver
 }
 export async function addRosterParticipant(huntId:string,person:RosterPerson){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
- const {error}=await db.from('hunt_participants').insert({hunt_id:huntId,roster_id:person.id,user_id:person.user_id,display_name:person.display_name,role:person.default_role});if(error)throw error;
+ const {data,error}=await db.from('hunt_participants').insert({hunt_id:huntId,roster_id:person.id,user_id:person.user_id,display_name:person.display_name,role:person.default_role}).select('*').single();if(error)throw error;return data as HuntPersonRow;
 }
 export async function createHuntFromPrevious(previous:HuntRow,title:string){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
