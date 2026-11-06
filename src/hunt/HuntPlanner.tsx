@@ -47,7 +47,26 @@ export function HuntPlanner({onExit,clubRole='member',entries=[]}:{onExit:()=>vo
  async function completeSelectedHunt(){if(!selected||working||!canManage||selected.status==='finished')return;if(!window.confirm('Kas lõpetada jaht „'+selected.title+'”? Jaht jääb ajalukku, kuid seda ei saa enam aktiivse jahina kasutada.'))return;await runLifecycle(()=>setHuntStatus(selected.id,'finished'),'Jaht lõpetatud. Osalejad ja positsioonid on ajaloo jaoks alles.');setPlacing(false);setMovingId(null);setFullMap(false);}
 
  useEffect(()=>{listRoster().then(setRoster).catch(e=>setNotice('Nimekirja laadimine: '+String(e)));},[]);
- async function createRosterEntry(){if(!canCreate||!newName.trim())return;setWorking(true);try{await addRosterPerson(newName,newRole);setRoster(await listRoster());setNewName('');}catch(e){setNotice(String(e));}finally{setWorking(false);}}
+ async function createRosterEntry(place=false){
+  if(!canCreate||working||!newName.trim()||(place&&(!canManage||!driveId)))return;
+  setWorking(true);
+  try{
+   const name=newName.trim().replace(/\s+/g,' ');
+   const duplicate=roster.find(p=>p.display_name.toLocaleLowerCase('et')===name.toLocaleLowerCase('et'));
+   if(duplicate){setNotice('See nimi on juba püsivas nimekirjas. Vali olemasolev inimene aktiivseks osalejaks.');return;}
+   const person=await addRosterPerson(name,newRole);
+   setRoster(rows=>[...rows,person].sort((a,b)=>a.display_name.localeCompare(b.display_name,'et')));
+   setNewName('');
+   setNotice(person.display_name+' lisatud püsivasse nimekirja.');
+   if(place&&selected){
+    const participant=await addRosterParticipant(selected.id,person);
+    setPeople(rows=>[...rows,participant].sort((a,b)=>a.display_name.localeCompare(b.display_name,'et')));
+    setPositionPerson(participant.id);setMovingId(null);setPlacing(true);setFullMap(true);
+    setNotice('Puuduta kaardil '+person.display_name+' asukohta.');
+   }
+  }catch(e){setNotice('Lisamine ebaõnnestus: '+String(e));}finally{setWorking(false);}
+ }
+
  async function toggleParticipant(person:RosterPerson,active:boolean){if(!selected||!canManage)return;setWorking(true);try{if(active)await addRosterParticipant(selected.id,person);else{const participant=people.find(p=>p.roster_id===person.id||!!person.user_id&&p.user_id===person.user_id);if(participant)await removeHuntPerson(participant.id);}setPeople(await huntPeople(selected.id));if(driveId)setPositions(await huntPositions(driveId));}catch(e){setNotice(String(e));}finally{setWorking(false);}}
  async function linkAccount(person:RosterPerson,userId:string){if(!canLinkAccounts||working)return;setWorking(true);try{await linkRosterAccount(person.id,userId||null);setRoster(await listRoster());if(selected)setPeople(await huntPeople(selected.id));setNotice(userId?'Kasutajakonto seotud: '+person.display_name:'Kasutajakonto seos eemaldatud: '+person.display_name);}catch(e){setNotice('Konto sidumine ebaõnnestus: '+String(e));}finally{setWorking(false);}}
  async function changeRosterRole(person:RosterPerson,role:'hunter'|'driver'|'dog_driver'){if(!canCreate)return;setWorking(true);try{await setRosterRole(person.id,role);setRoster(await listRoster());}catch(e){setNotice(String(e));}finally{setWorking(false);}}
@@ -67,6 +86,14 @@ export function HuntPlanner({onExit,clubRole='member',entries=[]}:{onExit:()=>vo
  useEffect(()=>{let active=true;listHunts().then(rows=>{if(active)setExisting(rows);}).catch(e=>{if(active)setNotice('Jahipäevade laadimine: '+e.message);});return()=>{active=false;};},[]);
  async function save(){if(!canCreate)return;if(!draft.title.trim()||draft.drives.some(d=>!d.title.trim())){setNotice('Sisesta jahi ja kõigi ajude nimed.');return;}setSaving(true);setNotice('');try{const id=await createHunt({title:draft.title,type:draft.type,allowSelfSelection:draft.allowSelfSelection,drives:draft.drives});setNotice('Jaht salvestatud! ID: '+id);setExisting(await listHunts());setDraft(initial);}catch(e){setNotice('Salvestamine ebaõnnestus: '+(e instanceof Error?e.message:String(e)));}finally{setSaving(false);}}
 
+ const personForm=canCreate&&<div className="hunt-roster">
+  <h3>Lisa inimene ilma e-postita</h3>
+  <p className="muted">Sisesta nimi ja roll. Inimene jääb püsivasse nimekirja ning saad teda jahil kaardile paigutada. E-posti, parooli ega registreerimist pole vaja.</p>
+  <label className="field"><span>Inimese nimi</span><input placeholder="Ees- ja perekonnanimi" value={newName} maxLength={120} disabled={working} onChange={e=>setNewName(e.target.value)}/></label>
+  <label className="field"><span>Roll</span><select value={newRole} disabled={working} onChange={e=>setNewRole(e.target.value as 'hunter'|'driver'|'dog_driver')}><option value="hunter">Kütt</option><option value="driver">Ajaja</option><option value="dog_driver">Ajaja koeraga</option></select></label>
+  <button type="button" disabled={working||!newName.trim()} onClick={()=>void createRosterEntry()}>Lisa püsivasse nimekirja</button>
+  {canManage&&<button type="button" className="primary" disabled={working||!driveId||!newName.trim()} onClick={()=>void createRosterEntry(true)}>Lisa ja paiguta kaardile</button>}
+ </div>;
  const addDrive=()=>setDraft(h=>({...h,drives:[...h.drives,{id:crypto.randomUUID(),title:'Aju '+(h.drives.length+1),positions:0}]}));
  return <section aria-label="Jahi planeerimine">
  {selected&&<div>
@@ -78,9 +105,10 @@ export function HuntPlanner({onExit,clubRole='member',entries=[]}:{onExit:()=>vo
  {canManage&&selected.status!=='finished'&&<div className="hunt-drive-lifecycle"><strong>Ajude olek</strong>{selected.hunt_drives?.slice().sort((a,b)=>a.sequence-b.sequence).map(d=><div className="memberrow" key={d.id}><span>{d.sequence}. {d.title}</span><small>{d.status==='active'?'aktiivne':d.status==='finished'?'lõpetatud':'planeeritud'}</small>{d.status==='active'?<button type="button" disabled={working} onClick={()=>void runLifecycle(()=>finishHuntDrive(d.id),'Aju lõpetati.')}>Lõpeta aju</button>:d.status!=='finished'&&selected.status!=='planned'&&<button type="button" disabled={working||selected.status==='paused'} onClick={()=>void runLifecycle(()=>activateHuntDrive(d.id),d.title+' on aktiivne.')}>Alusta aju</button>}</div>)}</div>}
  <label className="field"><span>Vali aju</span><select value={driveId} onChange={e=>{setDriveId(e.target.value);setPlacing(false);setMovingId(null);}}>{selected.hunt_drives?.slice().sort((a,b)=>a.sequence-b.sequence).map(d=><option key={d.id} value={d.id}>{d.sequence}. {d.title}</option>)}</select></label>
  <h3>Jahimehed ja ajajad</h3>
+ {personForm}
  <div className="hunt-counts"><strong>Kütid {positions.filter(pos=>people.some(p=>p.id===pos.assigned_participant_id&&(p.role!=='driver'&&p.role!=='dog_driver'))).length}/{people.filter(p=>(p.role!=='driver'&&p.role!=='dog_driver')).length}</strong><strong>Ajajad {positions.filter(pos=>people.some(p=>p.id===pos.assigned_participant_id&&(p.role==='driver'||p.role==='dog_driver'))).length}/{people.filter(p=>(p.role==='driver'||p.role==='dog_driver')).length}</strong></div>
  <button type="button" onClick={()=>{if(!rosterOpen&&canLinkAccounts)void huntChoices().then(setChoices).catch(e=>setNotice(String(e)));setRosterOpen(!rosterOpen);}}>{rosterOpen?'Sulge püsiv nimekiri':'Halda püsivat nimekirja'}</button>
- {rosterOpen&&<div className="hunt-roster"><h3>Püsiv jahimeeste nimekiri</h3><input aria-label="Uue jahimehe nimi" placeholder="Ees- ja perekonnanimi" value={newName} onChange={e=>setNewName(e.target.value)}/><select value={newRole} onChange={e=>setNewRole(e.target.value as 'hunter'|'driver'|'dog_driver')}><option value="hunter">Kütt</option><option value="driver">Ajaja</option><option value="dog_driver">Ajaja koeraga</option></select><button type="button" disabled={working||!canCreate||!newName.trim()} onClick={createRosterEntry}>+ Lisa nimekirja</button>{roster.map(p=><div className="memberrow" key={p.id}><strong>{p.display_name}</strong><select aria-label={p.display_name+' roll'} value={p.default_role} disabled={working||!canCreate} onChange={e=>changeRosterRole(p,e.target.value as 'hunter'|'driver'|'dog_driver')}><option value="hunter">Kütt</option><option value="driver">Ajaja</option><option value="dog_driver">Ajaja koeraga</option></select>{canLinkAccounts&&<select aria-label={p.display_name+' kasutajakonto'} value={p.user_id||''} disabled={working} onChange={e=>void linkAccount(p,e.target.value)}><option value="">Konto sidumata</option>{choices.filter(c=>c.user_id===p.user_id||!roster.some(other=>other.id!==p.id&&other.user_id===c.user_id)).map(c=><option key={c.user_id} value={c.user_id}>{c.display_name}</option>)}</select>}<button type="button" disabled={working||!canCreate} onClick={()=>deleteRosterEntry(p)}>Eemalda nimekirjast</button></div>)}</div>}
+ {rosterOpen&&<div className="hunt-roster"><h3>Püsiv jahimeeste nimekiri</h3>{roster.map(p=><div className="memberrow" key={p.id}><strong>{p.display_name}</strong><select aria-label={p.display_name+' roll'} value={p.default_role} disabled={working||!canCreate} onChange={e=>changeRosterRole(p,e.target.value as 'hunter'|'driver'|'dog_driver')}><option value="hunter">Kütt</option><option value="driver">Ajaja</option><option value="dog_driver">Ajaja koeraga</option></select>{canLinkAccounts&&<select aria-label={p.display_name+' kasutajakonto'} value={p.user_id||''} disabled={working} onChange={e=>void linkAccount(p,e.target.value)}><option value="">Konto sidumata</option>{choices.filter(c=>c.user_id===p.user_id||!roster.some(other=>other.id!==p.id&&other.user_id===c.user_id)).map(c=><option key={c.user_id} value={c.user_id}>{c.display_name}</option>)}</select>}<button type="button" disabled={working||!canCreate} onClick={()=>deleteRosterEntry(p)}>Eemalda nimekirjast</button></div>)}</div>}
  <h3>Vali aktiivsed osalejad</h3>
  {roster.map(p=><label className="checkrow" key={p.id}><span>{p.default_role==='dog_driver'?'🦴':p.default_role==='driver'?'👣':'●'} {p.display_name}</span><input type="checkbox" disabled={working||!canManage} checked={people.some(x=>x.roster_id===p.id||!!p.user_id&&x.user_id===p.user_id)} onChange={e=>toggleParticipant(p,e.target.checked)}/></label>)}
 
@@ -98,7 +126,9 @@ export function HuntPlanner({onExit,clubRole='member',entries=[]}:{onExit:()=>vo
  {positions.map(p=><div className="memberrow" key={p.id}><strong>K{p.number}</strong><select aria-label={'Positsiooni '+p.number+' osaleja'} disabled={working||!canManage} value={p.assigned_participant_id||''} onChange={e=>assign(p.id,e.target.value)}><option value="">Vaba</option>{people.map(person=><option key={person.id} value={person.id}>{person.display_name}</option>)}</select><button type="button" disabled={working||!canManage} onClick={()=>{setPlacing(false);setMovingId(p.id);setFullMap(true);}}>Muuda asukohta</button><button type="button" disabled={working||!canManage} onClick={()=>deletePosition(p)}>Kustuta punkt</button></div>)}
  {notice&&<p role="status" className="notice">{notice}</p>}
  </div>}
- {!selected&&<> 
+ {!selected&&<>
+ {personForm}
+ {canCreate&&<p className="muted">Püsivas nimekirjas: {roster.length} inimest. Osalejate valimiseks ava jaht.</p>}
  {canCreate&&<>
   <p className="muted">Loo jahipäev ja järjestikused ajud. Lisa ajude asukohad ja osalejad pärast jahi salvestamist.</p>
   <label className="field"><span>Jahi nimi</span><input value={draft.title} maxLength={120} placeholder="Näiteks laupäevane ühisjaht" onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
