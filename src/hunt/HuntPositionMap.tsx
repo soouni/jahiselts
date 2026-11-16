@@ -20,9 +20,9 @@ import {fromLonLat,toLonLat} from 'ol/proj';
 import {Style,Fill,Stroke,Icon,Text} from 'ol/style';
 import type {HuntPositionRow,HuntPersonRow} from './api';
 
-import {huntMarkerUrl} from './markers';
+import {huntMarkerUrl,meetingMarkerUrl} from './markers';
 
-export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdit=false,driveArea=null,onAreaDraw,entries=[]}:{positions:HuntPositionRow[];people:HuntPersonRow[];onPlace:(coords:[number,number])=>void;onAssign?:(positionId:string,personId:string)=>void;onMove?:(positionId:string)=>void;canEdit?:boolean;entries?:Entry[];driveArea?:{type:'Polygon';coordinates:[number,number][][]}|null;onAreaDraw?:(area:{type:'Polygon';coordinates:[number,number][][]})=>void}){
+export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdit=false,driveArea=null,onAreaDraw,entries=[],meetingPoint=null}:{positions:HuntPositionRow[];people:HuntPersonRow[];meetingPoint?:[number,number]|null;onPlace:(coords:[number,number])=>void;onAssign?:(positionId:string,personId:string)=>void;onMove?:(positionId:string)=>void;canEdit?:boolean;entries?:Entry[];driveArea?:{type:'Polygon';coordinates:[number,number][][]}|null;onAreaDraw?:(area:{type:'Polygon';coordinates:[number,number][][]})=>void}){
  const [areaDrawing,setAreaDrawing]=useState(false);
  const drawInteraction=useRef<Draw|null>(null);
  const areaSource=useRef(new VectorSource());
@@ -79,7 +79,12 @@ export function HuntPositionMap({positions,people,onPlace,onAssign,onMove,canEdi
    }));
    src.addFeature(feature);
   });
- },[positions,people]);
+  if(meetingPoint){
+   const meeting=new Feature({geometry:new Point(fromLonLat(meetingPoint))});
+   meeting.setStyle(new Style({image:new Icon({src:meetingMarkerUrl,anchor:[0.5,0.5],scale:0.72,declutterMode:'none'}),text:new Text({text:'Kogunemine',font:'bold 12px sans-serif',offsetY:-31,declutterMode:'none',fill:new Fill({color:'#7a3510'}),stroke:new Stroke({color:'#fff',width:4})})}));
+   src.addFeature(meeting);
+  }
+ },[positions,people,meetingPoint]);
  useEffect(()=>{
   areaSource.current.clear();
   if(driveArea?.type==='Polygon'&&driveArea.coordinates?.length){

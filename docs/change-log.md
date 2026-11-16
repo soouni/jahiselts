@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-16 · Külalise vaate parandused, kogunemiskoht ja testide parandus
+
+- **Avaldamise taastamine ja täiendused** — kandidaatharu `parendused-kulalisvaade-20261116`: testiandmebaasi `pg_cron`-i asendus (avaldamine oli seisnud alates PR-ist #100), testid küttide järjestusele ja öisele lõpetamisele, ajaja sisenemiskoht külalise kaardil, alati nähtavad nimesildid, ilmateate lehe parandus, kogunemiskoht ja -aeg (migratsioon `20261116150000_hunt_meeting_point.sql`) ning võrguta kaart külalisele. Enne ühendamist tuleb rakendada migratsioon. Üksikasjad: [jahikood](jahikood-2026-11-16.md).
+
 ## 2026-11-16 · Jahikood ja külalise jahivaade
 
 - **Neljakohaline jahikood kontode asemel** — kandidaatharu `jahikood-kulalisvaade` (ühendamata, tootmises rakendamata): avaleht küsib jahikoodi; koodiga näeb ainult ühe jahi paigutust, muuta ei saa midagi. Jahijuhid ja adminid sisenevad kontoga ning loovad koodi jahi vaates. Külaline ei saa Supabase'i seanssi; RLS-i ei muudetud. Enne `main`-i ühendamist tuleb rakendada migratsioon ja avaldada Edge Function `hunt-code`. Üksikasjad: [jahikood](jahikood-2026-11-16.md).

@@ -12,4 +12,6 @@ const driverMarker=markerSvg('driver');
 const dogDriverMarker=markerSvg('dog_driver');
 
 
+/** Kogunemiskoha märk: oranž ring lipuga, et see eristuks küttide ja ajajate rohelistest märkidest. */
+export const meetingMarkerUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48"><circle cx="24" cy="24" r="21" fill="#b4531a" stroke="white" stroke-width="4"/><path d="M18 12v25" stroke="white" stroke-width="3.5" stroke-linecap="round"/><path d="M19.5 13h13l-4 5.5 4 5.5h-13z" fill="white"/></svg>');
 export function huntMarkerUrl(role:string){return role==='dog_driver'?dogDriverMarker:role==='driver'?driverMarker:hunterMarker;}

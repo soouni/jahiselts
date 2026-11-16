@@ -1,7 +1,8 @@
 /** Jahikoodiga külalise seadmesse salvestatud vaade. Sisaldab ainult vaatamiseks mõeldud andmeid. */
 export type GuestPosition={id:string;number:number;coordinates:[number,number];role:string;name:string};
 export type GuestArea={type:'Polygon';coordinates:[number,number][][]};
-export type GuestSnapshot={hunt:{title:string;status:string};drive:{sequence:number;title:string;status:string;area:GuestArea|null}|null;positions:GuestPosition[];expires_at:string;generated_at:string};
+export type GuestMeeting={at:string|null;coordinates:[number,number]|null;note:string|null};
+export type GuestSnapshot={hunt:{title:string;status:string};drive:{sequence:number;title:string;status:string;area:GuestArea|null}|null;positions:GuestPosition[];meeting:GuestMeeting|null;expires_at:string;generated_at:string};
 export type GuestSession={token:string;snapshot:GuestSnapshot;savedAt:number;myPositionId:string|null};
 type Store=Pick<Storage,'getItem'|'setItem'|'removeItem'>;
 const KEY='parnjoe-jahikood-v1';
@@ -14,7 +15,9 @@ export function cleanSnapshot(value:unknown):GuestSnapshot|null{
  if(!raw||typeof raw!=='object'||typeof raw.hunt?.title!=='string'||!Array.isArray(raw.positions)||!Number.isFinite(Date.parse(raw.expires_at)))return null;
  const positions=raw.positions.filter(p=>p&&typeof p.id==='string'&&Number.isInteger(p.number)&&typeof p.name==='string'&&typeof p.role==='string'&&validPoint(p.coordinates)).map(p=>({id:p.id,number:p.number,coordinates:[p.coordinates[0],p.coordinates[1]] as [number,number],role:p.role,name:p.name.slice(0,80)}));
  const drive=raw.drive&&typeof raw.drive.title==='string'?{sequence:Number(raw.drive.sequence)||1,title:raw.drive.title,status:String(raw.drive.status||''),area:raw.drive.area?.type==='Polygon'&&Array.isArray(raw.drive.area.coordinates)?raw.drive.area:null}:null;
- return {hunt:{title:raw.hunt.title,status:String(raw.hunt.status||'')},drive,positions,expires_at:raw.expires_at,generated_at:typeof raw.generated_at==='string'?raw.generated_at:new Date().toISOString()};
+ const m=raw.meeting&&typeof raw.meeting==='object'?raw.meeting:null;
+ const meeting:GuestMeeting|null=m?{at:typeof m.at==='string'&&Number.isFinite(Date.parse(m.at))?m.at:null,coordinates:validPoint(m.coordinates)?[m.coordinates[0],m.coordinates[1]]:null,note:typeof m.note==='string'&&m.note.trim()?m.note.trim().slice(0,200):null}:null;
+ return {hunt:{title:raw.hunt.title,status:String(raw.hunt.status||'')},drive,positions,meeting:meeting&&(meeting.at||meeting.coordinates||meeting.note)?meeting:null,expires_at:raw.expires_at,generated_at:typeof raw.generated_at==='string'?raw.generated_at:new Date().toISOString()};
 }
 export function readGuestSession(storage:Store,now=Date.now()):GuestSession|null{
  try{
@@ -28,6 +31,9 @@ export function readGuestSession(storage:Store,now=Date.now()):GuestSession|null
 export function saveGuestSession(storage:Store,session:GuestSession){try{storage.setItem(KEY,JSON.stringify(session));}catch{/* Salvestusruum pole saadaval: vaade töötab ainult selle lehe avamise ajal. */}}
 export function clearGuestSession(storage:Store){try{storage.removeItem(KEY);}catch{/* Salvestusruum pole saadaval. */}}
 export function roleLabel(role:string){return role==='dog_driver'?'Ajaja koeraga':role==='driver'?'Ajaja':role==='leader'?'Jahijuht':'Kütt';}
+export function isDriver(role:string){return role==='driver'||role==='dog_driver';}
+/** Kogunemisaeg Eesti aja järgi, nt "L 21. nov kell 08:00". */
+export function meetingTime(at:string|null){if(!at)return '';const date=new Date(at);return date.toLocaleDateString('et-EE',{timeZone:'Europe/Tallinn',weekday:'short',day:'numeric',month:'short'})+' kell '+date.toLocaleTimeString('et-EE',{timeZone:'Europe/Tallinn',hour:'2-digit',minute:'2-digit'});}
 export function guestProblem(code:string|undefined){
  if(code==='invalid_code')return 'Kood on vale või aegunud. Küsi jahijuhilt kehtiv kood.';
  if(code==='over_request_rate_limit')return 'Liiga palju valesid katseid. Oota 15 minutit ja proovi uuesti.';
