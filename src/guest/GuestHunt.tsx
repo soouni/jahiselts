@@ -68,7 +68,7 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
    </>:<>
     <h2>{snapshot.positions.length?'Vali oma nimi':'Paigutus puudub'}</h2>
     {!snapshot.positions.length&&<p className="muted">Jahijuht ei ole selles ajus veel kedagi kaardile paigutanud. Vaade uueneb ise.</p>}
-    <div className="guest-list">{snapshot.positions.map(p=><button type="button" key={p.id} aria-pressed={p.id===myId} onClick={()=>{setMyId(p.id);setListOpen(false);}}><strong>K{p.number}</strong><span>{p.name}</span><small>{roleLabel(p.role)}</small></button>)}</div>
+    <div className="guest-list">{snapshot.positions.map(p=><button type="button" key={p.id} className="guest-placed-person" style={{background:p.id===myId?'#d1eadb':'#eaf7ee',borderColor:p.id===myId?'#31835e':'#b9ddc5'}} aria-pressed={p.id===myId} onClick={()=>{setMyId(p.id);setListOpen(false);}}><strong>K{p.number}</strong><span>{p.name}</span><small style={{display:'flex',alignItems:'center',gap:6}}><span aria-hidden="true" style={{color:'#247b4d',fontWeight:800}}>✓</span>{p.id===myId?'Minu koht':'Paigutatud'}</small></button>)}</div>
    </>}
   </section>}
   <nav className="bottomnav hunt-dock guest-dock" aria-label="Jahivaate tööriistad">
