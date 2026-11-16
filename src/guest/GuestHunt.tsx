@@ -35,7 +35,7 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),7000);return()=>clearTimeout(t);},[toast]);
  const mine=useMemo(()=>snapshot.positions.find(p=>p.id===myId)||null,[snapshot,myId]);
  const selected=snapshot.positions.find(p=>p.id===selectedId)||null;
- const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.map(p=>({id:p.id,name:(p.id===myId?'MINA · ':'')+p.name+' · K'+p.number,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
+ const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.map(p=>({id:p.id,name:p.name,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
  useEffect(()=>{if(fitted.current||!markers.length)return;const t=setTimeout(()=>{map.current?.fitHunt();fitted.current=true;},400);return()=>clearTimeout(t);},[markers.length]);
  const toMine=mine&&fix?distanceAndBearing(fix.coords,mine.coordinates):null;
  /** Lähimad naabrid linnulennult, et näha, kes on kõrval. */
