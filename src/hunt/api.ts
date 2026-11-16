@@ -193,3 +193,10 @@ export async function revokeHuntAccessCode(huntId:string){
  const {error}=await db.rpc('revoke_hunt_access_code',{target_hunt_id:huntId});
  if(error)throw error;
 }
+
+/** Apply a verified hunter sequence atomically; only the hunt manager may call this RPC. */
+export async function confirmHuntPositionOrder(driveId:string,positionIds:string[]){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.rpc('confirm_hunt_position_order',{target_drive_id:driveId,ordered_position_ids:positionIds});
+ if(error)throw error;
+}
