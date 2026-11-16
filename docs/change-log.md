@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-16 · Kütiliini naabrid vasakul ja paremal
+
+- **Naabrid liini järjekorra järgi** — kandidaatharu `fix/kutiliini-naabrid-20261116`: külalise kast „Sinu koht" näitas kahte linnulennult lähimat kütti, mis liini otsas seistes olid mõlemad samal pool. Nüüd tuletatakse kütiliini järjekord kohtade asukohast (lühim ahel, ei sõltu kohanumbritest) ning näidatakse eraldi „Vasakul" ja „Paremal" näoga aju ala keskkoha poole. Liini otsas kuvatakse „kedagi, oled kütiliini otsas"; teist otsa näidatakse naabrina ainult siis, kui liin on suletud ring. Aju suunda ega ajajate asukohta selleks ei kasutata. Loogika: `src/guest/neighbours.ts`, testid `tests/guest-neighbours.test.mjs`. Andmebaasi ei muudeta.
+
 ## 2026-11-16 · Külalise vaate parandused ja testide parandus
 
 - **Avaldamise taastamine ja täiendused** — kandidaatharu `parendused-kulalisvaade-20261116`: testiandmebaasi `pg_cron`-i asendus (avaldamine oli seisnud alates PR-ist #100), testid küttide järjestusele ja öisele lõpetamisele, ajaja sisenemiskoht külalise kaardil, alati nähtavad nimesildid, ilmateate lehe parandus ning võrguta kaart külalisele. Andmebaasi ei muudeta. Üksikasjad: [jahikood](jahikood-2026-11-16.md).

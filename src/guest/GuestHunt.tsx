@@ -7,6 +7,7 @@ import {GuestError,fetchGuestSnapshot} from './api';
 import {loadParnjoeForecast,nextWeatherHours,readWeatherCache,weatherDescription,type WeatherForecast} from '../weather';
 import {parnjoeWindUrl,type WindReading} from '../hunt/wind';
 import {guestProblem,isDriver,roleLabel,saveGuestSession,type GuestSnapshot} from './session';
+import {lineNeighbours,type Neighbour} from './neighbours';
 
 const REFRESH_MS=20000;
 // Kaardi sobitamisel jäetakse ruumi päisele, tööriistadele (vasakul), GPS-nupule (paremal) ja alumisele kastile, et ükski koht ei jääks nende alla.
@@ -80,8 +81,8 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.map(p=>({id:p.id,name:p.name,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
  useEffect(()=>{if(fitted.current||!markers.length)return;const t=setTimeout(()=>{map.current?.fitHunt(FIT_PADDING);fitted.current=true;},400);return()=>clearTimeout(t);},[markers.length]);
  const toMine=mine&&fix?distanceAndBearing(fix.coords,mine.coordinates):null;
- /** Kütiliini lähimad naabrid linnulennult. Ajajad liiguvad, seetõttu neid naabriks ei loeta. */
- const neighbours=useMemo(()=>mine?.role==='hunter'?snapshot.positions.filter(p=>p.id!==mine.id&&p.role==='hunter').map(p=>({position:p,meters:distanceAndBearing(mine.coordinates,p.coordinates)?.meters??Infinity})).sort((a,b)=>a.meters-b.meters).slice(0,2):[],[snapshot,mine]);
+ /** Kütiliini naabrid vasakul ja paremal käel (näoga aju poole). Ajajad liiguvad, seetõttu neid naabriks ei loeta. */
+ const line=useMemo(()=>mine?.role==='hunter'?lineNeighbours(snapshot.positions.filter(p=>p.role==='hunter'),mine.id,snapshot.drive?.area):null,[snapshot,mine]);
  function toggleGps(){
   if(watch.current!==null){navigator.geolocation.clearWatch(watch.current);watch.current=null;setGpsOn(false);setFix(null);map.current?.clearGps();return;}
   if(!navigator.geolocation){setGpsError('See brauser ei toeta GPS-asukohta.');return;}
@@ -106,6 +107,7 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  }
  const open=(next:Sheet)=>{setSelectedId(null);setSheet(current=>current===next?null:next);};
  const meters=(value:number)=>value<1000?Math.round(value)+' m':(value/1000).toFixed(1)+' km';
+ const beside=(neighbour:Neighbour|null)=>{const p=neighbour&&snapshot.positions.find(position=>position.id===neighbour.id);return p&&neighbour?p.name+' (K'+p.number+', '+meters(neighbour.meters)+')':'kedagi, oled kütiliini otsas';};
  const baseName=base==='kaart'?'Kaart':base==='foto'?'Ortofoto':'Hübriid';
  const title=snapshot.hunt.title+(snapshot.drive?' · '+snapshot.drive.sequence+'. '+snapshot.drive.title:'');
  const walking=mine?directionsUrl(mine.coordinates,'walking'):null,driving=mine?directionsUrl(mine.coordinates,'driving'):null;
@@ -150,7 +152,8 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
    <strong>Sinu {placeWord(mine.role)}: K{mine.number}</strong>
    {isDriver(mine.role)&&<span>{roleLabel(mine.role)} · siit lähed ajusse</span>}
    {toMine&&<span>Kohani {meters(toMine.meters)} · {Math.round(toMine.bearing)}° põhjast</span>}
-   {neighbours.length>0&&<span>Kõrval: {neighbours.map(n=>n.position.name+' (K'+n.position.number+', '+meters(n.meters)+')').join(' ja ')}</span>}
+   {line&&<span>{line.sided?'Vasakul':'Ühel pool'}: {beside(line.left)}</span>}
+   {line&&<span>{line.sided?'Paremal':'Teisel pool'}: {beside(line.right)}</span>}
    <span className="guest-mine-links">{driving&&<a href={driving} target="_blank" rel="noopener noreferrer">Autoga lähemale ↗</a>}{walking&&<a href={walking} target="_blank" rel="noopener noreferrer">Jalgsi ↗</a>}</span>
   </aside>}
   {gpsError&&<div className="guest-gps-error" role="alert">{gpsError}</div>}
