@@ -1,26 +1,31 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {CloudSun,Info,LocateFixed,LogOut,Navigation,Ruler,Trees,Users,Wind,X} from 'lucide-react';
+import {CloudSun,Download,Info,LocateFixed,LogOut,Navigation,Ruler,Trees,Users,Wind,X} from 'lucide-react';
 import {MapCanvas,type HuntMapMarker,type MapHandle} from '../Map';
 import {distanceAndBearing} from '../hunt/navigation';
 import {directionsUrl} from '../hunt/parking';
 import {GuestError,fetchGuestSnapshot} from './api';
 import {loadParnjoeForecast,nextWeatherHours,readWeatherCache,weatherDescription,type WeatherForecast} from '../weather';
 import {parnjoeWindUrl,type WindReading} from '../hunt/wind';
-import {guestProblem,roleLabel,saveGuestSession,type GuestSnapshot} from './session';
+import {guestProblem,isDriver,roleLabel,saveGuestSession,type GuestSnapshot} from './session';
 
 const REFRESH_MS=20000;
+// Kaardi sobitamisel jäetakse ruumi päisele, tööriistadele (vasakul), GPS-nupule (paremal) ja alumisele kastile, et ükski koht ei jääks nende alla.
+const FIT_PADDING:[number,number,number,number]=[250,120,330,100];
 const noop=()=>{};
+type Sheet='list'|'weather'|null;
+type OfflineState={completed:number;failed:number;total:number;done:boolean}|null;
 type Props={token:string;initial:GuestSnapshot;initialPositionId:string|null;onExit:(notice?:string)=>void};
 /** Jahikoodiga külalise vaade: ainult vaatamine. Siit ei tehta ühtki andmebaasi kirjutust ega jagata asukohta. */
 export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  const map=useRef<MapHandle>(null);
  const [snapshot,setSnapshot]=useState(initial),[myId,setMyId]=useState<string|null>(initialPositionId);
- const [base,setBase]=useState('hybriid'),[listOpen,setListOpen]=useState(!initialPositionId),[selectedId,setSelectedId]=useState<string|null>(null);
+ const [base,setBase]=useState('hybriid'),[sheet,setSheet]=useState<Sheet>(initialPositionId?null:'list'),[selectedId,setSelectedId]=useState<string|null>(null);
  const [online,setOnline]=useState(navigator.onLine),[syncedAt,setSyncedAt]=useState(Date.now()),[stale,setStale]=useState(false),[toast,setToast]=useState('');
- const [measuring,setMeasuring]=useState(false),[windVisible,setWindVisible]=useState(false),[weatherOpen,setWeatherOpen]=useState(false);
+ const [measuring,setMeasuring]=useState(false),[windVisible,setWindVisible]=useState(false);
  const [weather,setWeather]=useState<WeatherForecast|null>(()=>readWeatherCache(localStorage)),[weatherError,setWeatherError]=useState('');
  const [windReading,setWindReading]=useState<WindReading|null>(null),[windError,setWindError]=useState('');
  const [fix,setFix]=useState<{coords:[number,number];accuracy:number}|null>(null),[gpsError,setGpsError]=useState(''),[gpsOn,setGpsOn]=useState(false);
+ const [offline,setOffline]=useState<OfflineState>(null);
  const watch=useRef<number|null>(null),fitted=useRef(false);
  useEffect(()=>{saveGuestSession(localStorage,{token,snapshot,savedAt:syncedAt,myPositionId:myId});},[token,snapshot,syncedAt,myId]);
  useEffect(()=>{
@@ -43,27 +48,39 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
   const controller=new AbortController();
   const load=async()=>{try{
    const response=await fetch(parnjoeWindUrl(),{signal:controller.signal});
-   if(!response.ok)throw new Error('Tuuleandmete päring ebaõnnestus');
+   if(!response.ok)throw new Error();
    const data=await response.json();
    const speed=data?.current?.wind_speed_10m,direction=data?.current?.wind_direction_10m;
-   if(typeof speed!=='number'||typeof direction!=='number')throw new Error('Tuuleandmed puuduvad');
+   if(typeof speed!=='number'||typeof direction!=='number')throw new Error();
    setWindReading({speed,direction,time:String(data.current.time||''),fetchedAt:Date.now()});setWindError('');
-  }catch(e){if(!controller.signal.aborted)setWindError(e instanceof Error?e.message:String(e));}};
+  }catch{if(!controller.signal.aborted){setWindError('Tuuleandmeid ei saanud laadida.');setToast('Tuuleandmeid ei saanud laadida. Kontrolli võrku.');}}};
   void load();const timer=window.setInterval(()=>void load(),10*60*1000);
   return()=>{controller.abort();clearInterval(timer);};
  },[windVisible]);
  useEffect(()=>{
-  if(!weatherOpen)return;
+  if(sheet!=='weather')return;
   const controller=new AbortController();
-  void loadParnjoeForecast(controller.signal,localStorage).then(value=>{setWeather(value);setWeatherError('');}).catch(e=>{if(!controller.signal.aborted)setWeatherError(e instanceof Error?e.message:String(e));});
+  void loadParnjoeForecast(controller.signal,localStorage).then(value=>{setWeather(value);setWeatherError('');}).catch(()=>{if(!controller.signal.aborted)setWeatherError('Ilmateadet ei saanud laadida. Kontrolli võrku.');});
   return()=>controller.abort();
- },[weatherOpen]);
+ },[sheet]);
+ // Võrguta kaardi salvestamise edenemine tuleb teenusetöötajalt (offline-sw.js).
+ useEffect(()=>{
+  const worker=navigator.serviceWorker;if(!worker)return;
+  const handle=(event:MessageEvent)=>{
+   const data=event.data;if(!data||typeof data.type!=='string')return;
+   if(data.type==='OFFLINE_MAP_PROGRESS')setOffline({completed:Number(data.completed)||0,failed:Number(data.failed)||0,total:Number(data.total)||0,done:false});
+   if(data.type==='OFFLINE_MAP_READY'){const m=data.metadata||{};setOffline({completed:Number(m.completed)||0,failed:Number(m.failed)||0,total:Number(m.total)||0,done:true});setToast(Number(m.failed)>0?'Kaart salvestati osaliselt: '+m.failed+' kaardipaani jäi laadimata.':'Kaart on salvestatud. Aju ala kaart töötab nüüd ka ilma levita.');}
+   if(data.type==='OFFLINE_MAP_ERROR'){setOffline(null);setToast('Kaardi salvestamine ebaõnnestus. Proovi uuesti, kui võrk on parem.');}
+  };
+  worker.addEventListener('message',handle);return()=>worker.removeEventListener('message',handle);
+ },[]);
  const mine=useMemo(()=>snapshot.positions.find(p=>p.id===myId)||null,[snapshot,myId]);
  const selected=snapshot.positions.find(p=>p.id===selectedId)||null;
- const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.filter(p=>p.role==='hunter').map(p=>({id:p.id,name:p.name,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
- useEffect(()=>{if(fitted.current||!markers.length)return;const t=setTimeout(()=>{map.current?.fitHunt();fitted.current=true;},400);return()=>clearTimeout(t);},[markers.length]);
+ // Kaardil on kõik paigutatud inimesed: küttide kohad ja ajajate sisenemiskohad (ajajad teise värviga).
+ const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.map(p=>({id:p.id,name:p.name,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
+ useEffect(()=>{if(fitted.current||!markers.length)return;const t=setTimeout(()=>{map.current?.fitHunt(FIT_PADDING);fitted.current=true;},400);return()=>clearTimeout(t);},[markers.length]);
  const toMine=mine&&fix?distanceAndBearing(fix.coords,mine.coordinates):null;
- /** Lähimad naabrid linnulennult, et näha, kes on kõrval. */
+ /** Kütiliini lähimad naabrid linnulennult. Ajajad liiguvad, seetõttu neid naabriks ei loeta. */
  const neighbours=useMemo(()=>mine?.role==='hunter'?snapshot.positions.filter(p=>p.id!==mine.id&&p.role==='hunter').map(p=>({position:p,meters:distanceAndBearing(mine.coordinates,p.coordinates)?.meters??Infinity})).sort((a,b)=>a.meters-b.meters).slice(0,2):[],[snapshot,mine]);
  function toggleGps(){
   if(watch.current!==null){navigator.geolocation.clearWatch(watch.current);watch.current=null;setGpsOn(false);setFix(null);map.current?.clearGps();return;}
@@ -75,50 +92,65 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
    if(first){first=false;map.current?.locate(coords,position.coords.accuracy);}else map.current?.showGps(coords,position.coords.accuracy);
   },error=>{setGpsError(error.code===1?'Asukohaluba on keelatud. Luba brauserile asukoha kasutamine.':'GPS-asukohta ei saanud määrata.');if(watch.current!==null)navigator.geolocation.clearWatch(watch.current);watch.current=null;setGpsOn(false);setFix(null);},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
  }
+ /** Salvestab aju ala (või selle puudumisel jahipiirkonna) aluskaardi ja rakenduse failid telefoni. Käivitub ainult nupust, et mobiilset andmemahtu ei kulutataks küsimata. */
+ function saveOfflineMap(){
+  const controller=navigator.serviceWorker?.controller;
+  if(!controller){setToast('Võrguta kaart ei ole selles brauseris veel valmis. Laadi leht uuesti ja proovi siis.');return;}
+  if(!navigator.onLine){setToast('Kaardi salvestamiseks on vaja võrguühendust.');return;}
+  const urls=map.current?.offlineUrls(snapshot.drive?.area||null)||[];
+  if(!urls.length){setToast('Kaardipaanide loendit ei saanud koostada. Oota, kuni kaart on laadinud.');return;}
+  const scope=new URL(import.meta.env.BASE_URL,location.href);
+  controller.postMessage({type:'CACHE_APP_SHELL',urls:[scope.href,new URL('data/boundary.geojson',scope).href,new URL('data/wmts.xml',scope).href,...performance.getEntriesByType('resource').map(entry=>entry.name)]});
+  setOffline({completed:0,failed:0,total:urls.length,done:false});
+  controller.postMessage({type:'CACHE_MAP_PACKAGE',urls,name:snapshot.hunt.title,base});
+ }
+ const open=(next:Sheet)=>{setSelectedId(null);setSheet(current=>current===next?null:next);};
  const meters=(value:number)=>value<1000?Math.round(value)+' m':(value/1000).toFixed(1)+' km';
  const baseName=base==='kaart'?'Kaart':base==='foto'?'Ortofoto':'Hübriid';
  const title=snapshot.hunt.title+(snapshot.drive?' · '+snapshot.drive.sequence+'. '+snapshot.drive.title:'');
  const walking=mine?directionsUrl(mine.coordinates,'walking'):null,driving=mine?directionsUrl(mine.coordinates,'driving'):null;
+ const saving=Boolean(offline&&!offline.done);
+ const placeWord=(role:string)=>isDriver(role)?'sisenemiskoht':'koht';
  return <main className="hunt-active guest-hunt">
-  <MapCanvas ref={map} huntDriveArea={snapshot.drive?.area||null} huntMarkers={markers} wind={windVisible?{reading:windReading,error:windError,now:Date.now()}:undefined} huntDistanceOn={false} huntMode huntMoving={false} huntCanDrag={false} onHuntDrag={noop} onHuntSelect={id=>{setListOpen(false);setSelectedId(id);}} onHuntPlace={noop} measuring={measuring} onCloseMeasure={()=>setMeasuring(false)} searchResult={null} onClearSearch={noop} entries={[]} base={base} boundaryVisible drawing={null} drawingColor="#173e32" drawingWidth={3} drawType="Point" editGeometry={null} onGeometry={noop} onSelect={noop} onReady={noop} onError={setToast}/>
+  <MapCanvas ref={map} huntDriveArea={snapshot.drive?.area||null} huntMarkers={markers} wind={windVisible?{reading:windReading,error:windError,now:Date.now()}:undefined} huntDistanceOn={false} huntMode huntMoving={false} huntCanDrag={false} onHuntDrag={noop} onHuntSelect={id=>{setSheet(null);setSelectedId(id);}} onHuntPlace={noop} measuring={measuring} onCloseMeasure={()=>setMeasuring(false)} searchResult={null} onClearSearch={noop} entries={[]} base={base} boundaryVisible drawing={null} drawingColor="#173e32" drawingWidth={3} drawType="Point" editGeometry={null} onGeometry={noop} onSelect={noop} onReady={noop} onError={setToast}/>
   <header className="topbar"><div className="brand guest-brand"><div className="brandicon"><Trees size={26}/></div><div><strong>Pärnjõe</strong><span>JAHIVAADE</span></div></div><div className="topactions"><button className="login" onClick={()=>{if(window.confirm('Sulgeda jahivaade? Uuesti avamiseks on vaja jahikoodi.'))onExit();}}><LogOut size={17}/><span>Välju</span></button></div></header>
   <div className="hunt-statusbar"><span className={`connection-dot ${online&&!stale?'is-online':'is-offline'}`}/><strong>{title}</strong><span>{online&&!stale?'Ainult vaatamine':'Salvestatud vaade · '+new Date(syncedAt).toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit'})}</span></div>
   <div className="basemap basemap-cycle"><button type="button" className="basemap-cycle-button" aria-label={`Aluskaart: ${baseName}. Vajuta kaardi vahetamiseks.`} title={`Aluskaart: ${baseName}`} onClick={()=>setBase(current=>current==='kaart'?'foto':current==='foto'?'hybriid':'kaart')}><svg className="basemap-layer-svg" viewBox="0 0 48 48" aria-hidden="true" fill="none"><path d="M24 6 42 21 24 35 6 21 24 6Z" fill="currentColor"/><path d="M7 29 24 42 41 29" stroke="currentColor" strokeWidth="5" strokeLinecap="square" strokeLinejoin="miter"/></svg><span className="tool-caption">{baseName}</span></button></div>
-  <div className="guest-extra-tools" style={{position:'absolute',left:12,top:240,zIndex:12,display:'flex',flexDirection:'column',gap:8}}>
-   <button type="button" aria-pressed={windVisible} onClick={()=>setWindVisible(v=>!v)} style={{borderRadius:12,padding:'10px 12px',background:windVisible?'#d6eddf':'white',color:'#173e32',display:'flex',gap:8,alignItems:'center'}}><Wind size={19}/>Tuul</button>
-   <button type="button" aria-pressed={measuring} onClick={()=>setMeasuring(v=>!v)} style={{borderRadius:12,padding:'10px 12px',background:measuring?'#d6eddf':'white',color:'#173e32',display:'flex',gap:8,alignItems:'center'}}><Ruler size={19}/>Vahemaad</button>
-   <button type="button" aria-expanded={weatherOpen} onClick={()=>setWeatherOpen(v=>!v)} style={{borderRadius:12,padding:'10px 12px',background:weatherOpen?'#d6eddf':'white',color:'#173e32',display:'flex',gap:8,alignItems:'center'}}><CloudSun size={19}/>Ilmateade</button>
+  <div className="guest-tools" role="group" aria-label="Kaardi tööriistad">
+   {windVisible&&windReading&&<span className="guest-chip" role="status">Tuul {windReading.speed.toFixed(1)} m/s · {Math.round(windReading.direction)}°</span>}
+   <button type="button" aria-pressed={windVisible} onClick={()=>setWindVisible(v=>!v)}><Wind size={19}/>Tuul</button>
+   <button type="button" aria-label="Mõõda vahemaid kaardil" aria-pressed={measuring} onClick={()=>setMeasuring(v=>!v)}><Ruler size={19}/>Mõõda</button>
+   <button type="button" aria-label="Ilmateade" aria-pressed={sheet==='weather'} onClick={()=>open('weather')}><CloudSun size={19}/>Ilm</button>
+   <button type="button" disabled={saving} aria-label="Salvesta aju ala kaart võrguta kasutamiseks" title="Salvesta aju ala kaart võrguta kasutamiseks" aria-describedby={offline?'guest-offline-status':undefined} onClick={saveOfflineMap}><Download size={19}/>{saving?'Salvestan…':'Võrguta'}</button>
+   {offline&&<span id="guest-offline-status" className="guest-chip" role="status">{offline.done?(offline.failed?offline.completed+'/'+offline.total+' paani, '+offline.failed+' puudu':'Kaart töötab ilma levita'):(offline.completed+offline.failed)+'/'+offline.total+' kaardipaani'}</span>}
   </div>
-  {windVisible&&windReading&&<div role="status" style={{position:'absolute',top:205,left:12,zIndex:12,background:'white',borderRadius:8,padding:'5px 8px',fontSize:12}}>Tuul {windReading.speed.toFixed(1)} m/s · {Math.round(windReading.direction)}°</div>}
-  {windVisible&&windError&&<div role="alert" className="toast">{windError}</div>}
-  {weatherOpen&&<section aria-label="Pärnjõe ilmateade" style={{position:'absolute',zIndex:16,left:12,right:12,bottom:130,background:'white',borderRadius:16,padding:16,maxHeight:'50vh',overflowY:'auto',boxShadow:'0 4px 22px #0003'}}>
-   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><strong>Pärnjõe ilmateade</strong><button type="button" aria-label="Sulge ilmateade" onClick={()=>setWeatherOpen(false)}><X size={20}/></button></div>
-   <p className="muted">Open-Meteo prognoos · Pärnjõe piirkond</p>
-   {weatherError&&<p role="alert">{weatherError}</p>}
-   {nextWeatherHours(weather,Date.now()).map(h=><div key={h.time} style={{display:'flex',justifyContent:'space-between',gap:10,padding:'8px 0',borderBottom:'1px solid #ddd'}}><strong>{new Date(h.time*1000).toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Tallinn'})}</strong><span>{h.temperature===null?'–':Math.round(h.temperature)+' °C'}</span><span>{h.wind===null?'–':h.wind.toFixed(1)+' m/s'}</span><span>{weatherDescription(h.code)}</span></div>)}
-   {!weather&&!weatherError&&<p>Laadin ilmateadet…</p>}
-  </section>}
   <button type="button" className={`hunt-gps-toggle${gpsOn?' is-active':''}`} aria-pressed={gpsOn} title="Näita minu asukohta" aria-label="Näita minu asukohta kaardil" onClick={toggleGps}><LocateFixed size={22}/><span>GPS</span></button>
-  {(selected||listOpen)&&<section className="hunt-sheet guest-sheet" aria-label={selected?'Valitud jahikoht':'Jahi paigutus'}>
-   <button type="button" className="iconbtn guest-sheet-close" aria-label="Sulge" onClick={()=>{setSelectedId(null);setListOpen(false);}}><X size={20}/></button>
+  {(selected||sheet)&&<section className="hunt-sheet guest-sheet" aria-label={selected?'Valitud jahikoht':sheet==='weather'?'Pärnjõe ilmateade':'Jahi paigutus'}>
+   <button type="button" className="iconbtn guest-sheet-close" aria-label="Sulge" onClick={()=>{setSelectedId(null);setSheet(null);}}><X size={20}/></button>
    {selected?<>
-    <h2>K{selected.number} · {selected.name}</h2><p className="muted">{roleLabel(selected.role)}{selected.id===myId?' · sinu koht':''}</p>
+    <h2>K{selected.number} · {selected.name}</h2><p className="muted">{roleLabel(selected.role)}{isDriver(selected.role)?' · sisenemiskoht':''}{selected.id===myId?' · sinu '+placeWord(selected.role):''}</p>
     {selected.id===myId?<button type="button" onClick={()=>{setMyId(null);setSelectedId(null);}}>See ei ole minu koht</button>:<button type="button" className="primary full" onClick={()=>{setMyId(selected.id);setSelectedId(null);}}>See olen mina</button>}
+   </>:sheet==='weather'?<>
+    <h2>Pärnjõe ilmateade</h2>
+    <p className="muted">Open-Meteo prognoos · Pärnjõe piirkond</p>
+    {weatherError&&<p role="alert" className="notice">{weatherError}</p>}
+    <div className="guest-weather">{nextWeatherHours(weather,Date.now()).map(h=><div key={h.time}><strong>{new Date(h.time*1000).toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Tallinn'})}</strong><span>{h.temperature===null?'–':Math.round(h.temperature)+' °C'}</span><span>{h.wind===null?'–':h.wind.toFixed(1)+' m/s'}</span><span>{weatherDescription(h.code)}</span></div>)}</div>
+    {!weather&&!weatherError&&<p>Laadin ilmateadet…</p>}
    </>:<>
     <h2>{snapshot.positions.length?'Vali oma nimi':'Paigutus puudub'}</h2>
     {!snapshot.positions.length&&<p className="muted">Jahijuht ei ole selles ajus veel kedagi kaardile paigutanud. Vaade uueneb ise.</p>}
-    <div className="guest-list">{snapshot.positions.map(p=><button type="button" key={p.id} className="guest-placed-person" style={{background:p.id===myId?'#d1eadb':'#eaf7ee',borderColor:p.id===myId?'#31835e':'#b9ddc5'}} aria-pressed={p.id===myId} onClick={()=>{setMyId(p.id);setListOpen(false);}}><strong>K{p.number}</strong><span>{p.name}</span><small style={{display:'flex',alignItems:'center',gap:6}}><span aria-hidden="true" style={{color:'#247b4d',fontWeight:800}}>✓</span>{p.id===myId?'Minu koht':'Paigutatud'}</small></button>)}</div>
+    <div className="guest-list">{snapshot.positions.map(p=><button type="button" key={p.id} className={isDriver(p.role)?'is-driver':undefined} aria-pressed={p.id===myId} onClick={()=>{setMyId(p.id);setSheet(null);}}><strong>K{p.number}</strong><span>{p.name}</span><small>{p.id===myId?'✓ Minu '+placeWord(p.role):roleLabel(p.role)}</small></button>)}</div>
    </>}
   </section>}
   <nav className="bottomnav hunt-dock guest-dock" aria-label="Jahivaate tööriistad">
-   <button aria-pressed={listOpen} onClick={()=>{setSelectedId(null);setListOpen(v=>!v);}}><Users/><span>Paigutus</span></button>
-   <button className="add" onClick={()=>{setSelectedId(null);setListOpen(false);map.current?.fitHunt();}}><Navigation/><span>{mine?'K'+mine.number:'Minu koht'}</span><small>{toMine?meters(toMine.meters):mine?'Vaata kaardil':'Vali nimi'}</small></button>
+   <button aria-pressed={sheet==='list'} onClick={()=>open('list')}><Users/><span>Paigutus</span></button>
+   <button className="add" onClick={()=>{setSelectedId(null);setSheet(null);map.current?.fitHunt(FIT_PADDING);}}><Navigation/><span>{mine?'K'+mine.number:'Minu koht'}</span><small>{toMine?meters(toMine.meters):mine?'Vaata kaardil':'Vali nimi'}</small></button>
   </nav>
-  {mine&&!selected&&!listOpen&&<aside className="guest-mine" aria-label="Minu jahikoht">
-   <strong>Sinu koht: K{mine.number}</strong>
-   {mine.role!=='hunter'&&<span>{roleLabel(mine.role)} · Kütiliini naabreid ei kuvata</span>}
+  {mine&&!selected&&!sheet&&<aside className="guest-mine" aria-label="Minu jahikoht">
+   <strong>Sinu {placeWord(mine.role)}: K{mine.number}</strong>
+   {isDriver(mine.role)&&<span>{roleLabel(mine.role)} · siit lähed ajusse</span>}
    {toMine&&<span>Kohani {meters(toMine.meters)} · {Math.round(toMine.bearing)}° põhjast</span>}
-   {mine.role==='hunter'&&neighbours.length>0&&<span>Kõrval: {neighbours.map(n=>n.position.name+' (K'+n.position.number+', '+meters(n.meters)+')').join(' ja ')}</span>}
+   {neighbours.length>0&&<span>Kõrval: {neighbours.map(n=>n.position.name+' (K'+n.position.number+', '+meters(n.meters)+')').join(' ja ')}</span>}
    <span className="guest-mine-links">{driving&&<a href={driving} target="_blank" rel="noopener noreferrer">Autoga lähemale ↗</a>}{walking&&<a href={walking} target="_blank" rel="noopener noreferrer">Jalgsi ↗</a>}</span>
   </aside>}
   {gpsError&&<div className="guest-gps-error" role="alert">{gpsError}</div>}

@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFileSync,readdirSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {webcrypto} from 'node:crypto';
 import ts from 'typescript';
-import {PGlite} from '@electric-sql/pglite';
+import {createHuntDb} from './helpers/hunt-db.mjs';
 import {cleanSnapshot,readGuestSession,saveGuestSession,validCode,guestProblem} from '../src/guest/session.ts';
 
 const source=readFileSync(new URL('../supabase/functions/hunt-code/index.ts',import.meta.url),'utf8');
@@ -70,18 +70,8 @@ test('guest device storage drops expired sessions and malformed rows',()=>{
  assert.match(guestProblem('invalid_code'),/vale või aegunud/);
 });
 
-const dir=new URL('../supabase/migrations/',import.meta.url);
 test('database: only hunt managers mint codes; guests get a throttled, name-shortened, read-only view',async()=>{
- const db=new PGlite();try{
- await db.exec(`create role anon;create role authenticated;create role service_role;create publication supabase_realtime;
- create schema auth;create table auth.users(id uuid primary key);
- create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
- create table public.memberships(email text primary key,user_id uuid,display_name text,role text,active boolean);
- create function public.my_role() returns text language sql stable security definer set search_path='' as $$select role from public.memberships where user_id=auth.uid() and active$$;
- create table public.club_settings(id boolean primary key);create table public.audit_events(id uuid);
- create schema extensions;create domain extensions.geometry as jsonb;create domain extensions.geography as jsonb;
- grant usage on schema auth to authenticated;grant select on memberships to authenticated;`);
- for(const file of readdirSync(dir).filter(name=>name>='20261008091358'&&!name.endsWith('_harden_username_login_throttle.sql')).sort()){try{await db.exec(readFileSync(new URL(file,dir),'utf8'));}catch(error){throw new Error(file+': '+error.message);}}
+ const {db,as}=await createHuntDb();try{
  const leader='00000000-0000-0000-0000-000000000001',other='00000000-0000-0000-0000-000000000002',hunt='00000000-0000-0000-0000-000000000010',ip='a'.repeat(64),ip2='b'.repeat(64);
  await db.exec(`insert into auth.users values('${leader}'),('${other}');
  insert into memberships values('leader@test.invalid','${leader}','Juht','member',true),('other@test.invalid','${other}','Teine','member',true);
@@ -89,7 +79,6 @@ test('database: only hunt managers mint codes; guests get a throttled, name-shor
  insert into hunt_drives(id,hunt_id,sequence,title) values('00000000-0000-0000-0000-000000000020','${hunt}',1,'Aju 1');
  insert into hunt_participants(id,hunt_id,display_name,role) values('00000000-0000-0000-0000-000000000030','${hunt}','  Mari   Maasikas ','hunter'),('00000000-0000-0000-0000-000000000031','${hunt}','Jaan','driver');
  insert into hunt_positions(drive_id,number,location,assigned_participant_id) values('00000000-0000-0000-0000-000000000020',1,'{"type":"Point","coordinates":[24.9,58.6]}','00000000-0000-0000-0000-000000000030'),('00000000-0000-0000-0000-000000000020',2,'{"type":"Point","coordinates":[24.91,58.61]}','00000000-0000-0000-0000-000000000031'),('00000000-0000-0000-0000-000000000020',3,'{"type":"Point","coordinates":[24.92,58.62]}',null);`);
- const as=async(user,sql,params)=>{await db.query("select set_config('request.jwt.claim.sub',$1,false)",[user]);await db.exec('set role authenticated');try{return await db.query(sql,params);}finally{await db.exec('reset role');}};
 
  await assert.rejects(as(other,'select public.create_hunt_access_code($1)',[hunt]),/ainult jahijuht/);
  await assert.rejects(as(other,'select public.get_hunt_access_code($1)',[hunt]),/ainult jahijuht/);

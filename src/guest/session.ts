@@ -28,6 +28,7 @@ export function readGuestSession(storage:Store,now=Date.now()):GuestSession|null
 export function saveGuestSession(storage:Store,session:GuestSession){try{storage.setItem(KEY,JSON.stringify(session));}catch{/* Salvestusruum pole saadaval: vaade töötab ainult selle lehe avamise ajal. */}}
 export function clearGuestSession(storage:Store){try{storage.removeItem(KEY);}catch{/* Salvestusruum pole saadaval. */}}
 export function roleLabel(role:string){return role==='dog_driver'?'Ajaja koeraga':role==='driver'?'Ajaja':role==='leader'?'Jahijuht':'Kütt';}
+export function isDriver(role:string){return role==='driver'||role==='dog_driver';}
 export function guestProblem(code:string|undefined){
  if(code==='invalid_code')return 'Kood on vale või aegunud. Küsi jahijuhilt kehtiv kood.';
  if(code==='over_request_rate_limit')return 'Liiga palju valesid katseid. Oota 15 minutit ja proovi uuesti.';
