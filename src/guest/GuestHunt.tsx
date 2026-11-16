@@ -60,11 +60,11 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  },[weatherOpen]);
  const mine=useMemo(()=>snapshot.positions.find(p=>p.id===myId)||null,[snapshot,myId]);
  const selected=snapshot.positions.find(p=>p.id===selectedId)||null;
- const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.map(p=>({id:p.id,name:p.name,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
+ const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.filter(p=>p.role==='hunter').map(p=>({id:p.id,name:p.name,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
  useEffect(()=>{if(fitted.current||!markers.length)return;const t=setTimeout(()=>{map.current?.fitHunt();fitted.current=true;},400);return()=>clearTimeout(t);},[markers.length]);
  const toMine=mine&&fix?distanceAndBearing(fix.coords,mine.coordinates):null;
  /** Lähimad naabrid linnulennult, et näha, kes on kõrval. */
- const neighbours=useMemo(()=>mine?snapshot.positions.filter(p=>p.id!==mine.id).map(p=>({position:p,meters:distanceAndBearing(mine.coordinates,p.coordinates)?.meters??Infinity})).sort((a,b)=>a.meters-b.meters).slice(0,2):[],[snapshot,mine]);
+ const neighbours=useMemo(()=>mine?.role==='hunter'?snapshot.positions.filter(p=>p.id!==mine.id&&p.role==='hunter').map(p=>({position:p,meters:distanceAndBearing(mine.coordinates,p.coordinates)?.meters??Infinity})).sort((a,b)=>a.meters-b.meters).slice(0,2):[],[snapshot,mine]);
  function toggleGps(){
   if(watch.current!==null){navigator.geolocation.clearWatch(watch.current);watch.current=null;setGpsOn(false);setFix(null);map.current?.clearGps();return;}
   if(!navigator.geolocation){setGpsError('See brauser ei toeta GPS-asukohta.');return;}
@@ -116,8 +116,9 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
   </nav>
   {mine&&!selected&&!listOpen&&<aside className="guest-mine" aria-label="Minu jahikoht">
    <strong>Sinu koht: K{mine.number}</strong>
+   {mine.role!=='hunter'&&<span>{roleLabel(mine.role)} · Kütiliini naabreid ei kuvata</span>}
    {toMine&&<span>Kohani {meters(toMine.meters)} · {Math.round(toMine.bearing)}° põhjast</span>}
-   {neighbours.length>0&&<span>Kõrval: {neighbours.map(n=>n.position.name+' (K'+n.position.number+', '+meters(n.meters)+')').join(' ja ')}</span>}
+   {mine.role==='hunter'&&neighbours.length>0&&<span>Kõrval: {neighbours.map(n=>n.position.name+' (K'+n.position.number+', '+meters(n.meters)+')').join(' ja ')}</span>}
    <span className="guest-mine-links">{driving&&<a href={driving} target="_blank" rel="noopener noreferrer">Autoga lähemale ↗</a>}{walking&&<a href={walking} target="_blank" rel="noopener noreferrer">Jalgsi ↗</a>}</span>
   </aside>}
   {gpsError&&<div className="guest-gps-error" role="alert">{gpsError}</div>}
