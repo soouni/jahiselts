@@ -145,7 +145,7 @@ export function HuntPlanner({onExit,clubRole='member',entries=[]}:{onExit:()=>vo
   <button type="button" className="primary full" onClick={save} disabled={saving}>{saving?'Salvestan…':'Salvesta jaht'}</button>
   {notice&&<p role="status" className="notice">{notice}</p>}
  </>}
-  <h3>Salvestatud jahid</h3>{existing.length?existing.map(h=><div className="memberrow" key={h.id}><strong>{h.title}</strong><small>{h.status}</small><button type="button" onClick={()=>openHunt(h as HuntRow)}>Ava jaht</button><button type="button" disabled={working||!canCreate} onClick={()=>copyPrevious(h as HuntRow)}>Uus samade osalejatega</button></div>):<p className="muted">Jahte veel ei ole.</p>}
+  <h3>Salvestatud jahid</h3>{existing.length?existing.map(h=><div className="memberrow" key={h.id} style={{background:h.status==='active'?'#e5f5eb':undefined,border:h.status==='active'?'2px solid #278354':undefined,borderRadius:h.status==='active'?12:undefined,padding:h.status==='active'?12:undefined}}><strong>{h.title}</strong><small style={{fontWeight:h.status==='active'?800:undefined,color:h.status==='active'?'#17663e':undefined}}>{h.status==='active'?'● AKTIIVNE JAHT':h.status==='paused'?'⏸ PEATATUD':h.status==='finished'?'Lõpetatud':'Planeeritud'}</small><button type="button" onClick={()=>openHunt(h as HuntRow)}>Ava jaht</button><button type="button" disabled={working||!canCreate} onClick={()=>copyPrevious(h as HuntRow)}>Uus samade osalejatega</button></div>):<p className="muted">Jahte veel ei ole.</p>}
  </>}
  </section>;
 }
