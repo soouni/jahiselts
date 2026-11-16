@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-16 · Jahikood ja külalise jahivaade
+
+- **Neljakohaline jahikood kontode asemel** — kandidaatharu `jahikood-kulalisvaade` (ühendamata, tootmises rakendamata): avaleht küsib jahikoodi; koodiga näeb ainult ühe jahi paigutust, muuta ei saa midagi. Jahijuhid ja adminid sisenevad kontoga ning loovad koodi jahi vaates. Külaline ei saa Supabase'i seanssi; RLS-i ei muudetud. Enne `main`-i ühendamist tuleb rakendada migratsioon ja avaldada Edge Function `hunt-code`. Üksikasjad: [jahikood](jahikood-2026-11-16.md).
+
 ## 2026-10-24 · Seltsi märgid planeerimiskaardil
 
 - **Planeerimise puuduv objektikiht** — kandidaatharu `fix/planning-map-landmarks`: jahi planeerimise kaardile antakse põhikaardil nähtavad ja rolli järgi lubatud seltsi objektid. Nähtavad on kohamärgid, sihid/jooned, metsatukad ning valitud filtritega vaatlused ja jäljed. Põhikaart ja planeerimiskaart kasutavad ühist objektide teisendust ja stiili, säilitades sümbolid, värvid, joonelaiused ja nimed. Planeerimise objektikiht on vaatamiseks; positsiooni valimine ja ala joonistamine säilivad. Kontroll: 74 testi läbis, 3 välise teenuse testi jäeti vahele; build ja diff-check läbisid. Testid katavad geomeetriate teisenduse, sümbolid, kujunduse, kustutatud objektide väljajätmise ja filtreeritud andmete tee planeerimiskaardini. Sisselogitud telefonivaate visuaalne kontroll on tegemata. Veel põhiharusse ühendamata ega avaldatud.
