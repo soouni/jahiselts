@@ -1,0 +1,63 @@
+// Avalik jahikoodi otspunkt. Külaline ei saa Supabase'i seanssi: funktsioon
+// kontrollib koodi, piirab katseid ja väljastab ainult vaatamiseks mõeldud
+// jahivaate. Koode ega pääsutähiseid ei logita.
+const origins=new Set(['https://soouni.github.io','https://parnjoe-jahikaart.ojamaa.chatgpt.site']);
+const encoder=new TextEncoder();
+const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+Deno.serve(async(req:Request)=>{
+ const origin=req.headers.get('origin')||'';
+ const headers:Record<string,string>={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','Access-Control-Allow-Headers':'authorization, apikey, content-type, x-client-info','Access-Control-Allow-Methods':'POST, OPTIONS'};
+ if(origins.has(origin))headers['Access-Control-Allow-Origin']=origin;
+ const reply=(status:number,body:unknown)=>new Response(JSON.stringify(body),{status,headers});
+ if(origin&&!origins.has(origin))return reply(403,{code:'forbidden'});
+ if(req.method==='OPTIONS')return new Response(null,{status:204,headers});
+ if(req.method!=='POST')return reply(405,{code:'method_not_allowed'});
+ try{
+  if(Number(req.headers.get('content-length')||0)>2048)return reply(400,{code:'invalid_request'});
+  const raw=await req.text();if(raw.length>2048)return reply(400,{code:'invalid_request'});
+  let body:{action?:unknown;code?:unknown;token?:unknown};
+  try{body=JSON.parse(raw);}catch{return reply(400,{code:'invalid_request'});}
+  if(!body||typeof body!=='object')return reply(400,{code:'invalid_request'});
+  const url=Deno.env.get('SUPABASE_URL')!;
+  const secret=JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS')||'{}').default||Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if(!url||!secret)return reply(503,{code:'unavailable'});
+  const serviceHeaders:Record<string,string>={apikey:secret,'Content-Type':'application/json'};
+  if(!secret.startsWith('sb_secret_'))serviceHeaders.Authorization='Bearer '+secret;
+  const hmac=await crypto.subtle.importKey('raw',encoder.encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const hash=async(s:string)=>Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',hmac,encoder.encode(s)))).map(x=>x.toString(16).padStart(2,'0')).join('');
+  const rpc=(name:string,args:unknown)=>fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:serviceHeaders,body:JSON.stringify(args),signal:AbortSignal.timeout(8000)});
+  const sign=(codeId:string,expires:number)=>hash('guest:'+codeId+':'+expires);
+  const snapshot=async(codeId:string)=>{const r=await rpc('hunt_guest_snapshot',{target_code_id:codeId});if(!r.ok)throw new Error('snapshot');return r.json();};
+
+  if(body.action==='redeem'){
+   const code=typeof body.code==='string'?body.code.trim():'';
+   if(!/^[0-9]{4}$/.test(code))return reply(400,{code:'invalid_code'});
+   const ip=req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()||'unknown';
+   const result=await rpc('redeem_hunt_access_code',{submitted_code:code,ip_hash:await hash('ip:'+ip)});
+   if(!result.ok)return reply(503,{code:'unavailable'});
+   const outcome=await result.json();
+   if(outcome?.status==='throttled')return reply(429,{code:'over_request_rate_limit'});
+   if(outcome?.status!=='ok'||typeof outcome.code_id!=='string'||!uuidPattern.test(outcome.code_id))return reply(400,{code:'invalid_code'});
+   const expires=Math.floor(Date.parse(outcome.expires_at)/1000);
+   if(!Number.isFinite(expires))return reply(503,{code:'unavailable'});
+   const view=await snapshot(outcome.code_id);
+   if(!view)return reply(400,{code:'invalid_code'});
+   return reply(200,{token:['v1',outcome.code_id,expires,await sign(outcome.code_id,expires)].join('.'),snapshot:view});
+  }
+
+  if(body.action==='view'){
+   const parts=typeof body.token==='string'&&body.token.length<200?body.token.split('.'):[];
+   const [version,codeId,expiresText,signature]=parts;
+   const expires=Number(expiresText);
+   if(parts.length!==4||version!=='v1'||!uuidPattern.test(codeId)||!/^[0-9]{9,11}$/.test(expiresText)||!/^[a-f0-9]{64}$/.test(signature))return reply(401,{code:'guest_expired'});
+   const expected=await sign(codeId,expires);
+   let difference=0;for(let i=0;i<64;i++)difference|=expected.charCodeAt(i)^signature.charCodeAt(i);
+   if(difference!==0||expires*1000<=Date.now())return reply(401,{code:'guest_expired'});
+   // Tühistatud kood või lõpetatud jaht lõpetab vaate kohe, kuigi tähis on veel allkirjastatud.
+   const view=await snapshot(codeId);
+   if(!view)return reply(401,{code:'guest_expired'});
+   return reply(200,{snapshot:view});
+  }
+  return reply(400,{code:'invalid_request'});
+ }catch{return reply(503,{code:'unavailable'});}
+});

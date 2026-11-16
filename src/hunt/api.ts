@@ -175,3 +175,21 @@ export async function placeHuntParticipant(driveId:string,participantId:string,c
  const {data,error}=await db.rpc('place_hunt_participant',{target_drive_id:driveId,target_participant_id:participantId,new_location:{type:'Point',coordinates}});
  if(error)throw error;return data as HuntPositionRow;
 }
+
+export type HuntAccessCode={code:string;expires_at:string};
+/** Jahikood: ainult jahijuht ja admin näevad, loovad ja tühistavad koodi. */
+export async function getHuntAccessCode(huntId:string):Promise<HuntAccessCode|null>{
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('get_hunt_access_code',{target_hunt_id:huntId});
+ if(error)throw error;return (data as HuntAccessCode|null)||null;
+}
+export async function createHuntAccessCode(huntId:string):Promise<HuntAccessCode>{
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {data,error}=await db.rpc('create_hunt_access_code',{target_hunt_id:huntId});
+ if(error)throw error;return data as HuntAccessCode;
+}
+export async function revokeHuntAccessCode(huntId:string){
+ if(!db)throw new Error('Andmebaasi ühendus puudub.');
+ const {error}=await db.rpc('revoke_hunt_access_code',{target_hunt_id:huntId});
+ if(error)throw error;
+}

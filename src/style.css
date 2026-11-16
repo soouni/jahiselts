@@ -174,3 +174,33 @@ a.menurow:hover{background:var(--soft)}
 .weather-updated,.weather-source{font-size:12px!important;color:var(--muted);line-height:1.5}.weather-source a{text-decoration:underline}
 .weather-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 @media(max-width:360px){.weather-table th,.weather-table td{padding:9px 3px}.weather-temperature{gap:2px}.weather-refresh span{display:none}}
+
+/* Jahikood: avalehe koodiväli, külalise jahivaade ja jahijuhi koodipaneel. */
+.code-gate{min-height:100dvh;height:auto;display:grid;place-items:center;padding:24px 16px calc(24px + env(safe-area-inset-bottom));background:#e9eee7;overflow:auto}
+.code-gate-card{width:min(420px,100%);padding:26px 22px;background:#fff;border-radius:20px;box-shadow:var(--shadow)}
+.code-gate-card h1{margin:22px 0 6px;font-size:26px;line-height:1.2}
+.code-gate-brand{display:flex;gap:12px;align-items:center}
+.code-gate-brand strong{display:block;font-size:18px}
+.code-gate-brand span{font-size:11px;letter-spacing:.08em;color:var(--muted)}
+.code-gate-field{display:block;margin:18px 0 12px}
+.code-gate-field span{display:block;margin-bottom:6px;font-size:14px;font-weight:650}
+.code-gate-field input{width:100%;min-height:68px;padding:8px 12px;border:2px solid #c6d6ce;border-radius:14px;font-size:38px;font-weight:750;letter-spacing:.45em;text-align:center;font-variant-numeric:tabular-nums;color:var(--ink);background:#fff}
+.code-gate-field input:focus-visible{outline:3px solid #278154;outline-offset:2px;border-color:#173e32}
+.code-gate-links{margin-top:14px;border-top:1px solid #e8eee6;padding-top:6px;display:grid}
+.code-gate-links .subtle{justify-content:flex-start;gap:8px}
+.guest-brand{pointer-events:auto;cursor:default}
+.guest-sheet{bottom:146px}
+.guest-sheet h2{margin:0 36px 4px 0;font-size:19px}
+.guest-sheet-close{position:absolute;top:10px;right:10px}
+.guest-list{display:grid;gap:6px;margin-top:10px}
+.guest-list button{display:grid;grid-template-columns:52px 1fr auto;align-items:center;gap:8px;min-height:48px;padding:8px 12px;text-align:left;border:1px solid #d4dfd8;border-radius:12px;background:#fff;color:var(--ink)}
+.guest-list button[aria-pressed="true"]{background:var(--ink);color:#fff;border-color:var(--ink)}
+.guest-list small{color:inherit;opacity:.8}
+.guest-dock{max-width:300px}
+.guest-mine{position:absolute;left:50%;bottom:146px;transform:translateX(-50%);z-index:27;width:min(430px,calc(100vw - 24px));display:grid;gap:3px;padding:12px 14px;background:#fffffff5;color:var(--ink);border-radius:14px;box-shadow:0 4px 22px #102e2640;font-size:14px;line-height:1.45}
+.guest-mine strong{font-size:16px}
+.guest-mine-links{display:flex;gap:16px;margin-top:4px}
+.guest-mine-links a{color:var(--ink);font-weight:650;min-height:32px;display:inline-flex;align-items:center}
+.guest-gps-error{position:absolute;z-index:29;top:150px;left:50%;transform:translateX(-50%);width:min(360px,calc(100vw - 24px));padding:12px 14px;border-radius:12px;background:#fff5e6;border:1px solid #f1dcb8;font-size:14px}
+@media(max-width:760px){.guest-mine{bottom:calc(136px + env(safe-area-inset-bottom))}.guest-sheet{bottom:calc(126px + env(safe-area-inset-bottom))}}
+.hunt-access-code-value{display:block;padding:10px;border-radius:12px;background:#eaf2ed;font-size:40px;font-weight:750;letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums}
