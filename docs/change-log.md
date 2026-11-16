@@ -4,7 +4,7 @@ Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest,
 
 ## 2026-11-16 · Kütiliini naabrid vasakul ja paremal
 
-- **Naabrid liini järjekorra järgi** — kandidaatharu `fix/kutiliini-naabrid-20261116`: külalise kast „Sinu koht" näitas kahte linnulennult lähimat kütti, mis liini otsas seistes olid mõlemad samal pool. Nüüd tuletatakse kütiliini järjekord kohtade asukohast (lühim ahel, ei sõltu kohanumbritest) ning näidatakse eraldi „Vasakul" ja „Paremal" näoga aju ala keskkoha poole. Liini otsas kuvatakse „kedagi, oled kütiliini otsas"; teist otsa näidatakse naabrina ainult siis, kui liin on suletud ring. Aju suunda ega ajajate asukohta selleks ei kasutata. Loogika: `src/guest/neighbours.ts`, testid `tests/guest-neighbours.test.mjs`. Andmebaasi ei muudeta.
+- **Naabrid liini järjekorra järgi** — kandidaatharu `fix/kutiliini-naabrid-20261116`: külalise kast „Sinu koht" näitas kahte linnulennult lähimat kütti, mis liini otsas seistes olid mõlemad samal pool. Nüüd tuletatakse kütiliini järjekord kohtade asukohast (lühim ahel, ei sõltu kohanumbritest) ning näidatakse eraldi „Vasakul" ja „Paremal" näoga aju ala keskkoha poole. Liini otsas kuvatakse „kedagi, oled kütiliini otsas"; teist otsa näidatakse naabrina ainult siis, kui liin on suletud ring. Aju suunda ega ajajate asukohta selleks ei kasutata. Loogika: `src/guest/neighbours.ts`, testid `tests/guest-neighbours.test.mjs`. Andmebaasi ei muudeta. Samas harus asendati külalise vaate vaba mõõtmise tööriist nupuga „Vahemaad", mis näitab kaardil küttide omavahelisi kaugusi (sama funktsioon mis liikme jahivaates).
 
 ## 2026-11-16 · Külalise vaate parandused ja testide parandus
 
