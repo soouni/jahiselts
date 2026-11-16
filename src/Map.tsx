@@ -2,7 +2,7 @@ import {entryMapFeatures,entryMapStyle} from './entryMap';
 import {mapInteractions} from './mapInteractions';
 import {huntAreaStyles} from './hunt/areaStyles';
 import {WindOverlay,type WindOverlayState} from './hunt/WindOverlay';
-import {huntMarkerUrl,meetingMarkerUrl} from './hunt/markers';
+import {huntMarkerUrl} from './hunt/markers';
 import {MapCompass} from './MapCompass';
 import {MeasureTool} from './MeasureTool';
 import {forwardRef,useEffect,useId,useImperativeHandle,useRef,useState} from 'react';
@@ -36,7 +36,6 @@ const draftLayer=new VectorLayer({source:draft.current,style:draftStyle});
 const gpsLayer = new VectorLayer({source:gps.current,style:new Style({fill:new Fill({color:'rgba(38,126,231,.13)'}),stroke:new Stroke({color:'#2680eb',width:1}),image:new CircleStyle({radius:7,fill:new Fill({color:'#1976df'}),stroke:new Stroke({color:'#fff',width:3})})})});
 const huntLayer=new VectorLayer({source:huntSource.current,declutter:'hunt',style:f=>{
  const live=f.get('live'),stale=f.get('stale'),positionNumber=f.get('positionNumber'),isMine=f.get('isMine');
- if(f.get('role')==='meeting')return new Style({image:new Icon({src:meetingMarkerUrl,scale:.8,anchor:[.5,.5],declutterMode:'none'}),text:new Text({text:String(f.get('name')||'Kogunemine'),offsetY:-32,font:'700 12px system-ui',declutterMode:'none',fill:new Fill({color:'#7a3510'}),stroke:new Stroke({color:'#fff',width:4})})});
  if(typeof positionNumber==='number'){
   // Ajaja sisenemiskoht on pruun, et see ei seguneks kütiliini roheliste kohtadega.
   const driver=f.get('role')==='driver'||f.get('role')==='dog_driver';

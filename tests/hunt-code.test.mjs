@@ -5,7 +5,7 @@ import {runInNewContext} from 'node:vm';
 import {webcrypto} from 'node:crypto';
 import ts from 'typescript';
 import {createHuntDb} from './helpers/hunt-db.mjs';
-import {cleanSnapshot,readGuestSession,saveGuestSession,validCode,guestProblem,meetingTime} from '../src/guest/session.ts';
+import {cleanSnapshot,readGuestSession,saveGuestSession,validCode,guestProblem} from '../src/guest/session.ts';
 
 const source=readFileSync(new URL('../supabase/functions/hunt-code/index.ts',import.meta.url),'utf8');
 const code=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
@@ -64,12 +64,6 @@ test('guest device storage drops expired sessions and malformed rows',()=>{
  assert.equal(validCode('0427'),true);assert.equal(validCode('427'),false);assert.equal(validCode('12 4'),false);
  const clean=cleanSnapshot({...view,positions:[...view.positions,{id:'bad',number:2,coordinates:[999,58],role:'hunter',name:'X'},null]});assert.equal(clean.positions.length,1);
  assert.equal(cleanSnapshot({hunt:{},positions:[]}),null);
- assert.equal(clean.meeting,null);
- const met=cleanSnapshot({...view,meeting:{at:'2026-11-21T06:00:00Z',coordinates:[24.88,58.64],note:'  Jahimaja parkla '}}).meeting;
- assert.deepEqual(met,{at:'2026-11-21T06:00:00Z',coordinates:[24.88,58.64],note:'Jahimaja parkla'});
- assert.deepEqual(cleanSnapshot({...view,meeting:{at:'homme',coordinates:[999,1],note:'Maja'}}).meeting,{at:null,coordinates:null,note:'Maja'});
- assert.equal(cleanSnapshot({...view,meeting:{at:null,coordinates:null,note:' '}}).meeting,null);
- assert.match(meetingTime('2026-11-21T06:00:00Z'),/21\. nov.* kell 08:00/);
  const store=storage();saveGuestSession(store,{token:'t',snapshot:clean,savedAt:1,myPositionId:'p1'});
  assert.equal(readGuestSession(store).myPositionId,'p1');
  assert.equal(readGuestSession(store,Date.parse(view.expires_at)+1),null);assert.equal(store.getItem('parnjoe-jahikood-v1'),null);

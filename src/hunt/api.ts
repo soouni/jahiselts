@@ -17,14 +17,14 @@ export async function createHunt(draft:HuntDraft){
 }
 export async function listHunts(){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
- const {data,error}=await db.from('hunts').select('id,title,type,status,leader_id,allow_self_selection,starts_at,meeting_at,meeting_point,meeting_note,created_at,updated_at,hunt_drives(id,hunt_id,sequence,title,status,area_geojson,started_at,finished_at,updated_at)').order('created_at',{ascending:false}).limit(40);
+ const {data,error}=await db.from('hunts').select('id,title,type,status,leader_id,allow_self_selection,starts_at,created_at,updated_at,hunt_drives(id,hunt_id,sequence,title,status,area_geojson,started_at,finished_at,updated_at)').order('created_at',{ascending:false}).limit(40);
  if(error)throw error;
  return data||[];
 }
 
 export type ClubChoice={user_id:string;display_name:string};
 export type HuntDriveRow={id:string;hunt_id?:string;sequence:number;title:string;status:string;area_geojson?:{type:'Polygon';coordinates:[number,number][][]}|null;started_at?:string|null;finished_at?:string|null;updated_at?:string};
-export type HuntRow={id:string;title:string;type:string;status:string;leader_id:string;allow_self_selection:boolean;starts_at?:string|null;meeting_at?:string|null;meeting_point?:{type:'Point';coordinates:[number,number]}|null;meeting_note?:string|null;updated_at?:string;hunt_drives:HuntDriveRow[]};
+export type HuntRow={id:string;title:string;type:string;status:string;leader_id:string;allow_self_selection:boolean;starts_at?:string|null;updated_at?:string;hunt_drives:HuntDriveRow[]};
 export type HuntPersonRow={id:string;hunt_id:string;user_id:string|null;display_name:string;role:string;status:string;roster_id:string|null};
 export type HuntPositionRow={id:string;drive_id:string;number:number;location:{type:'Point';coordinates:[number,number]};assigned_participant_id:string|null;confirmed_at:string|null;confirmation_accuracy_m?:number|null;confirmation_distance_m?:number|null};
 export type HuntLocationRow={participant_id:string;hunt_id:string;user_id:string;location:{type:'Point';coordinates:[number,number]};accuracy_m:number;heading_deg:number|null;recorded_at:string;received_at:string};
@@ -199,14 +199,4 @@ export async function confirmHuntPositionOrder(driveId:string,positionIds:string
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
  const {error}=await db.rpc('confirm_hunt_position_order',{target_drive_id:driveId,ordered_position_ids:positionIds});
  if(error)throw error;
-}
-
-export type HuntMeeting={meeting_at:string|null;meeting_point:{type:'Point';coordinates:[number,number]}|null;meeting_note:string|null};
-/** Salvestab kogunemiskoha ja -aja. Õigust kontrollib andmebaas (jahijuht või admin), väärtusi tabeli kitsendused. */
-export async function saveHuntMeeting(huntId:string,meeting:Partial<HuntMeeting>):Promise<HuntMeeting>{
- if(!db)throw new Error('Andmebaasi ühendus puudub.');
- const {data,error}=await db.from('hunts').update(meeting).eq('id',huntId).select('meeting_at,meeting_point,meeting_note').maybeSingle();
- if(error)throw error;
- if(!data)throw new Error('Kogunemise andmeid saab muuta ainult jahijuht või administraator.');
- return data as HuntMeeting;
 }

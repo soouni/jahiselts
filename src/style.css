@@ -200,7 +200,6 @@ a.menurow:hover{background:var(--soft)}
 .guest-list button.is-driver[aria-pressed="true"]{background:#f1e0bf;border-color:#8a5a14}
 .guest-list small{color:inherit;opacity:.8}
 .guest-dock{max-width:300px}
-.guest-dock.has-meeting{max-width:420px}
 .guest-mine{position:absolute;left:50%;bottom:146px;transform:translateX(-50%);z-index:27;width:min(430px,calc(100vw - 24px));display:grid;gap:3px;padding:12px 14px;background:#fffffff5;color:var(--ink);border-radius:14px;box-shadow:0 4px 22px #102e2640;font-size:14px;line-height:1.45}
 .guest-mine strong{font-size:16px}
 .guest-mine-links{display:flex;gap:16px;margin-top:4px}
@@ -209,7 +208,7 @@ a.menurow:hover{background:var(--soft)}
 @media(max-width:760px){.guest-mine{bottom:calc(136px + env(safe-area-inset-bottom))}.guest-sheet{bottom:calc(136px + env(safe-area-inset-bottom))}}
 .hunt-access-code-value{display:block;padding:10px;border-radius:12px;background:#eaf2ed;font-size:40px;font-weight:750;letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums}
 
-/* Külalise kaarditööriistad, ilmateade ja kogunemine. Lehed (.guest-sheet) avanevad ühes kohas, nii et need ei jää üksteise ega kasti "Sinu koht" alla. */
+/* Külalise kaarditööriistad ja ilmateade. Lehed (.guest-sheet) avanevad ühes kohas, nii et need ei jää üksteise ega kasti "Sinu koht" alla. */
 .guest-tools{position:absolute;left:12px;top:240px;z-index:12;display:flex;flex-direction:column;align-items:flex-start;gap:8px}
 /* Kitsad nupud (ikoon + lühike silt), et need ei kataks kaardil jahikohti. */
 .guest-tools button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:64px;min-height:52px;padding:6px 4px;border-radius:12px;background:#fff;color:var(--ink);font-size:11px;font-weight:700;line-height:1.15;text-align:center;box-shadow:0 2px 10px #102e2626}
@@ -218,6 +217,4 @@ a.menurow:hover{background:var(--soft)}
 .guest-chip{padding:5px 9px;border-radius:8px;background:#fff;color:var(--ink);font-size:12px;font-weight:650;box-shadow:0 2px 10px #102e2626}
 .guest-sheet{z-index:31;max-height:min(60dvh,520px);overflow-y:auto}
 .guest-weather>div{display:grid;grid-template-columns:54px 56px 70px 1fr;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid #e3ebe5;font-size:15px}
-.guest-meeting-time{margin:4px 0;font-size:20px;font-weight:750}
-.guest-sheet-link{display:inline-flex;align-items:center;min-height:44px;font-weight:700;color:var(--ink)}
 @media(max-height:700px){.guest-tools{top:200px;gap:6px}.guest-tools button{min-height:46px}}

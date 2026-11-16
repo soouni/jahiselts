@@ -67,28 +67,13 @@ test('finish_expired_hunts: closes only hunts started on an earlier Estonian day
  }finally{await db.close();}
 });
 
-test('meeting place and time: managers set it, guests see it, bad values are refused',async()=>{
+test('guest view keeps drivers so their entry point can be shown',async()=>{
  const {db,as}=await createHuntDb();try{
  await seed(db);
- const save=(user,values)=>as(user,'update public.hunts set meeting_at=$2,meeting_point=$3::jsonb,meeting_note=$4 where id=$1 returning id',[hunt,...values]);
- const point='{"type":"Point","coordinates":[24.88,58.64]}';
- assert.equal((await save(other,['2026-11-21T06:00:00Z',point,'Jahimaja'])).rows.length,0,'another member cannot change the meeting place');
- assert.equal((await save(leader,['2026-11-21T06:00:00Z',point,'Jahimaja parkla'])).rows.length,1);
- for(const bad of ['{"type":"Point","coordinates":[2.35,48.85]}','{"type":"Point","coordinates":["24.88",58.64]}','{"type":"Point","coordinates":[24.88]}','{"type":"LineString","coordinates":[[24.8,58.6],[24.9,58.6]]}','"tekst"'])
-  await assert.rejects(save(leader,[null,bad,null]),/hunts_meeting_point_valid/,bad);
- await assert.rejects(save(leader,[null,null,'x'.repeat(201)]),/hunts_meeting_note_length/);
-
  const code=(await as(leader,'select public.create_hunt_access_code($1) as c',[hunt])).rows[0].c;
  const id=(await db.query('select id from hunt_access_codes where code=$1',[code.code])).rows[0].id;
- const snapshot=async()=>(await db.query('select public.hunt_guest_snapshot($1) as s',[id])).rows[0].s;
- const view=await snapshot();
- assert.deepEqual(view.meeting.coordinates,[24.88,58.64]);assert.equal(view.meeting.note,'Jahimaja parkla');
- assert.equal(new Date(view.meeting.at).toISOString(),'2026-11-21T06:00:00.000Z');
- assert.deepEqual(view.positions.map(p=>[p.number,p.role]),[[1,'hunter'],[2,'driver'],[3,'hunter'],[5,'hunter']],'drivers stay in the guest view so their entry point can be shown');
+ const view=(await db.query('select public.hunt_guest_snapshot($1) as s',[id])).rows[0].s;
+ assert.deepEqual(view.positions.map(p=>[p.number,p.role]),[[1,'hunter'],[2,'driver'],[3,'hunter'],[5,'hunter']]);
  assert.equal(view.positions[1].name,'Ajaja M.');
-
- await save(leader,[null,null,null]);
- assert.equal((await snapshot()).meeting,null,'no meeting details means no meeting block');
- await assert.rejects(as(leader,'select public.hunt_guest_snapshot($1)',[id]),/permission denied/,'the replaced function keeps service-role-only access');
  }finally{await db.close();}
 });
