@@ -1,9 +1,11 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {Info,LocateFixed,LogOut,Navigation,Trees,Users,X} from 'lucide-react';
+import {CloudSun,Info,LocateFixed,LogOut,Navigation,Ruler,Trees,Users,Wind,X} from 'lucide-react';
 import {MapCanvas,type HuntMapMarker,type MapHandle} from '../Map';
 import {distanceAndBearing} from '../hunt/navigation';
 import {directionsUrl} from '../hunt/parking';
 import {GuestError,fetchGuestSnapshot} from './api';
+import {loadParnjoeForecast,nextWeatherHours,readWeatherCache,weatherDescription,type WeatherForecast} from '../weather';
+import {parnjoeWindUrl,type WindReading} from '../hunt/wind';
 import {guestProblem,roleLabel,saveGuestSession,type GuestSnapshot} from './session';
 
 const REFRESH_MS=20000;
@@ -15,6 +17,9 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  const [snapshot,setSnapshot]=useState(initial),[myId,setMyId]=useState<string|null>(initialPositionId);
  const [base,setBase]=useState('hybriid'),[listOpen,setListOpen]=useState(!initialPositionId),[selectedId,setSelectedId]=useState<string|null>(null);
  const [online,setOnline]=useState(navigator.onLine),[syncedAt,setSyncedAt]=useState(Date.now()),[stale,setStale]=useState(false),[toast,setToast]=useState('');
+ const [measuring,setMeasuring]=useState(false),[windVisible,setWindVisible]=useState(false),[weatherOpen,setWeatherOpen]=useState(false);
+ const [weather,setWeather]=useState<WeatherForecast|null>(()=>readWeatherCache(localStorage)),[weatherError,setWeatherError]=useState('');
+ const [windReading,setWindReading]=useState<WindReading|null>(null),[windError,setWindError]=useState('');
  const [fix,setFix]=useState<{coords:[number,number];accuracy:number}|null>(null),[gpsError,setGpsError]=useState(''),[gpsOn,setGpsOn]=useState(false);
  const watch=useRef<number|null>(null),fitted=useRef(false);
  useEffect(()=>{saveGuestSession(localStorage,{token,snapshot,savedAt:syncedAt,myPositionId:myId});},[token,snapshot,syncedAt,myId]);
@@ -33,6 +38,26 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  },[token]);
  useEffect(()=>()=>{if(watch.current!==null)navigator.geolocation.clearWatch(watch.current);},[]);
  useEffect(()=>{if(!toast)return;const t=setTimeout(()=>setToast(''),7000);return()=>clearTimeout(t);},[toast]);
+ useEffect(()=>{
+  if(!windVisible)return;
+  const controller=new AbortController();
+  const load=async()=>{try{
+   const response=await fetch(parnjoeWindUrl(),{signal:controller.signal});
+   if(!response.ok)throw new Error('Tuuleandmete päring ebaõnnestus');
+   const data=await response.json();
+   const speed=data?.current?.wind_speed_10m,direction=data?.current?.wind_direction_10m;
+   if(typeof speed!=='number'||typeof direction!=='number')throw new Error('Tuuleandmed puuduvad');
+   setWindReading({speed,direction,time:String(data.current.time||''),fetchedAt:Date.now()});setWindError('');
+  }catch(e){if(!controller.signal.aborted)setWindError(e instanceof Error?e.message:String(e));}};
+  void load();const timer=window.setInterval(()=>void load(),10*60*1000);
+  return()=>{controller.abort();clearInterval(timer);};
+ },[windVisible]);
+ useEffect(()=>{
+  if(!weatherOpen)return;
+  const controller=new AbortController();
+  void loadParnjoeForecast(controller.signal,localStorage).then(value=>{setWeather(value);setWeatherError('');}).catch(e=>{if(!controller.signal.aborted)setWeatherError(e instanceof Error?e.message:String(e));});
+  return()=>controller.abort();
+ },[weatherOpen]);
  const mine=useMemo(()=>snapshot.positions.find(p=>p.id===myId)||null,[snapshot,myId]);
  const selected=snapshot.positions.find(p=>p.id===selectedId)||null;
  const markers:HuntMapMarker[]=useMemo(()=>snapshot.positions.map(p=>({id:p.id,name:p.name,role:p.role,coordinates:p.coordinates,positionNumber:p.number,isMine:p.id===myId})),[snapshot,myId]);
@@ -55,10 +80,24 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  const title=snapshot.hunt.title+(snapshot.drive?' · '+snapshot.drive.sequence+'. '+snapshot.drive.title:'');
  const walking=mine?directionsUrl(mine.coordinates,'walking'):null,driving=mine?directionsUrl(mine.coordinates,'driving'):null;
  return <main className="hunt-active guest-hunt">
-  <MapCanvas ref={map} huntDriveArea={snapshot.drive?.area||null} huntMarkers={markers} huntDistanceOn={false} huntMode huntMoving={false} huntCanDrag={false} onHuntDrag={noop} onHuntSelect={id=>{setListOpen(false);setSelectedId(id);}} onHuntPlace={noop} measuring={false} onCloseMeasure={noop} searchResult={null} onClearSearch={noop} entries={[]} base={base} boundaryVisible drawing={null} drawingColor="#173e32" drawingWidth={3} drawType="Point" editGeometry={null} onGeometry={noop} onSelect={noop} onReady={noop} onError={setToast}/>
+  <MapCanvas ref={map} huntDriveArea={snapshot.drive?.area||null} huntMarkers={markers} wind={windVisible?{reading:windReading,error:windError,now:Date.now()}:undefined} huntDistanceOn={false} huntMode huntMoving={false} huntCanDrag={false} onHuntDrag={noop} onHuntSelect={id=>{setListOpen(false);setSelectedId(id);}} onHuntPlace={noop} measuring={measuring} onCloseMeasure={()=>setMeasuring(false)} searchResult={null} onClearSearch={noop} entries={[]} base={base} boundaryVisible drawing={null} drawingColor="#173e32" drawingWidth={3} drawType="Point" editGeometry={null} onGeometry={noop} onSelect={noop} onReady={noop} onError={setToast}/>
   <header className="topbar"><div className="brand guest-brand"><div className="brandicon"><Trees size={26}/></div><div><strong>Pärnjõe</strong><span>JAHIVAADE</span></div></div><div className="topactions"><button className="login" onClick={()=>{if(window.confirm('Sulgeda jahivaade? Uuesti avamiseks on vaja jahikoodi.'))onExit();}}><LogOut size={17}/><span>Välju</span></button></div></header>
   <div className="hunt-statusbar"><span className={`connection-dot ${online&&!stale?'is-online':'is-offline'}`}/><strong>{title}</strong><span>{online&&!stale?'Ainult vaatamine':'Salvestatud vaade · '+new Date(syncedAt).toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit'})}</span></div>
   <div className="basemap basemap-cycle"><button type="button" className="basemap-cycle-button" aria-label={`Aluskaart: ${baseName}. Vajuta kaardi vahetamiseks.`} title={`Aluskaart: ${baseName}`} onClick={()=>setBase(current=>current==='kaart'?'foto':current==='foto'?'hybriid':'kaart')}><svg className="basemap-layer-svg" viewBox="0 0 48 48" aria-hidden="true" fill="none"><path d="M24 6 42 21 24 35 6 21 24 6Z" fill="currentColor"/><path d="M7 29 24 42 41 29" stroke="currentColor" strokeWidth="5" strokeLinecap="square" strokeLinejoin="miter"/></svg><span className="tool-caption">{baseName}</span></button></div>
+  <div className="guest-extra-tools" style={{position:'absolute',left:12,top:240,zIndex:12,display:'flex',flexDirection:'column',gap:8}}>
+   <button type="button" aria-pressed={windVisible} onClick={()=>setWindVisible(v=>!v)} style={{borderRadius:12,padding:'10px 12px',background:windVisible?'#d6eddf':'white',color:'#173e32',display:'flex',gap:8,alignItems:'center'}}><Wind size={19}/>Tuul</button>
+   <button type="button" aria-pressed={measuring} onClick={()=>setMeasuring(v=>!v)} style={{borderRadius:12,padding:'10px 12px',background:measuring?'#d6eddf':'white',color:'#173e32',display:'flex',gap:8,alignItems:'center'}}><Ruler size={19}/>Vahemaad</button>
+   <button type="button" aria-expanded={weatherOpen} onClick={()=>setWeatherOpen(v=>!v)} style={{borderRadius:12,padding:'10px 12px',background:weatherOpen?'#d6eddf':'white',color:'#173e32',display:'flex',gap:8,alignItems:'center'}}><CloudSun size={19}/>Ilmateade</button>
+  </div>
+  {windVisible&&windReading&&<div role="status" style={{position:'absolute',top:205,left:12,zIndex:12,background:'white',borderRadius:8,padding:'5px 8px',fontSize:12}}>Tuul {windReading.speed.toFixed(1)} m/s · {Math.round(windReading.direction)}°</div>}
+  {windVisible&&windError&&<div role="alert" className="toast">{windError}</div>}
+  {weatherOpen&&<section aria-label="Pärnjõe ilmateade" style={{position:'absolute',zIndex:16,left:12,right:12,bottom:130,background:'white',borderRadius:16,padding:16,maxHeight:'50vh',overflowY:'auto',boxShadow:'0 4px 22px #0003'}}>
+   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}><strong>Pärnjõe ilmateade</strong><button type="button" aria-label="Sulge ilmateade" onClick={()=>setWeatherOpen(false)}><X size={20}/></button></div>
+   <p className="muted">Open-Meteo prognoos · Pärnjõe piirkond</p>
+   {weatherError&&<p role="alert">{weatherError}</p>}
+   {nextWeatherHours(weather,Date.now()).map(h=><div key={h.time} style={{display:'flex',justifyContent:'space-between',gap:10,padding:'8px 0',borderBottom:'1px solid #ddd'}}><strong>{new Date(h.time*1000).toLocaleTimeString('et-EE',{hour:'2-digit',minute:'2-digit',timeZone:'Europe/Tallinn'})}</strong><span>{h.temperature===null?'–':Math.round(h.temperature)+' °C'}</span><span>{h.wind===null?'–':h.wind.toFixed(1)+' m/s'}</span><span>{weatherDescription(h.code)}</span></div>)}
+   {!weather&&!weatherError&&<p>Laadin ilmateadet…</p>}
+  </section>}
   <button type="button" className={`hunt-gps-toggle${gpsOn?' is-active':''}`} aria-pressed={gpsOn} title="Näita minu asukohta" aria-label="Näita minu asukohta kaardil" onClick={toggleGps}><LocateFixed size={22}/><span>GPS</span></button>
   {(selected||listOpen)&&<section className="hunt-sheet guest-sheet" aria-label={selected?'Valitud jahikoht':'Jahi paigutus'}>
    <button type="button" className="iconbtn guest-sheet-close" aria-label="Sulge" onClick={()=>{setSelectedId(null);setListOpen(false);}}><X size={20}/></button>
