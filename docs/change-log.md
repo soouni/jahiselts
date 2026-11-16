@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-16 · Aju külgede pikkuste ja vahemaade siltide paigutus
+
+- **Sildid ei jää enam üksteise ega kohamärkide alla** — kandidaatharu `fix/aju-kuljepikkuste-sildid-20261116`: aju külje pikkuse silt nihkub piki külge (vajadusel sügavamale ala sisse) esimesse kohta, kus ees ei ole kohamärki, nimesilti ega küttide vahemaa silti. Küttide vahemaa silt asub joone kõrval aju ala pool, mitte joone ja märkide peal, ning väldib samuti märke ja nimesilte. Kohamärgid joonistatakse vahemaade joonte peale, et joon ei kataks koha numbrit. Kehtib nii külalise kui liikme jahivaates (`src/Map.tsx`); jahijuhi planeerimiskaarti ei muudetud. Loogika ja testid: `src/hunt/areaStyles.ts`, `tests/hunt-area-styles.test.mjs`. Teadaolev piir: kui kaks kohta on ekraanil alla umbes 120 piksli vahega, ei pruugi vahemaa sildile täiesti vaba kohta leiduda; kaardi peal olevaid nuppe paigutus ei arvesta.
+
 ## 2026-11-16 · Kütiliini naabrid vasakul ja paremal
 
 - **Naabrid liini järjekorra järgi** — kandidaatharu `fix/kutiliini-naabrid-20261116`: külalise kast „Sinu koht" näitas kahte linnulennult lähimat kütti, mis liini otsas seistes olid mõlemad samal pool. Nüüd tuletatakse kütiliini järjekord kohtade asukohast (lühim ahel, ei sõltu kohanumbritest) ning näidatakse eraldi „Vasakul" ja „Paremal" näoga aju ala keskkoha poole. Liini otsas kuvatakse „kedagi, oled kütiliini otsas"; teist otsa näidatakse naabrina ainult siis, kui liin on suletud ring. Aju suunda ega ajajate asukohta selleks ei kasutata. Loogika: `src/guest/neighbours.ts`, testid `tests/guest-neighbours.test.mjs`. Andmebaasi ei muudeta. Samas harus asendati külalise vaate vaba mõõtmise tööriist nupuga „Vahemaad", mis näitab kaardil küttide omavahelisi kaugusi (sama funktsioon mis liikme jahivaates).
