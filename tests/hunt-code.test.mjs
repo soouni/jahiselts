@@ -20,7 +20,7 @@ function setup({status='ok',snapshot=view,expires=view.expires_at}={}){
   if(url.endsWith('/rpc/hunt_guest_snapshot'))return Response.json(snapshot);
   throw Error('Unexpected endpoint');
  }});
- return {calls,run:(body,origin='https://soouni.github.io')=>handler(new Request('https://test.supabase.co/functions/v1/hunt-code',{method:'POST',headers:{origin,'Content-Type':'application/json','x-forwarded-for':'203.0.113.7'},body:JSON.stringify(body)}))};
+ return {calls,run:(body,origin='https://soouni.github.io',extra={'x-forwarded-for':'203.0.113.7'})=>handler(new Request('https://test.supabase.co/functions/v1/hunt-code',{method:'POST',headers:{origin,'Content-Type':'application/json',...extra},body:JSON.stringify(body)}))};
 }
 
 test('valid code returns a signed view-only token and the hunt view',async()=>{
@@ -34,6 +34,20 @@ test('wrong code, throttling and malformed input never reach the hunt view',asyn
  const wrong=setup({status:'invalid'});const r=await wrong.run({action:'redeem',code:'0001'});assert.equal(r.status,400);assert.deepEqual(await r.json(),{code:'invalid_code'});assert.equal(wrong.calls.length,1);
  const slow=setup({status:'throttled'});assert.equal((await slow.run({action:'redeem',code:'0001'})).status,429);assert.equal(slow.calls.length,1);
  for(const bad of ['123','12345','12a4','',null,1234]){const x=setup();assert.equal((await x.run({action:'redeem',code:bad})).status,400);assert.equal(x.calls.length,0);}
+});
+test('the global lock has its own answer and the throttle ignores spoofed addresses',async()=>{
+ const locked=setup({status:'locked'});const r=await locked.run({action:'redeem',code:'4827'});assert.equal(r.status,429);assert.deepEqual(await r.json(),{code:'temporarily_locked'});assert.equal(locked.calls.length,1);
+ const hashOf=async headers=>{const x=setup();await x.run({action:'redeem',code:'4827'},'https://soouni.github.io',headers);return x.calls[0].body.ip_hash;};
+ const real=await hashOf({'x-forwarded-for':'203.0.113.7'});
+ assert.equal(await hashOf({'x-forwarded-for':'1.1.1.1, 203.0.113.7'}),real,'a client-written first entry must not change the bucket');
+ assert.equal(await hashOf({'x-forwarded-for':'9.9.9.9, 8.8.8.8, 203.0.113.7'}),real);
+ assert.equal(await hashOf({'cf-connecting-ip':'203.0.113.7','x-forwarded-for':'5.5.5.5'}),real,'the gateway header wins');
+ assert.notEqual(await hashOf({'x-forwarded-for':'203.0.113.8'}),real);
+ const v6=await hashOf({'x-forwarded-for':'2001:db8:1:2:aaaa:bbbb:cccc:dddd'});
+ assert.equal(await hashOf({'x-forwarded-for':'2001:db8:1:2::9'}),v6,'one IPv6 /64 is one device owner');
+ assert.equal(await hashOf({'x-forwarded-for':'2001:0db8:0001:0002:0:0:0:1'}),v6);
+ assert.notEqual(await hashOf({'x-forwarded-for':'2001:db8:1:3::9'}),v6);
+ assert.equal(await hashOf({}),await hashOf({'x-forwarded-for':'  '}),'no address at all shares one cautious bucket');
 });
 test('forged, altered and expired tokens are rejected before any database call',async()=>{
  const x=setup();const {token}=await (await x.run({action:'redeem',code:'4827'})).json();const [v,id,exp,sig]=token.split('.');
@@ -68,6 +82,9 @@ test('guest device storage drops expired sessions and malformed rows',()=>{
  assert.equal(readGuestSession(store).myPositionId,'p1');
  assert.equal(readGuestSession(store,Date.parse(view.expires_at)+1),null);assert.equal(store.getItem('parnjoe-jahikood-v1'),null);
  assert.match(guestProblem('invalid_code'),/vale või aegunud/);
+ assert.match(guestProblem('over_request_rate_limit'),/seadmest.*15 minutit/);
+ assert.match(guestProblem('temporarily_locked'),/hetkeks suletud.*jahijuhilt/);
+ assert.notEqual(guestProblem('temporarily_locked'),guestProblem('over_request_rate_limit'));
 });
 
 test('database: only hunt managers mint codes; guests get a throttled, name-shortened, read-only view',async()=>{
@@ -105,8 +122,13 @@ test('database: only hunt managers mint codes; guests get a throttled, name-shor
  for(let i=0;i<5;i++)assert.equal((await redeem(wrong)).status,'invalid');
  assert.equal((await redeem(second.code)).status,'throttled','a blocked address cannot keep guessing, even with the right code');
  assert.equal((await redeem(second.code,ip2)).status,'ok','other addresses stay unaffected below the global limit');
- await db.exec("update hunt_code_limits set attempts=40,expires_at=now()+interval '1 hour' where bucket='global'");
- assert.equal((await redeem(second.code,'c'.repeat(64))).status,'throttled','global limit caps distributed guessing');
+ await db.exec("update hunt_code_limits set attempts=59,expires_at=now()+interval '1 hour' where bucket='global'");
+ assert.equal((await redeem(second.code,'c'.repeat(64))).status,'ok','just below the global limit the right code still works');
+ await db.exec("update hunt_code_limits set attempts=60,expires_at=now()+interval '1 hour' where bucket='global'");
+ assert.equal((await redeem(second.code,'c'.repeat(64))).status,'locked','global limit caps distributed guessing and says so, instead of blaming the address');
+ assert.equal((await redeem(wrong,'d'.repeat(64))).status,'locked','a locked system does not answer guesses either');
+ await db.exec("update hunt_code_limits set expires_at=now()-interval '1 minute' where bucket='global'");
+ assert.equal((await redeem(second.code,'e'.repeat(64))).status,'ok','the lock ends by itself after the hour');
  await db.exec('delete from hunt_code_limits');
 
  await as(leader,'select public.revoke_hunt_access_code($1)',[hunt]);

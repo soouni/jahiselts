@@ -18,7 +18,7 @@ import type {OfficialPlace} from './gazetteerSearch';
 import type WMTS from 'ol/source/WMTS';import VectorSource from 'ol/source/Vector';import VectorLayer from 'ol/layer/Vector';import TileLayer from 'ol/layer/Tile';
 import {createBasemapSource} from './basemaps';
 import {mapColor,colorOutline,mapWidth} from './mapColors';
-import {Fill,Stroke,Style,Circle as CircleStyle,Text,Icon} from 'ol/style';import {Draw,Modify,DragPan} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,toLonLat,transform,get as getProjection} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Polygon from 'ol/geom/Polygon';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
+import {Fill,Stroke,Style,Circle as CircleStyle,RegularShape,Text,Icon} from 'ol/style';import {Draw,Modify,DragPan} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,toLonLat,transform,get as getProjection} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Polygon from 'ol/geom/Polygon';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
 import type {Entry,Geometry,Kind} from './types';import 'ol/ol.css';
 proj4.defs('EPSG:3301','+proj=lcc +lat_0=57.51755393055556 +lon_0=24 +lat_1=59.33333333333334 +lat_2=58 +x_0=500000 +y_0=6375000 +ellps=GRS80 +units=m +no_defs');register(proj4);
 const format=new GeoJSON();
@@ -35,6 +35,10 @@ const draftStyle=()=>{const color=callbacks.current.drawingColor,width=callbacks
 ];};
 const draftLayer=new VectorLayer({source:draft.current,style:draftStyle});
 const gpsLayer = new VectorLayer({source:gps.current,style:new Style({fill:new Fill({color:'rgba(38,126,231,.13)'}),stroke:new Stroke({color:'#2680eb',width:1}),image:new CircleStyle({radius:7,fill:new Fill({color:'#1976df'}),stroke:new Stroke({color:'#fff',width:3})})})});
+const markerImage=(driver:boolean,isMine:boolean)=>{
+ const fill=new Fill({color:isMine?'#f2b544':driver?'#8a5a14':'#176c52'}),stroke=new Stroke({color:isMine?'#173e32':'#fff',width:3});
+ return driver?new RegularShape({points:4,radius:isMine?23:21,angle:Math.PI/4,declutterMode:'none',fill,stroke}):new CircleStyle({radius:isMine?18:16,declutterMode:'none',fill,stroke});
+};
 // zIndex 115: kohamärgid on vahemaade joonte (110) peal, et joon ei kataks koha numbrit.
 const huntLayer=new VectorLayer({source:huntSource.current,declutter:'hunt',zIndex:115,style:f=>{
  const live=f.get('live'),stale=f.get('stale'),positionNumber=f.get('positionNumber'),isMine=f.get('isMine');
@@ -43,7 +47,8 @@ const huntLayer=new VectorLayer({source:huntSource.current,declutter:'hunt',zInd
   const driver=f.get('role')==='driver'||f.get('role')==='dog_driver';
   // declutterMode 'none': number ja nimi peavad olema alati näha, ka siis kui kohad on lähestikku või sildid kattuvad aju ala mõõtudega.
   const marker=new Style({
-   image:new CircleStyle({radius:isMine?18:16,declutterMode:'none',fill:new Fill({color:isMine?'#f2b544':driver?'#8a5a14':'#176c52'}),stroke:new Stroke({color:'#fff',width:3})}),
+   // Ajaja on ruut, kütt ring: värvipime ei pea rohelist ja pruuni eristama. Oma koht on kollane tumeda äärisega (kontrast valge äärise vastu oli alla 3:1).
+   image:markerImage(driver,isMine),
    text:new Text({text:'K'+positionNumber,font:'800 13px system-ui',declutterMode:'none',fill:new Fill({color:isMine?'#173e32':'#fff'})})
   });
   const name=new Style({text:new Text({text:(isMine?'MINA · ':'')+String(f.get('name')||''),offsetY:-28,font:'700 12px system-ui',declutterMode:'none',fill:new Fill({color:'#173e32'}),stroke:new Stroke({color:'#fff',width:4}),overflow:true})});

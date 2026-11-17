@@ -6,7 +6,7 @@ import {directionsUrl} from '../hunt/parking';
 import {GuestError,fetchGuestSnapshot} from './api';
 import {loadParnjoeForecast,nextWeatherHours,readWeatherCache,weatherDescription,type WeatherForecast} from '../weather';
 import {parnjoeWindUrl,type WindReading} from '../hunt/wind';
-import {guestProblem,isDriver,roleLabel,saveGuestSession,type GuestSnapshot} from './session';
+import {compassWord,guestProblem,isDriver,roleLabel,saveGuestSession,type GuestSnapshot} from './session';
 import {lineNeighbours,type Neighbour} from './neighbours';
 
 const REFRESH_MS=20000;
@@ -70,7 +70,7 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
   const handle=(event:MessageEvent)=>{
    const data=event.data;if(!data||typeof data.type!=='string')return;
    if(data.type==='OFFLINE_MAP_PROGRESS')setOffline({completed:Number(data.completed)||0,failed:Number(data.failed)||0,total:Number(data.total)||0,done:false});
-   if(data.type==='OFFLINE_MAP_READY'){const m=data.metadata||{};setOffline({completed:Number(m.completed)||0,failed:Number(m.failed)||0,total:Number(m.total)||0,done:true});setToast(Number(m.failed)>0?'Kaart salvestati osaliselt: '+m.failed+' kaardipaani jäi laadimata.':'Kaart on salvestatud. Aju ala kaart töötab nüüd ka ilma levita.');}
+   if(data.type==='OFFLINE_MAP_READY'){const m=data.metadata||{};setOffline({completed:Number(m.completed)||0,failed:Number(m.failed)||0,total:Number(m.total)||0,done:true});setToast(Number(m.failed)>0?'Kaart salvestati osaliselt: '+m.failed+' kaardilõiku jäi laadimata.':'Kaart on salvestatud. Aju ala kaart töötab nüüd ka ilma levita.');}
    if(data.type==='OFFLINE_MAP_ERROR'){setOffline(null);setToast('Kaardi salvestamine ebaõnnestus. Proovi uuesti, kui võrk on parem.');}
   };
   worker.addEventListener('message',handle);return()=>worker.removeEventListener('message',handle);
@@ -99,7 +99,7 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
   if(!controller){setToast('Võrguta kaart ei ole selles brauseris veel valmis. Laadi leht uuesti ja proovi siis.');return;}
   if(!navigator.onLine){setToast('Kaardi salvestamiseks on vaja võrguühendust.');return;}
   const urls=map.current?.offlineUrls(snapshot.drive?.area||null)||[];
-  if(!urls.length){setToast('Kaardipaanide loendit ei saanud koostada. Oota, kuni kaart on laadinud.');return;}
+  if(!urls.length){setToast('Salvestatavate kaardilõikude loendit ei saanud koostada. Oota, kuni kaart on laadinud.');return;}
   const scope=new URL(import.meta.env.BASE_URL,location.href);
   controller.postMessage({type:'CACHE_APP_SHELL',urls:[scope.href,new URL('data/boundary.geojson',scope).href,new URL('data/wmts.xml',scope).href,...performance.getEntriesByType('resource').map(entry=>entry.name)]});
   setOffline({completed:0,failed:0,total:urls.length,done:false});
@@ -107,7 +107,7 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
  }
  const open=(next:Sheet)=>{setSelectedId(null);setSheet(current=>current===next?null:next);};
  const meters=(value:number)=>value<1000?Math.round(value)+' m':(value/1000).toFixed(1)+' km';
- const beside=(neighbour:Neighbour|null)=>{const p=neighbour&&snapshot.positions.find(position=>position.id===neighbour.id);return p&&neighbour?p.name+' (K'+p.number+', '+meters(neighbour.meters)+')':'kedagi, oled kütiliini otsas';};
+ const beside=(neighbour:Neighbour|null)=>{const p=neighbour&&snapshot.positions.find(position=>position.id===neighbour.id);return p&&neighbour?p.name+' (K'+p.number+', '+meters(neighbour.meters)+')':'pole kedagi, oled liini otsas';};
  const baseName=base==='kaart'?'Kaart':base==='foto'?'Ortofoto':'Hübriid';
  const title=snapshot.hunt.title+(snapshot.drive?' · '+snapshot.drive.sequence+'. '+snapshot.drive.title:'');
  const walking=mine?directionsUrl(mine.coordinates,'walking'):null,driving=mine?directionsUrl(mine.coordinates,'driving'):null;
@@ -123,8 +123,8 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
    <button type="button" aria-pressed={windVisible} onClick={()=>setWindVisible(v=>!v)}><Wind size={19}/>Tuul</button>
    <button type="button" aria-label="Näita küttide vahemaid kaardil" title="Näita küttide vahemaid kaardil" aria-pressed={distanceOn} onClick={()=>setDistanceOn(v=>!v)}><Ruler size={19}/>Vahemaad</button>
    <button type="button" aria-label="Ilmateade" aria-pressed={sheet==='weather'} onClick={()=>open('weather')}><CloudSun size={19}/>Ilm</button>
-   <button type="button" disabled={saving} aria-label="Salvesta aju ala kaart võrguta kasutamiseks" title="Salvesta aju ala kaart võrguta kasutamiseks" aria-describedby={offline?'guest-offline-status':undefined} onClick={saveOfflineMap}><Download size={19}/>{saving?'Salvestan…':'Võrguta'}</button>
-   {offline&&<span id="guest-offline-status" className="guest-chip" role="status">{offline.done?(offline.failed?offline.completed+'/'+offline.total+' paani, '+offline.failed+' puudu':'Kaart töötab ilma levita'):(offline.completed+offline.failed)+'/'+offline.total+' kaardipaani'}</span>}
+   <button type="button" disabled={saving} aria-label="Salvesta aju ala kaart võrguta kasutamiseks" title="Salvesta aju ala kaart võrguta kasutamiseks" aria-describedby={offline?'guest-offline-status':undefined} onClick={saveOfflineMap}><Download size={19}/>{saving?'Salvestan…':'Salvesta kaart'}</button>
+   {offline&&<span id="guest-offline-status" className="guest-chip" role="status">{offline.done?(offline.failed?offline.completed+'/'+offline.total+' lõiku, '+offline.failed+' puudu':'Kaart töötab ilma levita'):(offline.completed+offline.failed)+'/'+offline.total+' kaardilõiku'}</span>}
   </div>
   <button type="button" className={`hunt-gps-toggle${gpsOn?' is-active':''}`} aria-pressed={gpsOn} title="Näita minu asukohta" aria-label="Näita minu asukohta kaardil" onClick={toggleGps}><LocateFixed size={22}/><span>GPS</span></button>
   {(selected||sheet)&&<section className="hunt-sheet guest-sheet" aria-label={selected?'Valitud jahikoht':sheet==='weather'?'Pärnjõe ilmateade':'Jahi paigutus'}>
@@ -151,13 +151,13 @@ export function GuestHunt({token,initial,initialPositionId,onExit}:Props){
   {mine&&!selected&&!sheet&&<aside className="guest-mine" aria-label="Minu jahikoht">
    <strong>Sinu {placeWord(mine.role)}: K{mine.number}</strong>
    {isDriver(mine.role)&&<span>{roleLabel(mine.role)} · siit lähed ajusse</span>}
-   {toMine&&<span>Kohani {meters(toMine.meters)} · {Math.round(toMine.bearing)}° põhjast</span>}
+   {toMine&&<span>Kohani {meters(toMine.meters)} · {compassWord(toMine.bearing)}</span>}
    {line&&<span>{line.sided?'Vasakul':'Ühel pool'}: {beside(line.left)}</span>}
    {line&&<span>{line.sided?'Paremal':'Teisel pool'}: {beside(line.right)}</span>}
    <span className="guest-mine-links">{driving&&<a href={driving} target="_blank" rel="noopener noreferrer">Autoga lähemale ↗</a>}{walking&&<a href={walking} target="_blank" rel="noopener noreferrer">Jalgsi ↗</a>}</span>
   </aside>}
   {gpsError&&<div className="guest-gps-error" role="alert">{gpsError}</div>}
-  <footer className="attribution"><a href="https://geoportaal.maaruum.ee/avaandmete-litsents" target="_blank" rel="noreferrer">{base==='kaart'?'Aluskaart':'Ortofoto'}: Maa- ja Ruumiamet</a><br/><a href="https://metadata.geoportaal.ee/geonetwork/srv/api/records/608db693-7eb4-40f0-a1c5-c54e3f109790" target="_blank" rel="noreferrer">Piir: EELIS, Keskkonnaagentuur · CC BY 4.0</a><br/><span>Kaardipunkt ei asenda jahijuhi ohutuskorraldusi.</span></footer>
+  <footer className="attribution"><a href="https://geoportaal.maaruum.ee/avaandmete-litsents" target="_blank" rel="noreferrer">{base==='kaart'?'Aluskaart':'Ortofoto'}: Maa- ja Ruumiamet</a><br/><a href="https://metadata.geoportaal.ee/geonetwork/srv/api/records/608db693-7eb4-40f0-a1c5-c54e3f109790" target="_blank" rel="noreferrer">Piir: EELIS, Keskkonnaagentuur · CC BY 4.0</a><br/><span>Kaart ei asenda jahijuhi ohutusjuhiseid.</span></footer>
   {toast&&<div role="status" className="toast"><Info size={18}/><span>{toast}</span><button onClick={()=>setToast('')} aria-label="Sulge teade"><X size={17}/></button></div>}
  </main>;
 }

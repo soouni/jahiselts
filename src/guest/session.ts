@@ -29,9 +29,15 @@ export function saveGuestSession(storage:Store,session:GuestSession){try{storage
 export function clearGuestSession(storage:Store){try{storage.removeItem(KEY);}catch{/* Salvestusruum pole saadaval. */}}
 export function roleLabel(role:string){return role==='dog_driver'?'Ajaja koeraga':role==='driver'?'Ajaja':role==='leader'?'Jahijuht':'Kütt';}
 export function isDriver(role:string){return role==='driver'||role==='dog_driver';}
+/** Suund ilmakaarena: välitingimustes on see arusaadavam kui kraadid. */
+export function compassWord(bearing:number){
+ const names=['põhja','kirde','ida','kagu','lõuna','edela','lääne','loode'];
+ return names[Math.round((((bearing%360)+360)%360)/45)%8]+' suunas';
+}
 export function guestProblem(code:string|undefined){
  if(code==='invalid_code')return 'Kood on vale või aegunud. Küsi jahijuhilt kehtiv kood.';
- if(code==='over_request_rate_limit')return 'Liiga palju valesid katseid. Oota 15 minutit ja proovi uuesti.';
+ if(code==='over_request_rate_limit')return 'Sellest seadmest tehti liiga palju katseid. Oota 15 minutit ja proovi uuesti.';
+ if(code==='temporarily_locked')return 'Sisenemine on hetkeks suletud, sest kogu süsteemis tehti liiga palju valesid katseid. Proovi tunni aja pärast uuesti või küsi jahijuhilt.';
  if(code==='guest_expired')return 'Jahikood on aegunud või jaht on lõpetatud.';
  return 'Ühendus ebaõnnestus. Kontrolli võrku ja proovi uuesti.';
 }

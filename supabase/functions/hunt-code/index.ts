@@ -3,6 +3,16 @@
 // jahivaate. Koode ega pääsutähiseid ei logita.
 const origins=new Set(['https://soouni.github.io','https://parnjoe-jahikaart.ojamaa.chatgpt.site']);
 const encoder=new TextEncoder();
+/** Kliendi aadress piirangu jaoks. `x-forwarded-for` esimest kirjet saab klient ise ette kirjutada, seega eelistatakse värava enda päist ja viimast kirjet; IPv6 ümardatakse /64 võrguni, sest üks seade saab seal vahetada aadressi vabalt. */
+const clientAddress=(headers:Headers)=>{
+ const raw=(headers.get('cf-connecting-ip')||headers.get('x-real-ip')||headers.get('x-forwarded-for')?.split(',').pop()||'').trim().toLowerCase();
+ if(!raw||raw.length>64)return 'unknown';
+ if(!raw.includes(':'))return raw;
+ const [head,tail=''] = raw.split('::');
+ const first=head?head.split(':'):[],last=tail?tail.split(':'):[];
+ const groups=raw.includes('::')?[...first,...Array(Math.max(0,8-first.length-last.length)).fill('0'),...last]:first;
+ return groups.slice(0,4).map(g=>g?(parseInt(g,16)||0).toString(16):'0').join(':')+'::/64';
+};
 const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin')||'';
@@ -32,11 +42,13 @@ Deno.serve(async(req:Request)=>{
   if(body.action==='redeem'){
    const code=typeof body.code==='string'?body.code.trim():'';
    if(!/^[0-9]{4}$/.test(code))return reply(400,{code:'invalid_code'});
-   const ip=req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()||'unknown';
+   const ip=clientAddress(req.headers);
    const result=await rpc('redeem_hunt_access_code',{submitted_code:code,ip_hash:await hash('ip:'+ip)});
    if(!result.ok)return reply(503,{code:'unavailable'});
    const outcome=await result.json();
    if(outcome?.status==='throttled')return reply(429,{code:'over_request_rate_limit'});
+   // Kogu süsteemi piir: õigete koodidega külalised ootavad, kuni piir lõpeb; jahijuht saab neid suuliselt aidata.
+   if(outcome?.status==='locked')return reply(429,{code:'temporarily_locked'});
    if(outcome?.status!=='ok'||typeof outcome.code_id!=='string'||!uuidPattern.test(outcome.code_id))return reply(400,{code:'invalid_code'});
    const expires=Math.floor(Date.parse(outcome.expires_at)/1000);
    if(!Number.isFinite(expires))return reply(503,{code:'unavailable'});
