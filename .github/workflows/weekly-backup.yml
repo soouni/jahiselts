@@ -81,9 +81,16 @@ jobs:
 
           tar -czf "$dir.tar.gz" "$dir"
 
+          # Uued `sb_secret_` võtmed ei ole JWT-d ega kuulu Authorization päisesse;
+          # vanad service_role võtmed (JWT) vajavad seda.
+          auth=(-H "apikey: $SUPABASE_SERVICE_ROLE_KEY")
+          case "$SUPABASE_SERVICE_ROLE_KEY" in
+            sb_secret_*) ;;
+            *) auth+=(-H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY") ;;
+          esac
+
           curl --fail-with-body \
             -X POST "$SUPABASE_URL/storage/v1/object/backups/$dir.tar.gz" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            "${auth[@]}" \
             -H "Content-Type: application/gzip" \
             --data-binary "@$dir.tar.gz"
