@@ -1,6 +1,7 @@
 import {entryMapFeatures,entryMapStyle} from './entryMap';
 import {mapInteractions} from './mapInteractions';
-import {huntAreaStyles} from './hunt/areaStyles';
+import type {FeatureLike} from 'ol/Feature.js';
+import {huntAreaStyles,markerObstacles,distanceLabelObstacle,distanceLabelAnchor} from './hunt/areaStyles';
 import {WindOverlay,type WindOverlayState} from './hunt/WindOverlay';
 import {huntMarkerUrl} from './hunt/markers';
 import {MapCompass} from './MapCompass';
@@ -34,7 +35,8 @@ const draftStyle=()=>{const color=callbacks.current.drawingColor,width=callbacks
 ];};
 const draftLayer=new VectorLayer({source:draft.current,style:draftStyle});
 const gpsLayer = new VectorLayer({source:gps.current,style:new Style({fill:new Fill({color:'rgba(38,126,231,.13)'}),stroke:new Stroke({color:'#2680eb',width:1}),image:new CircleStyle({radius:7,fill:new Fill({color:'#1976df'}),stroke:new Stroke({color:'#fff',width:3})})})});
-const huntLayer=new VectorLayer({source:huntSource.current,declutter:'hunt',style:f=>{
+// zIndex 115: kohamärgid on vahemaade joonte (110) peal, et joon ei kataks koha numbrit.
+const huntLayer=new VectorLayer({source:huntSource.current,declutter:'hunt',zIndex:115,style:f=>{
  const live=f.get('live'),stale=f.get('stale'),positionNumber=f.get('positionNumber'),isMine=f.get('isMine');
  if(typeof positionNumber==='number'){
   // Ajaja sisenemiskoht on pruun, et see ei seguneks kütiliini roheliste kohtadega.
@@ -49,9 +51,16 @@ const huntLayer=new VectorLayer({source:huntSource.current,declutter:'hunt',styl
  }
  return new Style({image:live?new CircleStyle({radius:9,declutterMode:'obstacle',fill:new Fill({color:stale?'#718078':'#167a59'}),stroke:new Stroke({color:'#fff',width:3})}):new Icon({src:huntMarkerUrl(f.get('role')),scale:.9,anchor:[.5,.5],declutterMode:'obstacle'}),text:new Text({text:f.get('name'),offsetY:live?-18:-36,font:'700 14px system-ui',fill:new Fill({color:stale?'#526b5f':'#173e32'}),stroke:new Stroke({color:'#fff',width:5})})});
 }});
-const huntDistanceLayer=new VectorLayer({source:huntDistanceSource.current,zIndex:110,style:feature=>{const geom=feature.getGeometry() as LineString;const coords=geom.getCoordinates();return [new Style({stroke:new Stroke({color:'#fff',width:6,lineDash:[9,7]})}),new Style({stroke:new Stroke({color:'#176c52',width:3,lineDash:[9,7]})}),new Style({geometry:new Point([(coords[0][0]+coords[1][0])/2,(coords[0][1]+coords[1][1])/2]),text:new Text({text:feature.get('distanceLabel'),font:'bold 14px system-ui',fill:new Fill({color:'#173e32'}),backgroundFill:new Fill({color:'#fff'}),backgroundStroke:new Stroke({color:'#176c52',width:1}),padding:[5,8,5,8]})})];}});
+// Kohamärgid ja nende nimesildid takistustena teiste siltide paigutamisel.
+const markerBoxes=()=>huntSource.current.getFeatures().flatMap(f=>markerObstacles((f.getGeometry() as Point).getCoordinates(),(f.get('isMine')?'MINA · ':'')+String(f.get('name')||'')));
+// Vahemaa silt asub joone kõrval aju ala pool; sama arvutust kasutab külgede pikkuste siltide paigutus.
+const distanceAnchor=(feature:FeatureLike,resolution:number)=>{const c=(feature.getGeometry() as LineString).getCoordinates();const area=huntAreaSource.current.getFeatures()[0]?.getGeometry();return distanceLabelAnchor(c[0],c[1],resolution,map.current?.getView().getRotation()||0,area instanceof Polygon?area.getInteriorPoint().getCoordinates():null,String(feature.get('distanceLabel')||''),markerBoxes());};
+const huntDistanceLayer=new VectorLayer({source:huntDistanceSource.current,zIndex:110,style:(feature,resolution)=>{return [new Style({stroke:new Stroke({color:'#fff',width:6,lineDash:[9,7]})}),new Style({stroke:new Stroke({color:'#176c52',width:3,lineDash:[9,7]})}),new Style({geometry:new Point(distanceAnchor(feature,resolution)),text:new Text({text:feature.get('distanceLabel'),font:'bold 14px system-ui',fill:new Fill({color:'#173e32'}),backgroundFill:new Fill({color:'#fff'}),backgroundStroke:new Stroke({color:'#176c52',width:1}),padding:[5,8,5,8]})})];}});
 const searchLayer=new VectorLayer({source:search.current,style:[new Style({stroke:new Stroke({color:'#fff',width:8})}),new Style({stroke:new Stroke({color:'#d72f79',width:4}),fill:new Fill({color:'rgba(215,47,121,.10)'}),image:new CircleStyle({radius:10,fill:new Fill({color:'#d72f79'}),stroke:new Stroke({color:'#fff',width:3})})})]});
-const m=new Map({interactions:mapInteractions(),target:el.current!,view:new View({center:fromLonLat([24.887,58.638]),zoom:11}),controls:defaultControls({zoom:false,rotate:false,attribution:false}),layers:[new VectorLayer({source:parkingSource.current,zIndex:120,style:new Style({image:new CircleStyle({radius:15,fill:new Fill({color:"#173e32"}),stroke:new Stroke({color:"white",width:3})}),text:new Text({text:"P · Minu auto",offsetY:-27,font:"bold 14px system-ui",fill:new Fill({color:"#173e32"}),stroke:new Stroke({color:"white",width:4})})})}),boundaryLayer,entriesLayer,new VectorLayer({source:huntAreaSource.current,declutter:'hunt',style:huntAreaStyles}),draftLayer,gpsLayer,searchLayer,huntLayer,huntDistanceLayer]});map.current=m;setMapInstance(m);
+const m=new Map({interactions:mapInteractions(),target:el.current!,view:new View({center:fromLonLat([24.887,58.638]),zoom:11}),controls:defaultControls({zoom:false,rotate:false,attribution:false}),layers:[new VectorLayer({source:parkingSource.current,zIndex:120,style:new Style({image:new CircleStyle({radius:15,fill:new Fill({color:"#173e32"}),stroke:new Stroke({color:"white",width:3})}),text:new Text({text:"P · Minu auto",offsetY:-27,font:"bold 14px system-ui",fill:new Fill({color:"#173e32"}),stroke:new Stroke({color:"white",width:4})})})}),boundaryLayer,entriesLayer,new VectorLayer({source:huntAreaSource.current,declutter:'hunt',style:(feature,resolution)=>huntAreaStyles(feature,resolution,{rotation:map.current?.getView().getRotation()||0,obstacles:[
+ // Külje pikkuse silt ei tohi jääda kohamärgi, nimesildi ega küttide vahemaa sildi alla.
+ ...markerBoxes(),
+ ...huntDistanceSource.current.getFeatures().map(f=>distanceLabelObstacle(distanceAnchor(f,resolution)))]})}),draftLayer,gpsLayer,searchLayer,huntLayer,huntDistanceLayer]});map.current=m;setMapInstance(m);
 // Mouse drag is immediate; on touch a 450 ms long press activates dragging.
 const viewport=m.getViewport();
 let drag:{id:string;feature:Feature;start:[number,number];active:boolean;pointerId:number;touch:boolean;timer:number|null;moved:boolean}|null=null;
@@ -121,9 +130,11 @@ useEffect(()=>{
  m.getView().fit(target,{padding,maxZoom:16,duration:450});
 },[p.searchResult]);
 useEffect(()=>{huntAreaSource.current.clear();if(p.huntMode&&p.huntDriveArea?.type==='Polygon'){try{huntAreaSource.current.addFeature(new Feature({geometry:new Polygon(p.huntDriveArea.coordinates.map(ring=>ring.map(coord=>fromLonLat(coord))))}));}catch(e){console.error('Aju ala:',e);}}},[p.huntMode,p.huntDriveArea]);
-useEffect(()=>{huntSource.current.clear();huntSource.current.addFeatures(p.huntMarkers.map(person=>new Feature({geometry:new Point(fromLonLat(person.coordinates)),name:person.name,role:person.role,positionNumber:person.positionNumber,isMine:person.isMine,huntPositionId:person.live?undefined:person.id,live:person.live,stale:person.stale})));},[p.huntMarkers]);
+useEffect(()=>{huntSource.current.clear();huntSource.current.addFeatures(p.huntMarkers.map(person=>new Feature({geometry:new Point(fromLonLat(person.coordinates)),name:person.name,role:person.role,positionNumber:person.positionNumber,isMine:person.isMine,huntPositionId:person.live?undefined:person.id,live:person.live,stale:person.stale})));huntAreaSource.current.changed();},[p.huntMarkers]);
 useEffect(()=>{
  huntDistanceSource.current.clear();
+ // Külgede pikkuste sildid paigutatakse ümber, kui vahemaade jooned ilmuvad või kaovad.
+ huntAreaSource.current.changed();
  if(!p.huntMode||!p.huntDistanceOn)return;
  const hunters=p.huntMarkers.filter(marker=>marker.role==='hunter');
  if(hunters.length<2)return;
