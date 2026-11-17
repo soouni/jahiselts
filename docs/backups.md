@@ -29,3 +29,7 @@ Taastamine uude andmebaasi:
 
 ```bash
 pg_restore --clean --if-exists --no-owner --no-privileges --dbname "$SUPABASE_DB_URL" database.dump
+
+## Kui töö ebaõnnestub
+
+Töö kontrollib nüüd iga faili sisu ega lae tühja või liiga väikest varukoopiat üles. Levinuim viga on vana andmebaasi parool saladuses `SUPABASE_DB_URL` (`password authentication failed`); sammud ja tabel on [töökorra juhendis](runbook.md#4-varukoopia).

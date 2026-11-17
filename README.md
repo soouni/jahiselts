@@ -2,6 +2,27 @@
 
 Mobiilis kasutatav jahikaart: ametlik Pärnjõe jahipiirkond JAH1000125, aluskaardid, kohanimed, vaatlused, ulukimärgid, otsing ja mõõtmine.
 
+## Jahimoodul ja jahikood
+
+Jahijuht ja admin logivad sisse oma kontoga ning planeerivad jahi: ajud, jahiala, kohad ja ajajate sisenemiskohad. Jahil osalejad **kontot ei vaja**: nad sisestavad avalehel jahijuhilt saadud neljakohalise koodi ja näevad ainult vaatamiseks jahivaadet (kuhu nad on paigutatud, kes on kõrval, aju ala, ilm, tuul, võrguta kaart). Kood kehtib ühe jahi kohta kuni 48 tundi ja lõpeb, kui jaht lõpetatakse või kood tühistatakse. Kasutamine ja tõrked: [töökorra juhend](docs/runbook.md); otsused ja turvamudel: [jahikood](docs/jahikood-2026-11-16.md).
+
+## Ülesehitus
+
+| Koht | Sisu |
+|---|---|
+| `src/main.tsx`, `src/Root.tsx` | Käivitus; avalehe valik: jahikood, külalise vaade või konto |
+| `src/App.tsx` | Kontoga rakendus (kaart, kirjed, jahirežiim, admin) |
+| `src/guest/` | Jahikoodi sisestus, külalise vaade, naabrite arvutus, külalise seanss |
+| `src/hunt/` | Jahi planeerimine, markerid, aju ala sildid, navigatsioon, reaalaeg |
+| `src/Map.tsx` | OpenLayersi kaart (kihid, markerid, mõõtmine) |
+| `supabase/migrations/` | Andmebaasi skeem ainult edasisuunas; failinimi on versioon |
+| `supabase/functions/` | Edge Function'id: `username-login`, `hunt-code` (avalik jahikood) |
+| `tests/` | `node --test` ühiktestid ja andmebaasi testid (PGlite); `tests/components/` vitest + jsdom |
+
+## Testid
+
+`npm test` jooksutab kõik: ühiktestid, andmebaasi migratsioonide kordus ja komponenditestid (3 võrgutesti jäetakse vahele). Ainult komponendid: `npm run test:components`. Avaldamine ja CI jooksutavad samu teste; ebaõnnestunud test blokeerib avaldamise.
+
 ## Veebis avaldamine
 
 Eeldatav veebiaadress pärast GitHub Pagesi aktiveerimist: https://soouni.github.io/jahiselts/
