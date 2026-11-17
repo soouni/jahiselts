@@ -30,6 +30,7 @@ export function MeasureTool({map,onClose}:{map:Map;onClose:()=>void}){
   let closingArea:Measurement|null=null;
   let closingPoints:number[][]|null=null;
   const viewport=map.getViewport();
+  if(!viewport)return;
   const closeOnFirstPoint=(event:PointerEvent)=>{
    if(mode!=='LineString'||!sketch.current||!(sketch.current instanceof LineString)||event.button!==0)return;
    const coords=sketch.current.getCoordinates();
