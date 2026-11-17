@@ -4,7 +4,7 @@ Mobiilis kasutatav jahikaart: ametlik Pärnjõe jahipiirkond JAH1000125, aluskaa
 
 ## Jahimoodul ja jahikood
 
-Jahijuht ja admin logivad sisse oma kontoga ning planeerivad jahi: ajud, jahiala, kohad ja ajajate sisenemiskohad. Jahil osalejad **kontot ei vaja**: nad sisestavad avalehel jahijuhilt saadud neljakohalise koodi ja näevad ainult vaatamiseks jahivaadet (kuhu nad on paigutatud, kes on kõrval, aju ala, ilm, tuul, võrguta kaart). Kood kehtib ühe jahi kohta kuni 48 tundi ja lõpeb, kui jaht lõpetatakse või kood tühistatakse. Kasutamine ja tõrked: [töökorra juhend](docs/runbook.md); otsused ja turvamudel: [jahikood](docs/jahikood-2026-11-16.md).
+Jahijuht ja admin logivad sisse oma kontoga ning planeerivad jahi: ajud, jahiala, kohad ja ajajate sisenemiskohad. Jahil osalejad **kontot ei vaja**: nad sisestavad avalehel jahijuhilt saadud neljakohalise koodi ja näevad ainult vaatamiseks jahivaadet (kuhu nad on paigutatud, kes on kõrval, aju ala, ilm, tuul, võrguta kaart). Kood kehtib ühe jahi kohta kuni 48 tundi ja lõpeb, kui jaht lõpetatakse või kood tühistatakse. Kasutamine ja tõrked: [töökorra juhend](docs/runbook.md); otsused ja turvamudel: [jahikood](docs/jahikood-2026-11-16.md), [ADR-0001](docs/adr/0001-jahikood-neljakohaline.md).
 
 ## Ülesehitus
 
