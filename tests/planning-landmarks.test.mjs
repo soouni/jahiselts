@@ -27,7 +27,7 @@ test('planning landmarks preserve point symbols, line/area styling and projected
  }finally{if(previous===undefined)delete globalThis.Image;else globalThis.Image=previous;}
 });
 test('planning receives the same permission-filtered entries as the main map',()=>{
- const app=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+ const app=['App.tsx','Root.tsx','main.tsx'].map(file=>readFileSync(new URL('../src/'+file,import.meta.url),'utf8')).join('\n');
  const planner=readFileSync(new URL('../src/hunt/HuntPlanner.tsx',import.meta.url),'utf8');
  const map=readFileSync(new URL('../src/hunt/HuntPositionMap.tsx',import.meta.url),'utf8');
  assert.match(app,/<HuntPlanner entries=\{visible\}/);

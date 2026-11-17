@@ -2,6 +2,13 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-17 · `main.tsx` jagamine osadeks
+
+- **Ülesehitus** — kandidaatharu `refactor/main-tsx-jagamine-20261117`: kontoga rakendus (`App`) on nüüd failis `src/App.tsx`, avalehe valik (jahikood, külalise vaade või konto) failis `src/Root.tsx` ja `src/main.tsx` sisaldab ainult käivitust. Abikomponendid `Modal`, `Field` ja `ToastContext` on `src/ui/Modal.tsx`, kategooriaikoonid `src/ui/kindIcons.ts`.
+- **Puhtad funktsioonid** — `composeHuntMarkers` (`src/hunt/composeMarkers.ts`), osaleja sobitamine (`src/hunt/roster.ts`), võrguta kaardi lause (`src/offlineSummary.ts`) ja lähima objekti otsing (`src/nearest.ts`) on eraldi ja testitud; Eesti ruutkoordinaatide määratlus on ühes failis (`src/projection.ts`).
+- **Käitumine ei muutunud.** Funktsioonide sisu on liigutatud muutmata (ainus erinevus: `composeHuntMarkers` võtab valikulise `now` parameetri, vaikimisi praegune aeg). `App` on endiselt umbes 80 KB ühes komponendis; selle edasine jagamine (olekud, jahirežiimi osad, kuva) vajab eraldi samme, sest olek on tihedalt seotud.
+- **Testid** — 4 uut komponenditesti `Root` jaoks ja 5 ühiktesti väljatõstetud funktsioonidele; kolm olemasolevat tekstikontrolli loevad nüüd kõiki kolme faili.
+
 ## 2026-11-17 · Komponenditestid külalisvaatele
 
 - **Renderdustestid** — kandidaatharu `test/komponenditestid-20261117`: `vitest` + `jsdom` + Testing Library katavad `CodeGate` ja `GuestHunt` komponendid (13 testi): koodi sisestamine ja automaatne saatmine, vigade teated ja nende eristamine, ainult vaatamine (ei lohistata, ei paigutata), vasak ja parem naaber, liini ots, ajaja sisenemiskoht, kohalik salvestus, sulgemine tühistatud koodi korral, võrguta salvestatud vaade. Kaart on testis asendatud lihtsa komponendiga, sest OpenLayers ei joonistu jsdom-is. Testi tõesust kontrolliti ühe teksti tahtliku murdmisega: kaks testi läksid katki.

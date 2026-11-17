@@ -20,7 +20,7 @@ import {createBasemapSource} from './basemaps';
 import {mapColor,colorOutline,mapWidth} from './mapColors';
 import {Fill,Stroke,Style,Circle as CircleStyle,RegularShape,Text,Icon} from 'ol/style';import {Draw,Modify,DragPan} from 'ol/interaction';import {defaults as defaultControls} from 'ol/control';import {fromLonLat,toLonLat,transform,get as getProjection} from 'ol/proj';import {register} from 'ol/proj/proj4';import proj4 from 'proj4';import Point from 'ol/geom/Point';import Polygon from 'ol/geom/Polygon';import Circle from 'ol/geom/Circle';import {getPointResolution} from 'ol/proj';
 import type {Entry,Geometry,Kind} from './types';import 'ol/ol.css';
-proj4.defs('EPSG:3301','+proj=lcc +lat_0=57.51755393055556 +lon_0=24 +lat_1=59.33333333333334 +lat_2=58 +x_0=500000 +y_0=6375000 +ellps=GRS80 +units=m +no_defs');register(proj4);
+import './projection';
 const format=new GeoJSON();
 export type HuntMapMarker={id:string;name:string;role:string;coordinates:[number,number];positionNumber?:number;isMine?:boolean;live?:boolean;stale?:boolean};
 export type MapHandle={showParking:(coords:[number,number]|null)=>void;fit:()=>void;focus:(e:Entry)=>void;undo:()=>void;finish:()=>void;locate:(coords:number[],accuracy:number)=>void;clearGps:()=>void;showGps:(coords:number[],accuracy:number)=>void;boundaryCheck:(coords:number[],accuracy?:number)=>string;geometry:()=>Geometry|null;fitHunt:(padding?:[number,number,number,number])=>void;offlineUrls:(area?:{type:'Polygon';coordinates:[number,number][][]}|null)=>string[]};
