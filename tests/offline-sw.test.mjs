@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
 const worker=readFileSync(new URL('../public/offline-sw.js',import.meta.url),'utf8');
-const app=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+const app=['App.tsx','Root.tsx','main.tsx'].map(file=>readFileSync(new URL('../src/'+file,import.meta.url),'utf8')).join('\n');
 
 test('first successful visit sends the loaded app shell to the service worker',()=>{
  assert.match(app,/performance\.getEntriesByType\('resource'\)/);

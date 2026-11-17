@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 
-const app=readFileSync(new URL('../src/main.tsx',import.meta.url),'utf8');
+const app=['App.tsx','Root.tsx','main.tsx'].map(file=>readFileSync(new URL('../src/'+file,import.meta.url),'utf8')).join('\n');
 const css=readFileSync(new URL('../src/style.css',import.meta.url),'utf8');
 const docks=readFileSync(new URL('../src/ui/ActionDocks.tsx',import.meta.url),'utf8');
 const ui=app+docks;
