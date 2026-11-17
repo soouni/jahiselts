@@ -2,6 +2,13 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-17 · Jahikoodi piirangud, ajaja marker ja eestikeelsed tekstid
+
+- **Piirangud** — kandidaatharu `fix/jahikood-piirangud-markerid-tekstid-20261117`: kliendi aadress võetakse nüüd värava päisest või `x-forwarded-for` viimasest kirjest (esimese kirje kirjutab klient ise ja sellega sai aadressi piiri mööda minna); IPv6 loetakse /64 kaupa. Üldpiir tõusis 40-lt 60-le valele katsele tunnis ja selle ületamine saab oma teate „sisenemine on hetkeks suletud”, sest varem süüdistati õiget koodi sisestajat aadressi piiris. Piir lõpeb ise tunni pärast. Jääkrisk: kolm erinevat võrguaadressi suudavad süsteemi tunniks lukku panna; tugevama kaitse jaoks oleks 6-kohaline kood parem, aga seda ei soovitud. Uus migratsioon `20261117100000_hunt_code_lock_status.sql` ja Edge Function `hunt-code` tuleb tootmises uuesti juurutada.
+- **Markerid** — ajaja sisenemiskoht on ruut, kütt ring (roheline ja pruun olid peaaegu sama heledad, kontrast 1,08:1); oma koht on kollane tumeda äärisega.
+- **Tekstid** — „Vasakul: pole kedagi, oled liini otsas”; suund ilmakaarena („kirde suunas”) kraadide asemel; nupp „Salvesta kaart”; „kaardilõik” sõna „kaardipaan” asemel; „Kaart ei asenda jahijuhi ohutusjuhiseid”; piirangu teated eristavad seadme ja kogu süsteemi piiri.
+- **Testid** — uued testid aadressi petmise, IPv6, üldpiiri ja lukustuse lõppemise, markerite kuju ja kontrasti ning tekstide kohta.
+
 ## 2026-11-16 · Aju külgede pikkuste ja vahemaade siltide paigutus
 
 - **Sildid ei jää enam üksteise ega kohamärkide alla** — kandidaatharu `fix/aju-kuljepikkuste-sildid-20261116`: aju külje pikkuse silt nihkub piki külge (vajadusel sügavamale ala sisse) esimesse kohta, kus ees ei ole kohamärki, nimesilti ega küttide vahemaa silti. Küttide vahemaa silt asub joone kõrval aju ala pool, mitte joone ja märkide peal, ning väldib samuti märke ja nimesilte. Kohamärgid joonistatakse vahemaade joonte peale, et joon ei kataks koha numbrit. Kehtib nii külalise kui liikme jahivaates (`src/Map.tsx`); jahijuhi planeerimiskaarti ei muudetud. Loogika ja testid: `src/hunt/areaStyles.ts`, `tests/hunt-area-styles.test.mjs`. Teadaolev piir: kui kaks kohta on ekraanil alla umbes 120 piksli vahega, ei pruugi vahemaa sildile täiesti vaba kohta leiduda; kaardi peal olevaid nuppe paigutus ei arvesta.
