@@ -2,6 +2,11 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-17 · Komponenditestid külalisvaatele
+
+- **Renderdustestid** — kandidaatharu `test/komponenditestid-20261117`: `vitest` + `jsdom` + Testing Library katavad `CodeGate` ja `GuestHunt` komponendid (13 testi): koodi sisestamine ja automaatne saatmine, vigade teated ja nende eristamine, ainult vaatamine (ei lohistata, ei paigutata), vasak ja parem naaber, liini ots, ajaja sisenemiskoht, kohalik salvestus, sulgemine tühistatud koodi korral, võrguta salvestatud vaade. Kaart on testis asendatud lihtsa komponendiga, sest OpenLayers ei joonistu jsdom-is. Testi tõesust kontrolliti ühe teksti tahtliku murdmisega: kaks testi läksid katki.
+- **`npm test`** jooksutab nüüd mõlemad komplektid (`node --test` ja `vitest run`); eraldi `npm run test:components`. Lähtekoodi tekstikontroll külalisvaate tekstide kohta asendati komponenditestidega; markeri kuju kontroll jääb allika põhjal, sest see on OpenLayersi lõuendil.
+
 ## 2026-11-17 · Hooldus: sõltuvused, Actions ja varukoopia kontroll
 
 - **Sõltuvused** — kandidaatharu `chore/hooldus-soltuvused-actions-varukoopia-20261117`: `npm update` lubatud vahemikus (`ol` 10.11, `supabase-js` 2.119, `react` 19.3.1, `vite` 6.4.6, `proj4` 2.23). Suuri versioonihüppeid (`vite` 8, `lucide-react` 1.x, TypeScript 7) ei tehtud; `pglite` on tahtlikult kinnitatud versioonil 0.5.10.
