@@ -17,7 +17,8 @@ Külaline siseneb **4-kohalise jahikoodiga**, mille kaitseks on serveripoolsed p
 - kood kehtib 48 tundi ja jahi kohta on korraga üks kehtiv kood;
 - üks seade (IP, IPv6 puhul /64) saab 5 valet katset 15 minuti jooksul;
 - kogu süsteemis lubatakse 60 valet katset tunnis, edasi sisenemine sulgub tunniks;
-- kood tühistatakse jahi lõppedes (Eesti päeva lõpus) või jahijuhi käsul;
+- kood tühistatakse jahi lõppedes või jahijuhi käsul; öine töö lõpetab Eesti päeva lõpus aktiivse või peatatud jahi, millel on algus määratud (planeeritud või alguseta jaht ei lõpe, koodi kehtivus on siis 48 h);
+- katsete loendurid suurenevad aatomlikult enne koodi otsingut (migratsioon `20261117140000`), seega paralleelsed päringud ei pääse piirist mööda;
 - külalise vaadet kontrollitakse serveris iga 20 sekundi järel.
 
 ## Vaadeldud variandid
@@ -33,7 +34,7 @@ Variant B lükati kasutaja otsusega tagasi: 6 numbrit on suuliselt jagades ja me
 
 ## Kompromiss
 
-4 numbrit annab 10 000 võimalust. Piirangutega on arvamine aeglane, kuid mitte võimatu: kui ründaja hoiab globaalse piiri tunniti täis, on 48 tunni jooksul umbes 2 900 katset ehk ligikaudu 25% võimalus ühe kehtiva koodi leidmiseks (hinnang, eeldab pidevat rünnakut). Selline rünnak tekitaks samal ajal sisenemise lukud, mida jahijuht märkaks.
+4 numbrit annab 10 000 võimalust. Piirangutega on arvamine aeglane, kuid mitte võimatu: kui ründaja hoiab globaalse piiri tunniti täis, on 48 tunni jooksul umbes 2 900 katset ehk ligikaudu 25% võimalus ühe kehtiva koodi leidmiseks (hinnang, eeldab pidevat rünnakut ja piirangute täpset jõustumist, mida kontrollib `tests/integration/hunt-code-race.sh`). Selline rünnak tekitaks samal ajal sisenemise lukud, mida jahijuht märkaks.
 
 Teine kompromiss: kolm erinevat IP-d suudavad kogu sisenemise tunniks sulgeda. Seda peeti vastuvõetavaks, sest juba sisse saanud külalised jäävad sisse ja jahijuht saab koodi uuesti jagada.
 

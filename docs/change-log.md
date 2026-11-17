@@ -2,6 +2,13 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-17 · Jahikoodi piirangute võidujooks (sõltumatu audit)
+
+- **Viga ja parandus.** Sõltumatu audit leidis, et `redeem_hunt_access_code` kontrollis piiri enne ja suurendas loendurit alles pärast koodi otsingut, nii et paralleelsed päringud pääsesid piirist mööda. Päris Postgresis (pgbench, 64 ühendust) lasi vana funktsioon 192 valest katsest läbi 61–68 (õige 5). Migratsioon `20261117140000_hunt_code_atomic_limits.sql` suurendab loendurit enne otsingut ühe `insert … on conflict … returning` käsuga; uus funktsioon lasi läbi täpselt 5, üldpiir täpselt 60, õige kood ei kuluta katseid.
+- **Aadress.** IPv4-ga kaardistatud IPv6 (`::ffff:a.b.c.d`, ka kuueteistkümnendkujul) loetakse IPv4-ks, port ja tsooni-id jäetakse ära; varem koondusid need ühte ämbrisse.
+- **Dokumendid.** Parandatud 960 katse/ööpäev (nüüd 1440, ADR-is 48 h arvutus), migratsioonide täielik järjekord ja jahtide automaatse lõpetamise tingimus.
+- **Test.** `tests/integration/hunt-code-race.sh` kordab võidujooksu päris Postgresis.
+
 ## 2026-11-17 · `main.tsx` jagamine osadeks
 
 - **Ülesehitus** — kandidaatharu `refactor/main-tsx-jagamine-20261117`: kontoga rakendus (`App`) on nüüd failis `src/App.tsx`, avalehe valik (jahikood, külalise vaade või konto) failis `src/Root.tsx` ja `src/main.tsx` sisaldab ainult käivitust. Abikomponendid `Modal`, `Field` ja `ToastContext` on `src/ui/Modal.tsx`, kategooriaikoonid `src/ui/kindIcons.ts`.

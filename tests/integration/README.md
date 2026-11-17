@@ -41,3 +41,7 @@ Jahi API test loob ka ühe ajutise kinnitatud Auth konto ilma seltsi liikmesuset
    ```
 
 Ära kopeeri ega kuva `.test-users.env` faili sisu. Kui fail on juba olemas, skript peatub, et mitte paroole üle kirjutada. Testprojekti saab pärast kontrolli Supabase Dashboardist eemaldada.
+
+## Jahikoodi piirangute võidujooks
+
+`hunt-code-race.sh` saadab pgbench'iga 64 samaaegset ühendust päris Postgresi vastu ja kontrollib, et aadressi piir (5), üldpiir (60) ja õige koodi tagastus hoiavad. Käivita ainult ajutise kohaliku andmebaasi vastu, kuhu on rakendatud kõik migratsioonid; skript keeldub tootmisaadressist. PGlite'is seda kontrollida ei saa, sest see on üheühenduseline.

@@ -25,7 +25,7 @@ Pärast muudatust kontrolli: Supabase Advisors (security) ei näita uusi hoiatus
 
 **Jahijuht loob koodi** jahi planeerimisvaates, paneelis „Jahikood osalejatele”: üks kehtiv kood jahi kohta. Uue koodi loomine tühistab eelmise kohe ja avatud vaated sulguvad; „Tühista kood” sulgeb vaated ilma uue koodita. Kehtiv kood on samas paneelis alati nähtav.
 
-**Kood ei sobi.** Põhjused: kood on tühistatud või aegunud (48 h), jaht on lõpetatud (jahid lõpevad automaatselt Eesti päeva lõpuks), või kood trükiti valesti. Lahendus: jahijuht vaatab koodi paneelist või loob uue.
+**Kood ei sobi.** Põhjused: kood on tühistatud või aegunud (48 h), jaht on lõpetatud (aktiivne või peatatud jaht, mille algus on määratud, lõpeb automaatselt Eesti päeva lõpus; algamata või alguseta jaht ei lõpe ja selle kood kehtib kuni 48 h), või kood trükiti valesti. Lahendus: jahijuht vaatab koodi paneelist või loob uue.
 
 **„Sisenemine on hetkeks suletud”** (`temporarily_locked`). Üle 60 vale koodikatse tunnis kokku sulgeb sisenemise tunniks; ühelt seadmelt 5 valet katset 15 minutis annab teate „sellest seadmest liiga palju katseid”. Mõlemad lõppevad ise. Kui jahipäeval ei saa oodata, kustuta piirangud (Supabase SQL Editor):
 

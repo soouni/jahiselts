@@ -47,6 +47,12 @@ test('the global lock has its own answer and the throttle ignores spoofed addres
  assert.equal(await hashOf({'x-forwarded-for':'2001:db8:1:2::9'}),v6,'one IPv6 /64 is one device owner');
  assert.equal(await hashOf({'x-forwarded-for':'2001:0db8:0001:0002:0:0:0:1'}),v6);
  assert.notEqual(await hashOf({'x-forwarded-for':'2001:db8:1:3::9'}),v6);
+ assert.equal(await hashOf({'x-forwarded-for':'::ffff:203.0.113.7'}),real,'an IPv4-mapped IPv6 address is the same client as its IPv4 form');
+ assert.equal(await hashOf({'x-forwarded-for':'::ffff:cb00:7107'}),real,'the hex form of a mapped address too');
+ assert.equal(await hashOf({'x-forwarded-for':'203.0.113.7:51234'}),real,'a port does not make a new client');
+ assert.equal(await hashOf({'x-forwarded-for':'[2001:db8:1:2::9]:4433'}),v6,'a bracketed IPv6 address with a port is the same /64');
+ assert.notEqual(await hashOf({'x-forwarded-for':'::ffff:203.0.113.8'}),real);
+ assert.notEqual(await hashOf({'x-forwarded-for':'::ffff:203.0.113.8'}),await hashOf({'x-forwarded-for':'::ffff:203.0.113.9'}),'mapped addresses no longer share one bucket');
  assert.equal(await hashOf({}),await hashOf({'x-forwarded-for':'  '}),'no address at all shares one cautious bucket');
 });
 test('forged, altered and expired tokens are rejected before any database call',async()=>{
@@ -129,6 +135,21 @@ test('database: only hunt managers mint codes; guests get a throttled, name-shor
  assert.equal((await redeem(wrong,'d'.repeat(64))).status,'locked','a locked system does not answer guesses either');
  await db.exec("update hunt_code_limits set expires_at=now()-interval '1 minute' where bucket='global'");
  assert.equal((await redeem(second.code,'e'.repeat(64))).status,'ok','the lock ends by itself after the hour');
+ await db.exec('delete from hunt_code_limits');
+
+ const counters=async()=>Object.fromEntries((await db.query('select bucket,attempts from hunt_code_limits')).rows.map(r=>[r.bucket,r.attempts]));
+ const g='f'.repeat(64);
+ assert.equal((await redeem(second.code,g)).status,'ok');
+ assert.deepEqual(Object.values(await counters()).reduce((a,b)=>a+b,0),0,'a right code costs no attempt');
+ assert.equal((await redeem(wrong,g)).status,'invalid');
+ assert.equal((await counters())['ip:'+g],1,'a wrong code is counted before any other work');assert.equal((await counters()).global,1);
+ for(let i=0;i<4;i++)await redeem(wrong,g);
+ assert.equal((await redeem(wrong,g)).status,'throttled');
+ assert.equal((await counters()).global,5,'a throttled address does not use up the global budget');
+ await db.exec("update hunt_code_limits set attempts=60,expires_at=now()+interval '1 hour' where bucket='global'");
+ const h='9'.repeat(64);
+ assert.equal((await redeem(wrong,h)).status,'locked');
+ assert.equal((await counters())['ip:'+h],0,'a locked system is not blamed on the address');
  await db.exec('delete from hunt_code_limits');
 
  await as(leader,'select public.revoke_hunt_access_code($1)',[hunt]);
