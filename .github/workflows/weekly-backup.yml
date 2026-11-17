@@ -17,7 +17,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install PostgreSQL tools
         run: |
@@ -71,6 +71,13 @@ jobs:
           export_geojson map_objects map_objects.geojson
           export_geojson observations observations.geojson
           export_geojson sign_reports sign_reports.geojson
+
+          # Tühi või liiga väike fail ei tohi saada „õnnestunud” varukoopiaks.
+          for file in database.dump schema.sql map_objects.geojson observations.geojson sign_reports.geojson; do
+            test -s "$dir/$file" || { echo "Varukoopia fail puudub või on tühi: $file" >&2; exit 1; }
+          done
+          test "$(wc -c < "$dir/database.dump")" -gt 10000 || { echo "database.dump on kahtlaselt väike" >&2; exit 1; }
+          grep -q 'CREATE TABLE' "$dir/schema.sql" || { echo "schema.sql ei sisalda tabeleid" >&2; exit 1; }
 
           tar -czf "$dir.tar.gz" "$dir"
 

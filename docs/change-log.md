@@ -2,6 +2,13 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-17 · Hooldus: sõltuvused, Actions ja varukoopia kontroll
+
+- **Sõltuvused** — kandidaatharu `chore/hooldus-soltuvused-actions-varukoopia-20261117`: `npm update` lubatud vahemikus (`ol` 10.11, `supabase-js` 2.119, `react` 19.3.1, `vite` 6.4.6, `proj4` 2.23). Suuri versioonihüppeid (`vite` 8, `lucide-react` 1.x, TypeScript 7) ei tehtud; `pglite` on tahtlikult kinnitatud versioonil 0.5.10.
+- **GitHub Actions** — `actions/checkout` v4 → v6 ja `actions/setup-node` v4 → v6 kõigis kolmes töövoos (Node 20 tegevuste hoiatus). Lehe avaldamise tegevusi (`configure-pages`, `upload-pages-artifact`, `deploy-pages`) ei muudetud.
+- **Varukoopia** — nädalane töö lõpetab nüüd vea, kui mõni fail on tühi, `database.dump` on alla 10 kB või `schema.sql`-is pole tabeleid; varem polnud mingit sisukontrolli. Töö ebaõnnestub endiselt alates 19. oktoobrist, sest GitHubi saladus `SUPABASE_DB_URL` sisaldab vana andmebaasi parooli: see tuleb käsitsi uuendada.
+- **Migratsioonide versioonid** — tootmise migratsioonitabelis on neli viimast migratsiooni (`hunt_access_codes`, `confirm_hunt_position_order`, `auto_finish_hunts`, `hunt_code_lock_status`) nüüd samade versiooninumbritega nagu repos, et `supabase db push` ei rakendaks neid uuesti.
+
 ## 2026-11-17 · Jahikoodi piirangud, ajaja marker ja eestikeelsed tekstid
 
 - **Piirangud** — kandidaatharu `fix/jahikood-piirangud-markerid-tekstid-20261117`: kliendi aadress võetakse nüüd värava päisest või `x-forwarded-for` viimasest kirjest (esimese kirje kirjutab klient ise ja sellega sai aadressi piiri mööda minna); IPv6 loetakse /64 kaupa. Üldpiir tõusis 40-lt 60-le valele katsele tunnis ja selle ületamine saab oma teate „sisenemine on hetkeks suletud”, sest varem süüdistati õiget koodi sisestajat aadressi piiris. Piir lõpeb ise tunni pärast. Jääkrisk: kolm erinevat võrguaadressi suudavad süsteemi tunniks lukku panna; tugevama kaitse jaoks oleks 6-kohaline kood parem, aga seda ei soovitud. Uus migratsioon `20261117100000_hunt_code_lock_status.sql` ja Edge Function `hunt-code` tuleb tootmises uuesti juurutada.

@@ -68,6 +68,7 @@ const m=new Map({interactions:mapInteractions(),target:el.current!,view:new View
  ...huntDistanceSource.current.getFeatures().map(f=>distanceLabelObstacle(distanceAnchor(f,resolution)))]})}),draftLayer,gpsLayer,searchLayer,huntLayer,huntDistanceLayer]});map.current=m;setMapInstance(m);
 // Mouse drag is immediate; on touch a 450 ms long press activates dragging.
 const viewport=m.getViewport();
+if(!viewport)return;
 let drag:{id:string;feature:Feature;start:[number,number];active:boolean;pointerId:number;touch:boolean;timer:number|null;moved:boolean}|null=null;
 let suppressClick=false;
 const dragPans=m.getInteractions().getArray().filter(i=>i instanceof DragPan);
