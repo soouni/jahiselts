@@ -18,6 +18,7 @@ export async function createHuntDb(){
  create table public.audit_events(id uuid);
  create schema extensions;
  create domain extensions.geometry as jsonb;create domain extensions.geography as jsonb;
+ create schema storage;create table storage.buckets(id text primary key,name text not null,public boolean default false,file_size_limit bigint,allowed_mime_types text[]);
  create schema cron;create table cron.job(jobname text primary key,schedule text not null,command text not null);
  create function cron.schedule(job_name text,job_schedule text,job_command text) returns bigint language sql as $$insert into cron.job values(job_name,job_schedule,job_command) on conflict(jobname) do update set schedule=excluded.schedule,command=excluded.command returning 1::bigint$$;
  grant usage on schema auth to authenticated;grant select on memberships to authenticated;

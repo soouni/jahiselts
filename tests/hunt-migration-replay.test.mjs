@@ -19,5 +19,16 @@ test('all hunt migrations replay in filename order without manually created help
  const position=await db.query("insert into hunt_positions(drive_id,number,location,assigned_participant_id) values($1,1,'{\"type\":\"Point\",\"coordinates\":[25,58]}',$2) returning assigned_participant_id",[drive.rows[0].id,participant.rows[0].id]);
  assert.equal(position.rows[0].assigned_participant_id,participant.rows[0].id);
  await db.exec('reset role');
+ const bucket=(await db.query("select public,file_size_limit,allowed_mime_types from storage.buckets where id='backups'")).rows;
+ assert.equal(bucket.length,1,'the backup bucket is created by a migration');assert.equal(bucket[0].public,false,'and it is private');
  }finally{await db.close();}
+});
+
+test('no migration file is empty (an empty file registers as applied but does nothing)',async()=>{
+ const {readdirSync,statSync}=await import('node:fs');
+ const dir=new URL('../supabase/migrations/',import.meta.url);
+ // Teadaolev erand: tühi migratsioon, mille ülesande võttis üle 20261117152659_create_backups_bucket.sql.
+ const known=new Set(['20260924202458_private_backup_bucket.sql']);
+ const empty=readdirSync(dir).filter(n=>n.endsWith('.sql')&&statSync(new URL(n,dir)).size===0&&!known.has(n));
+ assert.deepEqual(empty,[]);
 });
