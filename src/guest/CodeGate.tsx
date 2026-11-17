@@ -1,4 +1,4 @@
-import {useRef,useState,type FormEvent} from 'react';
+import {useEffect,useRef,useState,type FormEvent} from 'react';
 import {KeyRound,LoaderCircle,LogIn,MapPinned,Trees} from 'lucide-react';
 import {GuestError,guestAvailable,redeemHuntCode} from './api';
 import {guestProblem,validCode,type GuestSnapshot} from './session';
@@ -8,11 +8,13 @@ type Props={notice?:string;onGuest:(token:string,snapshot:GuestSnapshot)=>void;o
 export function CodeGate({notice='',onGuest,onLogin,onPublicMap}:Props){
  const [code,setCode]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
  const input=useRef<HTMLInputElement>(null);
+ // Fookus tagasi alles siis, kui väli pole enam keelatud: `disabled` väljale fookust ei saa.
+ useEffect(()=>{if(!busy&&error)input.current?.focus();},[busy,error]);
  async function submit(value:string){
   if(busy||!validCode(value))return;
   setBusy(true);setError('');
   try{const result=await redeemHuntCode(value);onGuest(result.token,result.snapshot);}
-  catch(e){setError(guestProblem(e instanceof GuestError?e.code:undefined));setCode('');input.current?.focus();}
+  catch(e){setError(guestProblem(e instanceof GuestError?e.code:undefined));setCode('');}
   finally{setBusy(false);}
  }
  function change(value:string){const digits=value.replace(/\D/g,'').slice(0,4);setCode(digits);if(digits.length===4)void submit(digits);}

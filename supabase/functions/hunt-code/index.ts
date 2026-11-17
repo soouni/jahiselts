@@ -3,15 +3,22 @@
 // jahivaate. Koode ega pääsutähiseid ei logita.
 const origins=new Set(['https://soouni.github.io','https://parnjoe-jahikaart.ojamaa.chatgpt.site']);
 const encoder=new TextEncoder();
-/** Kliendi aadress piirangu jaoks. `x-forwarded-for` esimest kirjet saab klient ise ette kirjutada, seega eelistatakse värava enda päist ja viimast kirjet; IPv6 ümardatakse /64 võrguni, sest üks seade saab seal vahetada aadressi vabalt. */
+/** Kliendi aadress piirangu jaoks. `x-forwarded-for` esimest kirjet saab klient ise ette kirjutada, seega eelistatakse värava enda päist ja viimast kirjet; IPv6 ümardatakse /64 võrguni, sest üks seade saab seal vahetada aadressi vabalt. IPv4-ga kaardistatud IPv6 (`::ffff:1.2.3.4`) loetakse IPv4-ks ning port ja tsooni-id jäetakse ära. */
 const clientAddress=(headers:Headers)=>{
- const raw=(headers.get('cf-connecting-ip')||headers.get('x-real-ip')||headers.get('x-forwarded-for')?.split(',').pop()||'').trim().toLowerCase();
+ let raw=(headers.get('cf-connecting-ip')||headers.get('x-real-ip')||headers.get('x-forwarded-for')?.split(',').pop()||'').trim().toLowerCase();
  if(!raw||raw.length>64)return 'unknown';
+ const bracketed=raw.match(/^\[([^\]]+)\](?::\d+)?$/);
+ if(bracketed)raw=bracketed[1];
+ else if(/^\d{1,3}(\.\d{1,3}){3}:\d+$/.test(raw))raw=raw.slice(0,raw.lastIndexOf(':'));
+ raw=raw.split('%')[0];
+ const dotted=raw.match(/^(?:::|(?:0{1,4}:){5})ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+ if(dotted)return dotted[1];
  if(!raw.includes(':'))return raw;
  const [head,tail=''] = raw.split('::');
  const first=head?head.split(':'):[],last=tail?tail.split(':'):[];
- const groups=raw.includes('::')?[...first,...Array(Math.max(0,8-first.length-last.length)).fill('0'),...last]:first;
- return groups.slice(0,4).map(g=>g?(parseInt(g,16)||0).toString(16):'0').join(':')+'::/64';
+ const groups=(raw.includes('::')?[...first,...Array(Math.max(0,8-first.length-last.length)).fill('0'),...last]:first).map(g=>g?(parseInt(g,16)||0).toString(16):'0');
+ if(groups.length===8&&groups.slice(0,5).every(g=>g==='0')&&groups[5]==='ffff'){const hi=parseInt(groups[6],16),lo=parseInt(groups[7],16);return [hi>>8,hi&255,lo>>8,lo&255].join('.');}
+ return groups.slice(0,4).join(':')+'::/64';
 };
 const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 Deno.serve(async(req:Request)=>{
