@@ -5,6 +5,10 @@ on:
   schedule:
     - cron: "17 3 * * 1"
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   backup:
     runs-on: ubuntu-latest
@@ -79,6 +83,12 @@ jobs:
           test "$(wc -c < "$dir/database.dump")" -gt 10000 || { echo "database.dump on kahtlaselt väike" >&2; exit 1; }
           grep -q 'CREATE TABLE' "$dir/schema.sql" || { echo "schema.sql ei sisalda tabeleid" >&2; exit 1; }
 
+          # Arhiiv peab olema loetav ja sisaldama peamiste tabelite andmeid (pg_restore --list ei vaja andmebaasi).
+          tables="$(pg_restore --list "$dir/database.dump" | awk '$4=="TABLE" && $5=="DATA" && $6=="public" {print $7}')"
+          for t in hunts memberships map_objects observations sign_reports; do
+            echo "$tables" | grep -qx "$t" || { echo "database.dump ei sisalda tabeli $t andmeid" >&2; exit 1; }
+          done
+
           tar -czf "$dir.tar.gz" "$dir"
 
           # Võtme tüüp ilma väärtust avaldamata, et vale võtit oleks logist näha.
@@ -105,3 +115,19 @@ jobs:
             "${auth[@]}" \
             -H "Content-Type: application/gzip" \
             --data-binary "@$dir.tar.gz"
+
+      - name: Teata ebaõnnestumisest
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          title="Varukoopia ebaõnnestus"
+          url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          n="$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')"
+          if [ -n "$n" ]; then
+            gh issue comment "$n" --body "Uuesti ebaõnnestus ($(date -u +%F)): $url"
+          else
+            gh issue create --title "$title" --body "Nädalane Supabase'i varukoopia ebaõnnestus: $url
+
+          Järgmised sammud on dokumendis docs/backups.md (jaotis \"Kui töö ebaõnnestub\"). Selle teate sulgemine ei tee midagi, kuid uus ebaõnnestumine lisab siia kommentaari."
+          fi

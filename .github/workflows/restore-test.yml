@@ -1,0 +1,104 @@
+name: Varukoopia taastamise proov
+
+# Käsitsi käivitatav. Laeb alla viimase varukoopia, taastab selle ajutisse Postgresi
+# (PostGIS) ja võrdleb peamiste tabelite ridade arvu tootmisandmebaasiga. Tootmisse
+# ei kirjutata midagi: tootmise andmebaasist loetakse ainult ridade arv.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      scratch:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_PASSWORD: scratch
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      PGPASSWORD: scratch
+
+    steps:
+      - name: Install PostgreSQL tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Laadi alla viimane varukoopia
+        run: |
+          set -euo pipefail
+          key="$(printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | tr -d '[:space:]"'"'"'')"
+          auth=(-H "apikey: $key")
+          case "$key" in
+            sb_*) ;;
+            *) auth+=(-H "Authorization: Bearer $key") ;;
+          esac
+          name="$(curl -fsS -X POST "$SUPABASE_URL/storage/v1/object/list/backups" "${auth[@]}" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"","limit":1,"sortBy":{"column":"created_at","order":"desc"}}' | jq -r '.[0].name // empty')"
+          test -n "$name" || { echo "Varukoopiate hulgas pole ühtegi faili" >&2; exit 1; }
+          echo "Viimane varukoopia: $name"
+          curl -fsS "$SUPABASE_URL/storage/v1/object/backups/$name" "${auth[@]}" -o backup.tar.gz
+          mkdir restore && tar -xzf backup.tar.gz -C restore --strip-components=1
+          ls -l restore
+
+      - name: Taasta ajutisse andmebaasi
+        run: |
+          set -uo pipefail
+          export PGHOST=localhost PGUSER=postgres
+          psql -v ON_ERROR_STOP=1 -c "create database scratch" >/dev/null
+          export PGDATABASE=scratch
+          # Supabase'i rollid, laiendused ja auth-skeem, millele avalik skeem viitab.
+          psql -v ON_ERROR_STOP=1 -q <<'SQL'
+          do $$ begin
+            if not exists (select 1 from pg_roles where rolname = 'anon') then create role anon nologin; end if;
+            if not exists (select 1 from pg_roles where rolname = 'authenticated') then create role authenticated nologin; end if;
+            if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin; end if;
+          end $$;
+          create schema if not exists extensions;
+          create extension if not exists postgis;
+          create extension if not exists pgcrypto;
+          create extension if not exists "uuid-ossp";
+          create publication supabase_realtime;
+          create schema auth;
+          create table auth.users(id uuid primary key, email text);
+          create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
+          create function auth.role() returns text language sql stable as $$ select 'authenticated'::text $$;
+          SQL
+          # auth.users on selles proovis tühi, seega võõrvõtmed auth.users'i vastu jäävad loomata
+          # (oodatud vead `violates foreign key constraint`). Andmed taastatakse ja loetakse üle.
+          PGOPTIONS='-c session_replication_role=replica' \
+            pg_restore --schema=public --no-owner --no-privileges --dbname=scratch restore/database.dump 2> restore-errors.txt
+          echo "pg_restore väljumiskood: $?"
+          echo "Vigu: $(grep -c 'error:' restore-errors.txt || true)"
+          grep 'error:' restore-errors.txt | head -20 || true
+
+      - name: Võrdle ridade arvu tootmisega
+        run: |
+          set -euo pipefail
+          export PGHOST=localhost PGUSER=postgres PGDATABASE=scratch
+          fail=0
+          for t in hunts memberships map_objects observations sign_reports; do
+            restored="$(psql -At -c "select count(*) from public.$t" 2>/dev/null || echo ERR)"
+            source_count="$(PGPASSWORD= psql "$SUPABASE_DB_URL" -At -c "select count(*) from public.$t")"
+            echo "$t: taastatud=$restored tootmine=$source_count"
+            if [ "$restored" = ERR ]; then echo "  VIGA: tabelit ei õnnestunud taastada" >&2; fail=1
+            elif [ "$restored" -eq 0 ] && [ "$source_count" -gt 0 ]; then echo "  VIGA: tabel on taastatud tühjana" >&2; fail=1; fi
+          done
+          exit $fail
