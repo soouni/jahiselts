@@ -40,7 +40,7 @@ Kui nädalane töö ebaõnnestub, avab see GitHubi issue pealkirjaga „Varukoop
 
 ## Taastamise proov
 
-Töö „Varukoopia taastamise proov” (`restore-test.yml`, ainult käsitsi): laeb alla viimase varukoopia, taastab avaliku skeemi ajutisse PostGIS-andmebaasi ja võrdleb tabelite `hunts`, `memberships`, `map_objects`, `observations` ja `sign_reports` ridade arvu tootmisandmebaasiga (tootmisest loetakse ainult ridade arv). Käivita pärast iga suuremat muutust ja vähemalt kord kvartalis: Actions → Varukoopia taastamise proov → Run workflow.
+Töö „Varukoopia taastamise proov” (`restore-test.yml`, ainult käsitsi): laeb alla viimase varukoopia, taastab avaliku skeemi ajutisse PostGIS-andmebaasi ja võrdleb tabelite `hunts`, `memberships`, `map_objects`, `observations`, `sign_reports` ja `boundary_versions` ridade arvu tootmisandmebaasiga (tootmisest loetakse ainult ridade arv). Käivita pärast iga suuremat muutust ja vähemalt kord kvartalis: Actions → Varukoopia taastamise proov → Run workflow.
 
 - Oodatud vead: `violates foreign key constraint` seoste kohta tabeliga `auth.users`, sest see on proovis tühi. Andmed ise taastatakse.
 - Läbikukkumine tähendab, et mõni tabel jäi taastamata või tuli tühjana, kuigi tootmises on andmeid.
