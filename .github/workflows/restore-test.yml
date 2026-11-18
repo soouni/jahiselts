@@ -72,9 +72,9 @@ jobs:
             if not exists (select 1 from pg_roles where rolname = 'service_role') then create role service_role nologin; end if;
           end $$;
           create schema if not exists extensions;
-          create extension if not exists postgis;
-          create extension if not exists pgcrypto;
-          create extension if not exists "uuid-ossp";
+          create extension if not exists postgis schema extensions;
+          create extension if not exists pgcrypto schema extensions;
+          create extension if not exists "uuid-ossp" schema extensions;
           create publication supabase_realtime;
           create schema auth;
           create table auth.users(id uuid primary key, email text);
@@ -95,7 +95,7 @@ jobs:
           set -euo pipefail
           export PGHOST=localhost PGUSER=postgres PGDATABASE=scratch
           fail=0
-          for t in hunts memberships map_objects observations sign_reports; do
+          for t in hunts memberships map_objects observations sign_reports boundary_versions; do
             restored="$(psql -At -c "select count(*) from public.$t" 2>/dev/null || echo ERR)"
             source_count="$(PGPASSWORD= psql "$SUPABASE_DB_URL" -At -c "select count(*) from public.$t")"
             echo "$t: taastatud=$restored tootmine=$source_count"
