@@ -81,9 +81,27 @@ jobs:
 
           tar -czf "$dir.tar.gz" "$dir"
 
+          # Võtme tüüp ilma väärtust avaldamata, et vale võtit oleks logist näha.
+          key="$(printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | tr -d '[:space:]"'"'"'')"
+          case "$key" in
+            sb_secret_*) kind="sb_secret (uus Secret key)" ;;
+            sb_publishable_*) kind="sb_publishable (AVALIK võti, sobimatu: vaja on Secret key)" ;;
+            eyJ*.*.*) kind="JWT (vana service_role või anon)" ;;
+            *) kind="tundmatu kuju" ;;
+          esac
+          echo "SUPABASE_SERVICE_ROLE_KEY tüüp: $kind, pikkus ${#key}"
+          echo "SUPABASE_URL host: $(printf '%s' "$SUPABASE_URL" | sed -E 's#^https?://##; s#/.*$##')"
+
+          # Uued `sb_` võtmed ei ole JWT-d ega kuulu Authorization päisesse;
+          # vanad JWT võtmed vajavad seda.
+          auth=(-H "apikey: $key")
+          case "$key" in
+            sb_*) ;;
+            *) auth+=(-H "Authorization: Bearer $key") ;;
+          esac
+
           curl --fail-with-body \
             -X POST "$SUPABASE_URL/storage/v1/object/backups/$dir.tar.gz" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            "${auth[@]}" \
             -H "Content-Type: application/gzip" \
             --data-binary "@$dir.tar.gz"

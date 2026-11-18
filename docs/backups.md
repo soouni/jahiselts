@@ -16,8 +16,8 @@ Varukoopia sisaldab:
 Repository Settings -> Secrets and variables -> Actions:
 
 - `SUPABASE_DB_URL` - Supabase PostgreSQL connection string
-- `SUPABASE_URL` - projekti URL, näiteks `https://pipwbfmgmuiisrvnnnmw.supabase.co`
-- `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
+- `SUPABASE_URL` - **tootmise** projekti URL: `https://asvbfhbmegmeuvvtgvor.supabase.co`. Ära kasuta testprojekti `pipwbfmgmuiisrvnnnmw` URL-i: see projekt ei sisalda `backups` bucketit ja üleslaadimine vastab „Bucket not found"
+- `SUPABASE_SERVICE_ROLE_KEY` - **sama** (tootmise) projekti Secret key (`sb_secret_…`) või vana service_role võti: Project Settings → API Keys
 
 Ära pane neid väärtusi koodi ega README faili.
 
