@@ -83,9 +83,10 @@ jobs:
           SQL
           # auth.users on selles proovis tühi, seega võõrvõtmed auth.users'i vastu jäävad loomata
           # (oodatud vead `violates foreign key constraint`). Andmed taastatakse ja loetakse üle.
+          rc=0
           PGOPTIONS='-c session_replication_role=replica' \
-            pg_restore --schema=public --no-owner --no-privileges --dbname=scratch restore/database.dump 2> restore-errors.txt
-          echo "pg_restore väljumiskood: $?"
+            pg_restore --schema=public --no-owner --no-privileges --dbname=scratch restore/database.dump 2> restore-errors.txt || rc=$?
+          echo "pg_restore väljumiskood: ${rc:-0} (nullist erinev on oodatud, vt vigu allpool)"
           echo "Vigu: $(grep -c 'error:' restore-errors.txt || true)"
           grep 'error:' restore-errors.txt | head -20 || true
 
