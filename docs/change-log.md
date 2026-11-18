@@ -4,7 +4,7 @@ Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest,
 
 ## 2026-11-17 · Intsidentide järelanalüüsid
 
-- **Uus kaust** `docs/postmortems/`: varukoopia töö pole kunagi õnnestunud (13 jooksu, 0 edukat; `backups` bucket puudub ja selle migratsioonifail on tühi) ning jahikoodi piirangute võidujooks (parandatud).
+- **Uus kaust** `docs/postmortems/`: varukoopia töö ei õnnestunud kunagi enne 2026-11-18 (13 jooksu, 0 edukat; `backups` bucket puudus, saladused olid valed; nüüd lahendatud, esimene varukoopia 2026-11-18 13:09 UTC) ning jahikoodi piirangute võidujooks (parandatud).
 
 ## 2026-11-17 · Jahikoodi piirangute võidujooks (sõltumatu audit)
 
