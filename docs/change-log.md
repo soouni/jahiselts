@@ -2,6 +2,10 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-17 · Intsidentide järelanalüüsid
+
+- **Uus kaust** `docs/postmortems/`: varukoopia töö ei õnnestunud kunagi enne 2026-11-18 (13 jooksu, 0 edukat; `backups` bucket puudus, saladused olid valed; nüüd lahendatud, esimene varukoopia 2026-11-18 13:09 UTC) ning jahikoodi piirangute võidujooks (parandatud).
+
 ## 2026-11-17 · Jahikoodi piirangute võidujooks (sõltumatu audit)
 
 - **Viga ja parandus.** Sõltumatu audit leidis, et `redeem_hunt_access_code` kontrollis piiri enne ja suurendas loendurit alles pärast koodi otsingut, nii et paralleelsed päringud pääsesid piirist mööda. Päris Postgresis (pgbench, 64 ühendust) lasi vana funktsioon 192 valest katsest läbi 61–68 (õige 5). Migratsioon `20261117140000_hunt_code_atomic_limits.sql` suurendab loendurit enne otsingut ühe `insert … on conflict … returning` käsuga; uus funktsioon lasi läbi täpselt 5, üldpiir täpselt 60, õige kood ei kuluta katseid.
