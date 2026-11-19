@@ -15,7 +15,7 @@ export async function createHuntDb(){
  create table public.memberships(email text primary key,user_id uuid,display_name text,role text,active boolean);
  create function public.my_role() returns text language sql stable security definer set search_path='' as $$select role from public.memberships where user_id=auth.uid() and active$$;
  create table public.club_settings(id boolean primary key);
- create table public.audit_events(id uuid);
+ create table public.audit_events(id bigint generated always as identity primary key,kind text not null,entry_id uuid,action text not null,actor uuid,actor_name text,occurred_at timestamptz not null default now(),before_data jsonb,after_data jsonb);
  create schema extensions;
  create domain extensions.geometry as jsonb;create domain extensions.geography as jsonb;
  create schema storage;create table storage.buckets(id text primary key,name text not null,public boolean default false,file_size_limit bigint,allowed_mime_types text[]);

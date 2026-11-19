@@ -2,6 +2,7 @@ import {db} from '../api';
 import type {HuntType} from './types';
 export async function canManageHunt(huntId:string){if(!db)return false;const {data,error}=await db.rpc('can_manage_hunt',{target_hunt_id:huntId});if(error)throw error;return Boolean(data);}
 export async function assignHuntLeader(huntId:string,userId:string){if(!db)throw new Error('Andmebaasi ühendus puudub.');const {error}=await db.rpc('assign_hunt_leader',{target_hunt_id:huntId,new_leader_id:userId});if(error)throw error;}
+export async function deleteHunt(huntId:string){if(!db)throw new Error('Andmebaasi ühendus puudub.');const {data,error}=await db.rpc('delete_hunt',{target_hunt_id:huntId});if(error)throw error;return data as {title:string;drives:number;participants:number};}
 export type HuntDraft={title:string;type:HuntType;allowSelfSelection:boolean;drives:{title:string}[]};
 export async function createHunt(draft:HuntDraft){
  if(!db)throw new Error('Andmebaasi ühendus puudub.');
