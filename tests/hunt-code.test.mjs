@@ -73,6 +73,7 @@ test('foreign origin and unknown actions are refused',async()=>{
  const x=setup();assert.equal((await x.run({action:'redeem',code:'4827'},'https://untrusted.invalid')).status,403);assert.equal(x.calls.length,0);
  assert.equal((await x.run({action:'write'})).status,400);
 });
+test('the map domain kaart.parnjoe.ee is an allowed origin',async()=>{const x=setup();const r=await x.run({action:'write'},'https://kaart.parnjoe.ee');assert.equal(r.status,400);assert.equal(r.headers.get('Access-Control-Allow-Origin'),'https://kaart.parnjoe.ee');});
 test('the endpoint contains no write path and never logs',()=>{
  assert.doesNotMatch(source,/console\./);
  assert.deepEqual([...source.matchAll(/rpc\('([a-z_]+)'/g)].map(m=>m[1]).sort(),['hunt_guest_snapshot','redeem_hunt_access_code']);

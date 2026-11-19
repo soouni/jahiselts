@@ -25,7 +25,9 @@ Jahijuht ja admin logivad sisse oma kontoga ning planeerivad jahi: ajud, jahiala
 
 ## Veebis avaldamine
 
-Eeldatav veebiaadress pärast GitHub Pagesi aktiveerimist: https://soouni.github.io/jahiselts/
+Veebiaadress: https://kaart.parnjoe.ee/ (GitHub Pages, oma domeen; vana aadress https://soouni.github.io/jahiselts/ suunab sinna).
+
+DNS: veebimajutus.ee-s CNAME-kirje `kaart.parnjoe.ee → soouni.github.io`. Settings → Pages → Custom domain = `kaart.parnjoe.ee`, Enforce HTTPS sees. Jahiseltsi koduleht (`www.parnjoe.ee`) on eraldi Elkdata serveris.
 
 1. Ava hoidlas Settings → Pages → Build and deployment → Source ja vali **GitHub Actions**.
 2. Ava Actions → Publish hunting map → Run workflow (main), kui esimene käivitus ei õnnestunud enne Pagesi aktiveerimist.
@@ -34,8 +36,8 @@ Eeldatav veebiaadress pärast GitHub Pagesi aktiveerimist: https://soouni.github
 ## Sisselogimise aadress
 
 Supabase'i olemasolevas projektis ava Authentication → URL Configuration.
-- Site URL: `https://soouni.github.io/jahiselts/`
-- Lisa Redirect URLs loendisse täpselt `https://soouni.github.io/jahiselts/`.
+- Site URL: `https://kaart.parnjoe.ee/`
+- Lisa Redirect URLs loendisse täpselt `https://kaart.parnjoe.ee/`.
 - Olemasoleva kaardi tagasisuunamise aadress võib ülemineku ajal alles jääda.
 
 Parooliga sisselogimine kasutab samu olemasolevaid kasutajakontosid. Uues veebiaadressis tuleb esimesel korral uuesti sisse logida. E-kirja kinnituslingid vajavad ülaltoodud aadressiseadistust.
