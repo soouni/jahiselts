@@ -24,7 +24,7 @@ export function CodeGate({notice='',onGuest,onLogin,onPublicMap}:Props){
    <h1>Sisesta jahikood</h1>
    <p className="muted">Neljakohalise koodi saad jahijuhilt. Koodiga näed, kuhu sind on paigutatud ja kes on sinu kõrval.</p>
    {notice&&<p className="notice" role="status">{notice}</p>}
-   <label className="code-gate-field"><span>Jahikood</span><input ref={input} autoFocus inputMode="numeric" pattern="[0-9]{4}" maxLength={4} autoComplete="one-time-code" aria-describedby={error?'code-gate-error':undefined} aria-invalid={Boolean(error)} disabled={busy||!guestAvailable} value={code} onChange={e=>change(e.target.value)} placeholder="••••"/></label>
+   <label className="code-gate-field"><span>Jahikood</span><input ref={input} autoFocus inputMode="numeric" pattern="[0-9]{4}" maxLength={4} autoComplete="one-time-code" aria-describedby={error?'code-gate-error':undefined} aria-invalid={Boolean(error)} disabled={busy||!guestAvailable} value={code} onChange={e=>change(e.target.value)} placeholder="0000"/></label>
    {error&&<p id="code-gate-error" className="notice" role="alert">{error}</p>}
    {!guestAvailable&&<p className="notice">Jahikoodiga sisenemine ei ole veel andmebaasiga ühendatud.</p>}
    <button className="primary full" disabled={busy||!validCode(code)}>{busy?<LoaderCircle className="spin"/>:<KeyRound size={18}/>} Ava jaht</button>
