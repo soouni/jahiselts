@@ -40,7 +40,7 @@ Esimesena tõmbab pilku pealkiri „Sisesta jahikood" ja seejärel koodiväli, m
 - `role="alert"` veateadetel ja `role="status"` märkustel; fookus naaseb väljale pärast viga.
 
 ### Prioriteetsed soovitused
-1. **Parandada oranži kontrast** — kui accent'iga on kirjutatud tekst, tumenda tooni (nt #b85f17 annab umbes 4,6 : 1 valgel; kontrolli enne kasutuselevõttu) või kasuta seal tumedat teksti.
+1. **Parandada oranži kontrast** — kui accent'iga on kirjutatud tekst, tumenda tooni (nt #b05813 annab valgel 4,94 : 1; vaata enne kasutuselevõttu, kuidas toon kaardil välja näeb) või kasuta seal tumedat teksti.
 2. **Tõsta 8–11 px tekstid vähemalt 12 px peale** — kõige olulisem kitsal ekraanil, kus kaubamärgi alamsilt on 8 px.
 3. **Koodivälja kohahoidja** — vältida parooli moodi punkte.
 
@@ -105,7 +105,7 @@ Veateated tulevad funktsioonist `guestProblem(code)`; selle ülevaate jaoks ei o
 - **Aeglane võrk:** töös-olek peab jääma nähtavaks kuni vastuseni; ära katkesta ajapiiranguga.
 
 ### Ligipääsetavus
-- Silt „Jahikood" on seotud väljaga; veateade `id="code-gate-error"` peaks olema `aria-describedby`-ga seotud väljaga.
+- Silt „Jahikood" on seotud väljaga ja veateade on väljaga seotud (`aria-describedby="code-gate-error"` seatakse vea korral).
 - Fookusjärjekord: väli → „Ava jaht" → „Jahijuht või admin: logi sisse" → „Vaata avalikku jahiala kaarti".
 - Puutealad vähemalt 44 px; kontrasti arvud vt punkt 1.
 
