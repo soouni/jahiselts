@@ -2,6 +2,13 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-19 · Omanik saab jahi kustutada
+
+- **Uus.** Jahi planeerimise loendis on omanikule jahi juures nupp „Kustuta jaht" (ei näidata aktiivsele jahile). Kinnitusdialoog nimetab jahi ja ütleb, et kustuvad ka ajud, osalejad, positsioonid ja jahikoodid ning et seda ei saa tagasi võtta.
+- **Kuidas.** Migratsioon `20261119100000_owner_delete_hunt.sql` lisab funktsiooni `delete_hunt(uuid)`: ainult aktiivne omanik, aktiivset jahti ei kustuta, kirjutab sündmuse `audit_events` tabelisse (nimi, olek, ajude ja osalejate arv). Tabeli DELETE-õigus jääb endiselt ära võetud; muud rollid (admin, jahijuht, liige) ja külalised ei saa funktsiooni kasutada.
+- **Taastamine.** Kustutatud jahti rakendusest tagasi ei saa. Enne suuremat kustutamist käivita käsitsi varukoopia (Actions → Varukoopia).
+- **Testid.** `tests/hunt-delete.test.mjs`: omanik kustutab koos kõigega ja see auditeeritakse; aktiivne jaht keelatud; admin, liige ja anonüümne keelatud; otsene DELETE keelatud; tundmatu jaht.
+
 ## 2026-11-17 · Intsidentide järelanalüüsid
 
 - **Uus kaust** `docs/postmortems/`: varukoopia töö ei õnnestunud kunagi enne 2026-11-18 (13 jooksu, 0 edukat; `backups` bucket puudus, saladused olid valed; nüüd lahendatud, esimene varukoopia 2026-11-18 13:09 UTC) ning jahikoodi piirangute võidujooks (parandatud).
