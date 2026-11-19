@@ -1,7 +1,7 @@
 // Avalik jahikoodi otspunkt. Külaline ei saa Supabase'i seanssi: funktsioon
 // kontrollib koodi, piirab katseid ja väljastab ainult vaatamiseks mõeldud
 // jahivaate. Koode ega pääsutähiseid ei logita.
-const origins=new Set(['https://soouni.github.io','https://parnjoe-jahikaart.ojamaa.chatgpt.site']);
+const origins=new Set(['https://jaht.parnjoe.ee','https://soouni.github.io','https://parnjoe-jahikaart.ojamaa.chatgpt.site']);
 const encoder=new TextEncoder();
 /** Kliendi aadress piirangu jaoks. `x-forwarded-for` esimest kirjet saab klient ise ette kirjutada, seega eelistatakse värava enda päist ja viimast kirjet; IPv6 ümardatakse /64 võrguni, sest üks seade saab seal vahetada aadressi vabalt. IPv4-ga kaardistatud IPv6 (`::ffff:1.2.3.4`) loetakse IPv4-ks ning port ja tsooni-id jäetakse ära. */
 const clientAddress=(headers:Headers)=>{

@@ -1,6 +1,6 @@
 # Töökorra juhend
 
-Kellele: projekti omajale ja igaühele, kes kaarti hooldab. Tootmise Supabase'i projekt: `asvbfhbmegmeuvvtgvor` (`https://asvbfhbmegmeuvvtgvor.supabase.co`). Veebileht: https://soouni.github.io/jahiselts/.
+Kellele: projekti omajale ja igaühele, kes kaarti hooldab. Tootmise Supabase'i projekt: `asvbfhbmegmeuvvtgvor` (`https://asvbfhbmegmeuvvtgvor.supabase.co`). Veebileht: https://jaht.parnjoe.ee/ (vana https://soouni.github.io/jahiselts/ suunab sinna).
 
 ## 1. Muudatuse avaldamine
 

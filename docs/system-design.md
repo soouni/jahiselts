@@ -67,7 +67,7 @@ Koormus on mitu suurusjärku alla seda, mida Supabase'i väikseim pakett kannab.
 - Kui külalisi on üle ~200 või küsitlus tekitab märgatavat koormust: asenda 20 s küsitlus Realtime'iga, aga arvesta, et siis tühistamine ja aegumine tuleb teisiti lahendada.
 - Kui jahte on mitmes klubis: praegune mudel on ühe klubi oma; mitme klubi korral vaja klubi tasandit RLS-is.
 - Kui koodi pikkust tahetakse kasvatada: ADR 0001 selgitab, miks 4 numbrit valiti; muutmine puudutab koodi genereerimist, piiranguid ja CodeGate'i.
-- Kui hosting vahetub: Edge Function'i CORS-lubatud allikad (soouni.github.io, parnjoe-jahikaart.ojamaa.chatgpt.site) tuleb uuendada.
+- Kui hosting vahetub: Edge Function'i CORS-lubatud allikad (jaht.parnjoe.ee, soouni.github.io, parnjoe-jahikaart.ojamaa.chatgpt.site) tuleb uuendada.
 
 ## 7. Eeldused (kontrollimata)
 
