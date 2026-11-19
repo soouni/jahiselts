@@ -19,7 +19,7 @@ Seisuga 2026-11-19. Kirjeldab, kuidas Pärnjõe jahiseltsi kaart praegu on ehita
 | Külaline | 4-kohaline jahikood | Vaatab ühe jahi paigutust: oma koht, naabrid; ei saa midagi muuta |
 | Avalik (sisselogimata) | — | Ametlik piir, aluskaardid, otsing, mõõtmine, oma asukoht |
 | Vaataja | konto | Kõik eelmine + admini lubatud kihid |
-| Liige | konto | Lisab vaatlusi ja jälgi; muudab oma kirjeid |
+| Liige | konto | Lisab vaatlusi ja jälgi; muutmisõigus sõltub rollist ja autorist (`canEdit`, täpset reeglit ei ole siin lahti kirjutatud) |
 | Jahijuht | jahil määratud liige | Haldab oma jahti: osalejad, positsioonid, koodid |
 | Admin | konto | Kõik liikme omad + oluline koht, siht/joon, ala; jahtide loomine; kasutajate haldus; prügikast; ajalugu |
 | Omanik | konto | Admini õigused + jahi lõplik kustutamine |
@@ -126,7 +126,7 @@ Vertikaalne lehekoost:
 |---|---|
 | Külalise vaade ja jahikoodi kehtivuse kontroll | iga 20 s |
 | Külalise ilmateate värskendus | iga 10 min |
-| Kontoga jahirežiimi taaskontroll | iga 15 min; GPS-i vanuse arvestus iga 1 s |
+| Kontoga jahirežiimi andmete värskendus | on koodis seatud 15 min intervalliga (täpset kasutust ei ole kontrollitud); GPS-i vanuse arvestus iga 1 s |
 | Jahikood | kehtib 48 h või kuni jahi lõpuni; üks kehtiv kood jahi kohta |
 | Isiklik jahikoht seadmes | 12 h; auto 48 h |
 
@@ -149,7 +149,7 @@ Vertikaalne lehekoost:
 - `role="alert"` ja `role="status"` veateadetel ja märkustel; `aria-pressed` jahirežiimi tööriistadel.
 - Kaardil: nooleklahvid liigutavad, + ja − suumivad (varjatud abitekst; nähtav fookuse korral), fookusring #dd8d38.
 - Puutealad: tööriistariba nupud ≥ 44 px, tavanupud ≥ 48 px.
-- Kontrastid: vt disain-ulevaade punkt 1 (kõik tekstid ≥ 4,5 : 1; oranž ainult märgina).
+- Kontrastid: vt disain-ulevaade punkt 1 (mõõdetud tekstitokenid `--ink`, `--muted`, #61796b, valge roheliste ja punasel ≥ 4,5 : 1; oranž ainult märgina). Teiste käsitsi kirjutatud värvikombinatsioonide kontrast on mõõtmata.
 - Teadaolev puudus: alla 12 px tekstid mõnes silditekstis; ikoonnuppudel vaja kontrollida, et kõigil oleks tekstiline nimi (ligipääsetav silt on olemas aluskaardi nupul, kompassil ja dokiriba nuppudel).
 
 ## 9. Avatud küsimused ja leitud tähelepanekud
