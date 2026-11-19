@@ -43,3 +43,13 @@ test('hunt tools retain circular controls and a scrollable rail',()=>{
  assert.match(css,/\.hunt-mode-switch\{[^}]*overflow-y:auto/);
  assert.match(app,/huntMode\?'Jaht sees':'Jaht'/);
 });
+
+test('locate and weather buttons live in the left tool column; weather is open to guests',()=>{
+ assert.match(app,/<nav className="hunt-mode-switch"/);
+ assert.match(app,/aria-label="Näita minu asukohta kaardil"/);
+ assert.match(app,/\{panel==='weather'&&<Modal/);
+ assert.doesNotMatch(app,/panel==='weather'&&member/);
+ const planner=readFileSync(new URL('../src/hunt/HuntPlanner.tsx',import.meta.url),'utf8');
+ assert.equal((planner.match(/copyPrevious\(/g)||[]).length,2);
+ assert.match(planner,/copyPrevious\(selected\)/);
+});

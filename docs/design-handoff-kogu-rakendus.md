@@ -154,8 +154,8 @@ Vertikaalne lehekoost:
 
 ## 9. Avatud küsimused ja leitud tähelepanekud
 
-1. **„Asukoht" puudub liikme põhiriba seest.** Vaatajal on alumisel ribal „Asukoht", aga liikme ja admini rida asendab selle nupuga „Lisa". Oma asukohta saab siis ainult joonistamise ajal (GPS-nupp) või jahirežiimis. Otsus: kas lisada eraldi ümmargune asukohanupp kaardile (nagu aluskaardi vahetaja)?
-2. **Jahtide rea nupud on kitsal ekraanil ja 520 px lehel kokku surutud** (kuni neli nuppu ühes reas, 11–12 px silt). Vaadatud 800 ja 1366 px laiusel: nupud murduvad kitsaks. Soovitus: rea nupud teise rea alla või „⋯" menüü.
-3. **Konto menüüs on „Jaht" ja „Ilmateade" eri tüüpi kirjed** (esimene avab planeerimise, teine teabe). Võiks olla ilmateade põhiriba lähedal, sest seda vajab ka külaline.
+1. **Lahendatud 2026-11-19:** liikme, admini ja omaniku vasakusse veergu lisati ümmargune „Asukoht" (vaatajal jääb alumisele ribale).
+2. **Lahendatud 2026-11-19:** „Uus samade osalejatega" kolis avatud jahi vaatesse; loendis on „Ava jaht" ja omanikule „Kustuta jaht".
+3. **Lahendatud 2026-11-19:** ümmargune „Ilm" vasakus veerus, nähtav ka sisselogimata külalisele (eeldus: ilmateade on avalik Open-Meteo andmestik, seega ei vaja kontot).
 4. **Disainisüsteem:** vt disain-ulevaade punkt 2 (tokenid, kolm raadiust, üks murdepunkt).
 5. **Testimata:** päris GPS, jahi alustamine, külalise koodi loomine ja päris jahipäeva paneelid; vaata neid testjahil.

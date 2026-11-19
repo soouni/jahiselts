@@ -2,6 +2,12 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-19 · Asukoht, ilm kõigile, jahi kordamine jahi sees
+
+- **Asukoht.** Liikme, admini ja omaniku vasakusse nupuveergu lisati ümmargune „Asukoht" (jahirežiimis peidus, vaatajal jääb alumine riba).
+- **Ilm.** Ümmargune „Ilm" on vasakus veerus kõigile, ka sisselogimata külalisele. Ilmapaneel ei nõua enam liikmeks olemist.
+- **Uus samade osalejatega.** Nupp kolis salvestatud jahtide loendist avatud jahi vaatesse (omanik/admin). Loendis on „Ava jaht" ja omanikule „Kustuta jaht".
+
 ## 2026-11-19 · Omanik saab jahi kustutada
 
 - **Uus.** Jahi planeerimise loendis on omanikule jahi juures nupp „Kustuta jaht" (ei näidata aktiivsele jahile). Kinnitusdialoog nimetab jahi ja ütleb, et kustuvad ka ajud, osalejad, positsioonid ja jahikoodid ning et seda ei saa tagasi võtta.
