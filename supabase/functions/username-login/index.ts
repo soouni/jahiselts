@@ -1,6 +1,6 @@
 // Public login endpoint: credentials are authenticated by Supabase Auth itself.
 // Never return a username/email mapping or log credentials/tokens.
-const origins=new Set(['https://soouni.github.io','https://parnjoe-jahikaart.ojamaa.chatgpt.site']);
+const origins=new Set(['https://www.parnjoe.ee','https://parnjoe.ee','https://soouni.github.io','https://parnjoe-jahikaart.ojamaa.chatgpt.site']);
 const encoder=new TextEncoder();
 Deno.serve(async(req:Request)=>{
  const origin=req.headers.get('origin')||'';
