@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
 import {Cloud,CloudFog,CloudLightning,CloudRain,CloudSnow,CloudSun,LoaderCircle,Moon,RefreshCw,Sun} from 'lucide-react';
+import {formatSunTime,parnjoeSunTimes,SHOOTING_LIGHT_DEGREES,TWILIGHT_DEGREES} from './sunTimes';
 import {loadParnjoeForecast,nextWeatherHours,readWeatherCache,weatherDescription,weatherIsStale,type WeatherForecast,type WeatherHour} from './weather';
 
 const clock=new Intl.DateTimeFormat('et-EE',{timeZone:'Europe/Tallinn',hour:'2-digit',minute:'2-digit'});
@@ -26,14 +27,15 @@ export function WeatherPanel(){
   const refresh=window.setInterval(()=>setRevision(v=>v+1),15*60*1000);
   return()=>{alive=false;window.clearTimeout(timeout);window.clearInterval(refresh);controller.abort();};
  },[revision]);
- const hours=nextWeatherHours(forecast,now),stale=forecast&&weatherIsStale(forecast,now);
+ const sun=parnjoeSunTimes(now),hours=nextWeatherHours(forecast,now),stale=forecast&&weatherIsStale(forecast,now);
  return <section className="weather-panel" aria-label="Pärnjõe järgmise kuue tunni ilmaprognoos" aria-busy={loading}>
   <div className="weather-heading"><div><h3>Pärnjõe</h3><p>Järgmised 6 tundi</p></div><button type="button" className="weather-refresh" disabled={loading} onClick={()=>setRevision(v=>v+1)} aria-label="Uuenda ilmateadet">{loading?<LoaderCircle className="spin" size={18}/>:<RefreshCw size={18}/>}<span>Uuenda</span></button></div>
   {error&&<p className="notice" role="alert">{error}{hours.length>0?' Kuvatud on varem laaditud prognoos.':''}</p>}
   {stale&&hours.length>0&&<p className="notice" role="status">Salvestatud prognoos on üle 30 minuti vana. Uuenda enne kasutamist.</p>}
   {!hours.length&&<p role="status">{loading?'Laadin Pärnjõe ilmateadet…':forecast?'Salvestatud prognoos ei kata enam järgmisi tunde. Vajuta „Uuenda“.':'Ilmateade pole veel laaditud.'}</p>}
   {hours.length>0&&<><table className="weather-table"><caption className="weather-sr-only">Pärnjõe tunniprognoos. Temperatuur Celsiuse kraadides, sademed millimeetrites ning tuul ja puhangud meetrites sekundis.</caption><thead><tr><th scope="col">Kell</th><th scope="col">Ilm / °C</th><th scope="col">Sadu<br/><small>mm</small></th><th scope="col">Tuul<br/><small>m/s</small></th><th scope="col">Puhang<br/><small>m/s</small></th></tr></thead><tbody>{hours.map(hour=><tr key={hour.time}><th scope="row"><time dateTime={new Date(hour.time*1000).toISOString()} title={fullTime.format(hour.time*1000)} aria-label={fullTime.format(hour.time*1000)}>{clock.format(hour.time*1000)}<small>{date.format(hour.time*1000)}</small></time></th><td><div className="weather-temperature"><WeatherIcon hour={hour}/><strong>{fmt(hour.temperature)}</strong></div></td><td>{fmt(hour.precipitation)}</td><td>{fmt(hour.wind)}<small>{hour.direction===null?'Suund —':directions[Math.round(hour.direction/45)%8]}</small></td><td>{fmt(hour.gust)}</td></tr>)}</tbody></table>{hours.length<6&&<p className="muted">Saadaval on {hours.length} tunni prognoos. Proovi andmeid uuendada.</p>}</>}
-  <p className="weather-updated" role="status">{forecast?'Laaditud '+fullTime.format(forecast.fetchedAt):''}{loading&&forecast?' · uuendan…':''}</p>
+  <div className="sun-times" aria-label="Päikese ja hämariku ajad täna"><h4>Täna (arvutuslik)</h4><dl>{[['Hämariku algus',sun.twilightStart],['Laskevalguse algus',sun.shootingStart],['Päikesetõus',sun.sunrise],['Päikeseloojang',sun.sunset],['Laskevalguse lõpp',sun.shootingEnd],['Hämariku lõpp',sun.twilightEnd]].map(([label,time])=><div key={label as string}><dt>{label as string}</dt><dd>{formatSunTime(time as Date)}</dd></div>)}</dl><p className="muted">Hämarik: Päikese kõrgus {TWILIGHT_DEGREES}°, laskevalgus: {SHOOTING_LIGHT_DEGREES}°. Hinnang Päikese asendist, mitte jahieeskirja aeg. Kontrolli jahieeskirjast.</p></div>
+ <p className="weather-updated" role="status">{forecast?'Laaditud '+fullTime.format(forecast.fetchedAt):''}{loading&&forecast?' · uuendan…':''}</p>
   <p className="weather-source">Allikas: <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · mudelprognoos Pärnjõe jahipiirkonnale. Ajad on Eesti ajas. Sademed näitavad kogust märgitud kellaajale eelnenud tunni jooksul. Tuul on 10 m kõrgusel; metsas võib see erineda.</p>
  </section>;
 }

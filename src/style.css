@@ -220,3 +220,5 @@ a.menurow:hover{background:var(--soft)}
 @media(max-height:700px){.guest-tools{top:200px;gap:6px}.guest-tools button{min-height:46px}}
 
 .finished-hunts{margin-top:8px}.finished-hunts summary{cursor:pointer;font-weight:700;font-size:14px;padding:10px 0;min-height:44px;display:flex;align-items:center}.menu-group{margin:18px 0 2px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+
+.sun-times{margin:14px 0 6px}.sun-times h4{margin:0 0 6px}.sun-times dl{margin:0;display:grid;gap:4px}.sun-times dl>div{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #0001;padding:3px 0}.sun-times dt{font-weight:600}.sun-times dd{margin:0;font-variant-numeric:tabular-nums}.sun-times .muted{font-size:12px;margin:6px 0 0}

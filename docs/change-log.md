@@ -2,6 +2,11 @@
 
 Siin peetakse kuupäevade kaupa lühikest logi projekti olulistest muudatustest, otsustest ja ülevaatuseks esitatud ettepanekutest. Logikirje märgib ka, kas töö on alles PR-is või juba põhiharusse ühendatud.
 
+## 2026-11-19 · Hämarik ja laskevalgus ilmapaneelis
+
+- **Uus.** Ilmapaneelis on rida „Täna (arvutuslik)": hämariku algus ja lõpp (Päikese kõrgus −12°), laskevalguse algus ja lõpp (−6°), päikesetõus ja -loojang. Arvutatakse seadmes teegiga SunCalc, töötab ilma võrguta ja on nähtav ka külalisele.
+- **Piirang.** Laskevalgus on hinnang Päikese asendist, mitte jahieeskirja aeg. Lävi on konstant `SHOOTING_LIGHT_DEGREES` failis `src/sunTimes.ts`.
+
 ## 2026-11-19 · Asukoht, ilm kõigile, jahi kordamine jahi sees
 
 - **Asukoht.** Liikme, admini ja omaniku vasakusse nupuveergu lisati ümmargune „Asukoht" (jahirežiimis peidus, vaatajal jääb alumine riba).
