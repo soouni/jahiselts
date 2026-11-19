@@ -29,7 +29,7 @@ Esimesena tõmbab pilku pealkiri „Sisesta jahikood" ja seejärel koodiväli, m
 | Tekst #61796b valgel | 4,71 : 1 | läbib napilt |
 | Valge tekst rohelisel #278154 | 4,82 : 1 | läbib |
 | Valge tekst ohupunasel `--danger` #9b3028 | 7,38 : 1 | läbib |
-| **Valge tekst oranžil `--accent` #d97726 (või vastupidi)** | **3,17 : 1** | **ei läbi AA tavatekstil**; läbib ainult suurel tekstil (3 : 1). Kontrolli, kus accent'iga tekst on |
+| Oranž `--accent` #d97726 valgel | 3,17 : 1 | tekstina ei läbiks AA, aga koodis kasutatakse seda ainult märkpunktina ja legendijoonena (mitte tekstina); mittetekstilisele elemendile piisab 3 : 1, **läbib** |
 | Puutealad | min-height 44–56 px | läbib |
 | Fookus ja liikumine | 5 `:focus-visible` reeglit, `prefers-reduced-motion` olemas | hea |
 | Väikseimad tekstid | 8 px (kaubamärgi alamsilt kitsal ekraanil), 10–11 px kokku 19 kohas | 🟡 liiga väikesed välitingimustes |
@@ -40,7 +40,7 @@ Esimesena tõmbab pilku pealkiri „Sisesta jahikood" ja seejärel koodiväli, m
 - `role="alert"` veateadetel ja `role="status"` märkustel; fookus naaseb väljale pärast viga.
 
 ### Prioriteetsed soovitused
-1. **Parandada oranži kontrast** — kui accent'iga on kirjutatud tekst, tumenda tooni (nt #b05813 annab valgel 4,94 : 1; vaata enne kasutuselevõttu, kuidas toon kaardil välja näeb) või kasuta seal tumedat teksti.
+1. ~~Oranži kontrast~~ — kontrollitud: oranži kasutatakse ainult mittetekstilistel elementidel, parandust ei vaja. Kui tulevikus kirjutatakse tekst oranžile, kasuta #b05813 (valgel 4,94 : 1).
 2. **Tõsta 8–11 px tekstid vähemalt 12 px peale** — kõige olulisem kitsal ekraanil, kus kaubamärgi alamsilt on 8 px.
 3. **Koodivälja kohahoidja** — vältida parooli moodi punkte.
 
@@ -111,3 +111,22 @@ Veateated tulevad funktsioonist `guestProblem(code)`; selle ülevaate jaoks ei o
 
 ### Liikumine
 Ainult keerlev ikoon; `prefers-reduced-motion` lülitab selle `animation:none` abil välja (üldreegel failis).
+
+## 4. Sisselogitud katsetuse leiud ja parandused (2026-11-19)
+
+Katsetasin kaarti sisselogituna (ainult lugemine; midagi ei salvestatud). Kaks leidu osutusid pärast koodi lugemist valeks: kustutamisel **on** kinnitusdialoog ja 30-päevane prügikast, ning „Vaatluste filter" on kokkuvolditud `<details>` (mitte tühi). Muu parandati:
+
+| # | Leid | Parandus |
+|---|---|---|
+| 1 | Kustuta-nupp objekti kaardil | muutmata: kinnitus ja prügikast on olemas |
+| 2 | „Kõigepealt märgi asukoht" eksitas, sest tegelik järjekord on tüüp → asukoht | tekst: „Vali, mida lisad. Seejärel märgid asukoha kaardil ja lisad andmed." |
+| 3 | Mõõtmisel „hiirekursorini" | „Jooksev lõik" |
+| 4 | „alusta esimene aju" | „alusta esimest aju" |
+| 5 | Jahtide loend täis lõpetatud testjahte | aktiivsed, peatatud ja planeeritud ees; lõpetatud kokkuvolditud „Lõpetatud jahid (N)" all |
+| 6 | Konto menüü lame loend | rühmad: Jahipäev, Konto, Eksport, Haldus (admin) |
+| 7 | Filter paistis tühjana | muutmata: on kokkuvolditud, see on tahtlik |
+| 8 | Aluskaardi nupu silt | muutmata: nupul on juba ligipääsetav silt ja kirjeldus; kolme režiimi tsükkel jääb |
+| – | Koodivälja kohahoidja •••• | „0000" |
+| – | Kaubamärgi alamsilt 8 px kitsal ekraanil | 10 px |
+
+Päris testjahte ei kustutatud: see on andmete kustutamine ja otsustus on sinu.
